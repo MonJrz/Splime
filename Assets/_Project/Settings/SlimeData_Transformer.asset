@@ -16,7 +16,7 @@ MonoBehaviour:
   _slimeColor: {r: 0, g: 1, b: 0, a: 1}
   _moveSpeed: 6
   _rotationSpeed: 12
-  _jumpForce: 7.5
+  _jumpForce: 5
   _gravity: -20
   _groundCheckDistance: 0.2
   _groundLayer:
