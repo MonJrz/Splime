@@ -20,7 +20,7 @@ GameObject:
   - component: {fileID: -5446737986640454462}
   - component: {fileID: -6240373175445343251}
   - component: {fileID: 6285129304420660674}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Slime_Transformer
   m_TagString: Untagged
   m_Icon: {fileID: 0}

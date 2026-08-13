@@ -20,7 +20,7 @@ GameObject:
   - component: {fileID: -1574916520840580265}
   - component: {fileID: 7127969660343803864}
   - component: {fileID: -291485108057008616}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Slime_Agile
   m_TagString: Untagged
   m_Icon: {fileID: 0}

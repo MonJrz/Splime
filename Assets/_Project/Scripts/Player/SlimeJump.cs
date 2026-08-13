@@ -85,16 +85,28 @@ namespace Splime.Player
 
         private void CheckGrounded()
         {
-            bool ccGrounded = _characterController.isGrounded;
+            // LayerMask: sólo detectar capas de suelo (configuradas en SlimeData).
+            // Esto excluye los CharacterControllers de otros Slimes (capa "Player"),
+            // evitando que el Slime Ágil encogido pueda saltar infinitamente sobre el otro Slime.
+            LayerMask groundMask = _slimeData != null ? _slimeData.GroundLayer : Physics.DefaultRaycastLayers;
 
-            // Usar bounds del CharacterController para calcular el origen y distancia del raycast.
-            // Bounds ya tiene en cuenta la escala del transform en world space,
-            // por lo que funciona correctamente cuando el Slime Ágil se encoge (scale 0.5).
-            // Sin esto, el raycast detecta suelo con el doble de distancia real
-            // y cancela la gravedad en caída, produciendo el efecto de "planeo".
+            // CharacterController.isGrounded no acepta LayerMask, así que
+            // filtramos adicionalmente: solo lo consideramos válido si el raycast
+            // con la máscara correcta también confirma el suelo.
             Vector3 rayStart = _characterController.bounds.center;
             float rayDistance = _characterController.bounds.extents.y + 0.15f;
-            bool rayGrounded = Physics.Raycast(rayStart, Vector3.down, rayDistance);
+
+            // Raycast con máscara de capas — ignora triggers y capas no-suelo (ej. capa "Player")
+            bool rayGrounded = Physics.Raycast(
+                rayStart,
+                Vector3.down,
+                rayDistance,
+                groundMask,
+                QueryTriggerInteraction.Ignore);
+
+            // ccGrounded es el check nativo del CharacterController (rápido pero sin LayerMask).
+            // Lo combinamos con AND del raycast para evitar falsos positivos sobre otros Slimes.
+            bool ccGrounded = _characterController.isGrounded && rayGrounded;
 
             _isGrounded = ccGrounded || rayGrounded;
 
