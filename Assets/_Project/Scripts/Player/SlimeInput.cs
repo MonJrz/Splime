@@ -13,6 +13,8 @@ namespace Splime.Player
     /// </summary>
     public class SlimeInput : NetworkBehaviour
     {
+        public static event Action<SlimeInput> LocalInputReady;
+
         [Header("Input Action Asset Reference")]
         [SerializeField] private InputActionAsset _inputActionAsset;
 
@@ -23,6 +25,7 @@ namespace Splime.Player
         private InputAction _jumpAction;
         private InputAction _abilityAction;
         private InputAction _interactAction;
+        private bool _isInputBlocked;
 
         // Properties for current frame input states
         public Vector2 MoveInput { get; private set; }
@@ -35,11 +38,18 @@ namespace Splime.Player
         public event Action OnAbilityPressed;
         public event Action OnInteractPressed;
 
-        public bool ShouldProcessInput => !IsSpawned || IsOwner;
+        public bool IsLocalInputSource => !IsSpawned || IsOwner;
+        public bool IsInputBlocked => _isInputBlocked;
+        public bool ShouldProcessInput => IsLocalInputSource && !_isInputBlocked;
 
         private void Start()
         {
             InitializeInputActions();
+
+            if (IsLocalInputSource)
+            {
+                LocalInputReady?.Invoke(this);
+            }
         }
 
         public override void OnNetworkSpawn()
@@ -53,7 +63,12 @@ namespace Splime.Player
                 {
                     _playerMap.Disable();
                 }
+
+                return;
             }
+
+            ApplyInputMapState();
+            LocalInputReady?.Invoke(this);
         }
 
         private void InitializeInputActions()
@@ -125,6 +140,43 @@ namespace Splime.Player
             OnInteractPressed?.Invoke();
         }
 
+        public void SetInputBlocked(bool isBlocked)
+        {
+            if (_isInputBlocked == isBlocked)
+            {
+                return;
+            }
+
+            _isInputBlocked = isBlocked;
+            ClearFrameInput();
+            ApplyInputMapState();
+        }
+
+        private void ApplyInputMapState()
+        {
+            if (_playerMap == null)
+            {
+                return;
+            }
+
+            if (ShouldProcessInput)
+            {
+                _playerMap.Enable();
+            }
+            else
+            {
+                _playerMap.Disable();
+            }
+        }
+
+        private void ClearFrameInput()
+        {
+            MoveInput = Vector2.zero;
+            JumpPressedThisFrame = false;
+            AbilityPressedThisFrame = false;
+            InteractPressedThisFrame = false;
+        }
+
         private void UnsubscribeEvents()
         {
             if (_jumpAction != null) _jumpAction.performed -= HandleJump;
@@ -132,7 +184,7 @@ namespace Splime.Player
             if (_interactAction != null) _interactAction.performed -= HandleInteract;
         }
 
-        private void OnDestroy()
+        public override void OnDestroy()
         {
             UnsubscribeEvents();
             if (_playerMap != null)
@@ -143,6 +195,8 @@ namespace Splime.Player
             {
                 Destroy(_inputAssetInstance);
             }
+
+            base.OnDestroy();
         }
 
         public override void OnNetworkDespawn()

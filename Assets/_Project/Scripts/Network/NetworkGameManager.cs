@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Splime.Core;
+using Splime.Player;
+using Splime.UI;
 using Unity.Netcode;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Multiplayer;
 using UnityEngine;
-using Splime.Core;
-using Splime.Player;
+using UnityEngine.SceneManagement;
 
 namespace Splime.Network
 {
@@ -21,6 +23,9 @@ namespace Splime.Network
     /// </summary>
     public class NetworkGameManager : MonoBehaviour
     {
+        private const string ReadyPropertyKey = "ready";
+        private const string ReadyValue = "1";
+
         public static NetworkGameManager Instance { get; private set; }
 
         [Header("Player Prefabs")]
@@ -35,19 +40,17 @@ namespace Splime.Network
         [SerializeField] private Vector3 _player1SpawnPosition = new Vector3(-2f, 1f, 0f);
         [SerializeField] private Vector3 _player2SpawnPosition = new Vector3(2f, 1f, 0f);
 
-        [Header("OnGUI Debug Controls")]
-        [SerializeField] private bool _showDebugGui = true;
+        [Header("Lobby Flow")]
+        [SerializeField] private LobbyUIController _lobbyUIController;
+        [SerializeField] private string _mainMenuSceneName = "Main";
+        [SerializeField] private string _gameplaySceneName = "SceneTest";
 
         private readonly Dictionary<ulong, GameObject> _spawnedPlayers = new Dictionary<ulong, GameObject>();
-
-        // Estado de inicialización de Unity Gaming Services
-        private bool _isInitialized = false;
-
-        // Estado de la sesión actual (Multiplayer Services 2.3.0)
+        private Task<bool> _servicesInitializationTask;
         private ISession _currentSession;
-        private string _joinCode = "";
-        private string _inputJoinCode = "";
-        private bool _isConnecting = false;
+        private string _joinCode = string.Empty;
+        private bool _isInitialized;
+        private bool _isConnecting;
 
         private void Awake()
         {
@@ -56,10 +59,16 @@ namespace Splime.Network
                 Destroy(gameObject);
                 return;
             }
+
             Instance = this;
+            DontDestroyOnLoad(gameObject);
+            SceneManager.sceneLoaded += OnSceneLoaded;
+            LobbyUIController configuredLobbyUI = _lobbyUIController;
+            _lobbyUIController = null;
+            BindLobbyUI(configuredLobbyUI);
         }
 
-        private async void Start()
+        private void Start()
         {
             if (NetworkManager.Singleton != null)
             {
@@ -67,30 +76,47 @@ namespace Splime.Network
                 NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
             }
 
-            // Inicializar Unity Gaming Services al arrancar
-            await InitializeServicesAsync();
+            _ = InitializeServicesAsync();
         }
 
         private void OnDestroy()
         {
+            if (Instance != this)
+            {
+                return;
+            }
+
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            UnbindLobbyUI();
+            UnsubscribeFromSessionEvents(_currentSession);
+            UnsubscribeFromNetworkSceneEvents();
+
             if (NetworkManager.Singleton != null)
             {
                 NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
                 NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
             }
+
+            Instance = null;
         }
 
         private void OnClientConnected(ulong clientId)
         {
-            if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer) return;
-            SpawnPlayerForClient(clientId);
+            if (NetworkManager.Singleton != null &&
+                NetworkManager.Singleton.IsServer &&
+                IsLevelSceneActive())
+            {
+                SpawnPlayerForClient(clientId);
+            }
+
+            RefreshLobbyUI();
         }
 
         private void OnClientDisconnected(ulong clientId)
         {
-            if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer) return;
-
-            if (_spawnedPlayers.TryGetValue(clientId, out GameObject playerObj))
+            if (NetworkManager.Singleton != null &&
+                NetworkManager.Singleton.IsServer &&
+                _spawnedPlayers.TryGetValue(clientId, out GameObject playerObj))
             {
                 if (playerObj != null)
                 {
@@ -102,10 +128,17 @@ namespace Splime.Network
                 }
                 _spawnedPlayers.Remove(clientId);
             }
+
+            RefreshLobbyUI();
         }
 
         private void SpawnPlayerForClient(ulong clientId)
         {
+            if (_spawnedPlayers.ContainsKey(clientId))
+            {
+                return;
+            }
+
             GameObject prefabToSpawn = (clientId == 0) ? _slimeTransformerPrefab : _slimeAgilePrefab;
             Vector3 spawnPos = (clientId == 0) ? _player1SpawnPosition : _player2SpawnPosition;
             SlimeData dataToAssign = (clientId == 0) ? _transformerData : _agileData;
@@ -155,8 +188,24 @@ namespace Splime.Network
         /// </summary>
         private async Task<bool> InitializeServicesAsync()
         {
-            if (_isInitialized) return true;
+            if (_isInitialized)
+            {
+                return true;
+            }
 
+            _servicesInitializationTask ??= InitializeServicesInternalAsync();
+            bool initialized = await _servicesInitializationTask;
+
+            if (!initialized)
+            {
+                _servicesInitializationTask = null;
+            }
+
+            return initialized;
+        }
+
+        private async Task<bool> InitializeServicesInternalAsync()
+        {
             try
             {
                 Debug.Log($"[{nameof(NetworkGameManager)}] 🔄 Inicializando Unity Gaming Services...");
@@ -195,42 +244,46 @@ namespace Splime.Network
         /// </summary>
         public async Task StartHostWithRelayAsync()
         {
-            if (_isConnecting) return;
+            if (_isConnecting || _currentSession != null)
+            {
+                return;
+            }
+
             _isConnecting = true;
 
             try
             {
-                // 1. Asegurar que UGS y Autenticación estén listos
                 bool initialized = await InitializeServicesAsync();
                 if (!initialized)
                 {
-                    Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ No se pudo iniciar el Host porque UGS no está listo.");
-                    _isConnecting = false;
+                    ShowLobbyError("No se pudo conectar con los servicios de Unity.");
                     return;
                 }
 
                 Debug.Log($"[{nameof(NetworkGameManager)}] 🌐 Creando Sesión de Relay (MaxPlayers = 2)...");
 
-                // 2. Configurar opciones de sesión con Relay
                 var options = new SessionOptions
                 {
                     MaxPlayers = 2
                 }.WithRelayNetwork();
 
-                // 3. Crear la sesión a través de Multiplayer Services SDK
-                _currentSession = await MultiplayerService.Instance.CreateSessionAsync(options);
-                _joinCode = _currentSession.Code;
+                ISession session = await MultiplayerService.Instance.CreateSessionAsync(options);
+                SetCurrentSession(session);
 
                 Debug.Log($"[{nameof(NetworkGameManager)}] 🎉 ¡HOST CREADO EXITOSAMENTE!");
                 Debug.Log($"[{nameof(NetworkGameManager)}] 🔑 JOIN CODE: {_joinCode}");
+                _lobbyUIController?.ShowHostWaitingRoom(_joinCode);
+                RefreshLobbyUI();
             }
             catch (SessionException e)
             {
                 Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error al crear la sesión: {e.Message}");
+                ShowLobbyError("No se pudo crear la sala. Intenta nuevamente.");
             }
             catch (Exception e)
             {
                 Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error inesperado al iniciar Host: {e.Message}");
+                ShowLobbyError("Ocurrió un error al crear la sala.");
             }
             finally
             {
@@ -243,11 +296,15 @@ namespace Splime.Network
         /// </summary>
         public async Task JoinSessionWithRelayAsync(string codeToJoin)
         {
-            if (_isConnecting) return;
+            if (_isConnecting || _currentSession != null)
+            {
+                return;
+            }
 
             if (string.IsNullOrWhiteSpace(codeToJoin))
             {
                 Debug.LogWarning($"[{nameof(NetworkGameManager)}] ⚠️ Debes ingresar un Join Code válido para conectarte.");
+                ShowLobbyError("Ingresa un código de sala válido.");
                 return;
             }
 
@@ -255,31 +312,32 @@ namespace Splime.Network
 
             try
             {
-                // 1. Asegurar UGS y Autenticación
                 bool initialized = await InitializeServicesAsync();
                 if (!initialized)
                 {
-                    Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ No se pudo conectar porque UGS no está listo.");
-                    _isConnecting = false;
+                    ShowLobbyError("No se pudo conectar con los servicios de Unity.");
                     return;
                 }
 
                 string formattedCode = codeToJoin.Trim().ToUpper();
                 Debug.Log($"[{nameof(NetworkGameManager)}] 🌐 Conectándose a la sesión con Join Code: {formattedCode}...");
 
-                // 2. Unirse por código usando Multiplayer Services SDK
-                _currentSession = await MultiplayerService.Instance.JoinSessionByCodeAsync(formattedCode);
-                _joinCode = _currentSession.Code;
+                ISession session = await MultiplayerService.Instance.JoinSessionByCodeAsync(formattedCode);
+                SetCurrentSession(session);
 
                 Debug.Log($"[{nameof(NetworkGameManager)}] 🎉 ¡CONEXIÓN COMO CLIENTE EXITOSA!");
+                _lobbyUIController?.ShowSharedLobbyAsGuest();
+                RefreshLobbyUI();
             }
             catch (SessionException e)
             {
                 Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error al unirse a la sesión: {e.Message}");
+                ShowLobbyError("No se pudo entrar a la sala. Revisa el código.");
             }
             catch (Exception e)
             {
                 Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error inesperado al unirse como Cliente: {e.Message}");
+                ShowLobbyError("Ocurrió un error al entrar a la sala.");
             }
             finally
             {
@@ -292,91 +350,395 @@ namespace Splime.Network
         /// </summary>
         public async Task DisconnectAsync()
         {
+            if (_isConnecting)
+            {
+                return;
+            }
+
+            _isConnecting = true;
             Debug.Log($"[{nameof(NetworkGameManager)}] 🚪 Iniciando proceso de desconexión...");
 
-            // 1. Abandonar/Eliminar la Sesión en UGS Multiplayer Services
-            if (_currentSession != null)
+            ISession session = _currentSession;
+            _currentSession = null;
+            UnsubscribeFromSessionEvents(session);
+            UnsubscribeFromNetworkSceneEvents();
+
+            if (session != null)
             {
                 try
                 {
-                    await _currentSession.LeaveAsync();
+                    await session.LeaveAsync();
                     Debug.Log($"[{nameof(NetworkGameManager)}] ✅ Sesión de UGS abandonada correctamente.");
                 }
                 catch (Exception e)
                 {
                     Debug.LogWarning($"[{nameof(NetworkGameManager)}] ⚠️ No se pudo abandonar la sesión de UGS: {e.Message}");
                 }
-                finally
-                {
-                    _currentSession = null;
-                }
             }
 
-            // 2. Apagar Netcode for GameObjects
             if (NetworkManager.Singleton != null && (NetworkManager.Singleton.IsClient || NetworkManager.Singleton.IsServer))
             {
                 NetworkManager.Singleton.Shutdown();
                 Debug.Log($"[{nameof(NetworkGameManager)}] ✅ Netcode for GameObjects apagado.");
             }
 
-            // 3. Limpiar estado local
-            _joinCode = "";
+            _joinCode = string.Empty;
             _spawnedPlayers.Clear();
+            _isConnecting = false;
+            _lobbyUIController?.NotifySessionLeft();
         }
 
-        private void OnGUI()
+        public bool TryLoadLevelScene(string sceneName)
         {
-            if (!_showDebugGui) return;
-
-            GUILayout.BeginArea(new Rect(20, 20, 280, 240));
-
-            if (NetworkManager.Singleton != null && !NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsServer)
+            if (string.IsNullOrWhiteSpace(sceneName) || !Application.CanStreamedLevelBeLoaded(sceneName))
             {
-                GUILayout.Label("<b>Splime Multiplayer (Unity Relay)</b>");
+                Debug.LogError(
+                    $"[{nameof(NetworkGameManager)}] La escena '{sceneName}' no existe o no está en Build Settings.",
+                    this);
+                return false;
+            }
 
-                if (_isConnecting)
+            NetworkManager networkManager = NetworkManager.Singleton;
+            if (networkManager == null || !networkManager.IsListening)
+            {
+                SceneManager.LoadScene(sceneName);
+                return true;
+            }
+
+            if (!networkManager.IsServer)
+            {
+                Debug.LogWarning(
+                    $"[{nameof(NetworkGameManager)}] Solo el host puede cambiar la escena de nivel.",
+                    this);
+                return false;
+            }
+
+            SceneEventProgressStatus status = networkManager.SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
+            if (status != SceneEventProgressStatus.Started)
+            {
+                Debug.LogError(
+                    $"[{nameof(NetworkGameManager)}] No se pudo cargar '{sceneName}' ({status}).",
+                    this);
+                return false;
+            }
+
+            DespawnPlayersForSceneChange();
+            return true;
+        }
+
+        private void BindLobbyUI(LobbyUIController lobbyUIController)
+        {
+            if (_lobbyUIController == lobbyUIController)
+            {
+                return;
+            }
+
+            UnbindLobbyUI();
+            _lobbyUIController = lobbyUIController;
+
+            if (_lobbyUIController == null)
+            {
+                return;
+            }
+
+            _lobbyUIController.HostRequested += HandleHostRequested;
+            _lobbyUIController.JoinRequested += HandleJoinRequested;
+            _lobbyUIController.ReadyChangeRequested += HandleReadyChangeRequested;
+            _lobbyUIController.StartGameRequested += HandleStartGameRequested;
+            _lobbyUIController.LeaveSessionRequested += HandleLeaveSessionRequested;
+            _lobbyUIController.BackToMainRequested += HandleBackToMainRequested;
+
+            RefreshLobbyUI();
+        }
+
+        private void UnbindLobbyUI()
+        {
+            if (_lobbyUIController == null)
+            {
+                return;
+            }
+
+            _lobbyUIController.HostRequested -= HandleHostRequested;
+            _lobbyUIController.JoinRequested -= HandleJoinRequested;
+            _lobbyUIController.ReadyChangeRequested -= HandleReadyChangeRequested;
+            _lobbyUIController.StartGameRequested -= HandleStartGameRequested;
+            _lobbyUIController.LeaveSessionRequested -= HandleLeaveSessionRequested;
+            _lobbyUIController.BackToMainRequested -= HandleBackToMainRequested;
+            _lobbyUIController = null;
+        }
+
+        private void HandleHostRequested()
+        {
+            _ = StartHostWithRelayAsync();
+        }
+
+        private void HandleJoinRequested(string joinCode)
+        {
+            _ = JoinSessionWithRelayAsync(joinCode);
+        }
+
+        private async void HandleReadyChangeRequested(bool isReady)
+        {
+            ISession session = _currentSession;
+
+            if (session == null)
+            {
+                ShowLobbyError("No hay una sala activa.");
+                return;
+            }
+
+            session.CurrentPlayer.Properties.TryGetValue(ReadyPropertyKey, out PlayerProperty previousValue);
+            session.CurrentPlayer.SetProperty(
+                ReadyPropertyKey,
+                new PlayerProperty(isReady ? ReadyValue : string.Empty, VisibilityPropertyOptions.Public));
+
+            try
+            {
+                await session.SaveCurrentPlayerDataAsync();
+                RefreshLobbyUI();
+            }
+            catch (Exception e)
+            {
+                session.CurrentPlayer.SetProperty(ReadyPropertyKey, previousValue);
+                Debug.LogError($"[{nameof(NetworkGameManager)}] No se pudo actualizar Ready: {e.Message}", this);
+                ShowLobbyError("No se pudo actualizar tu estado.");
+            }
+        }
+
+        private void HandleStartGameRequested()
+        {
+            if (_currentSession == null || !_currentSession.IsHost || !ArePlayersReady())
+            {
+                ShowLobbyError("Ambos jugadores deben estar listos.");
+                return;
+            }
+
+            if (!TryLoadLevelScene(_gameplaySceneName))
+            {
+                ShowLobbyError("No se pudo iniciar la partida.");
+            }
+        }
+
+        private void HandleLeaveSessionRequested()
+        {
+            _ = DisconnectAsync();
+        }
+
+        private void HandleBackToMainRequested()
+        {
+            if (!string.IsNullOrWhiteSpace(_mainMenuSceneName))
+            {
+                SceneManager.LoadScene(_mainMenuSceneName);
+            }
+        }
+
+        private void SetCurrentSession(ISession session)
+        {
+            UnsubscribeFromSessionEvents(_currentSession);
+            _currentSession = session;
+            _joinCode = session?.Code ?? string.Empty;
+
+            if (_currentSession == null)
+            {
+                return;
+            }
+
+            _currentSession.Changed += OnSessionChanged;
+            _currentSession.PlayerJoined += OnSessionPlayerChanged;
+            _currentSession.PlayerHasLeft += OnSessionPlayerChanged;
+            _currentSession.PlayerPropertiesChanged += OnSessionChanged;
+            _currentSession.RemovedFromSession += OnSessionEnded;
+            _currentSession.Deleted += OnSessionEnded;
+            SubscribeToNetworkSceneEvents();
+        }
+
+        private void UnsubscribeFromSessionEvents(ISession session)
+        {
+            if (session == null)
+            {
+                return;
+            }
+
+            session.Changed -= OnSessionChanged;
+            session.PlayerJoined -= OnSessionPlayerChanged;
+            session.PlayerHasLeft -= OnSessionPlayerChanged;
+            session.PlayerPropertiesChanged -= OnSessionChanged;
+            session.RemovedFromSession -= OnSessionEnded;
+            session.Deleted -= OnSessionEnded;
+        }
+
+        private void OnSessionChanged()
+        {
+            RefreshLobbyUI();
+        }
+
+        private void OnSessionPlayerChanged(string _)
+        {
+            RefreshLobbyUI();
+        }
+
+        private void OnSessionEnded()
+        {
+            ISession endedSession = _currentSession;
+            _currentSession = null;
+            UnsubscribeFromSessionEvents(endedSession);
+            UnsubscribeFromNetworkSceneEvents();
+            _joinCode = string.Empty;
+            _lobbyUIController?.NotifySessionLeft();
+        }
+
+        private void RefreshLobbyUI()
+        {
+            if (_lobbyUIController == null || _currentSession == null)
+            {
+                return;
+            }
+
+            int playerCount = _currentSession.PlayerCount;
+
+            if (_currentSession.IsHost && playerCount < 2)
+            {
+                _lobbyUIController.ShowHostWaitingRoom(_joinCode);
+            }
+            else
+            {
+                _lobbyUIController.ShowSharedLobby(_currentSession.IsHost);
+            }
+
+            GetReadyStates(out bool hostReady, out bool guestReady);
+            _lobbyUIController.SetConnectedPlayerCount(playerCount);
+            _lobbyUIController.SetReadyStates(hostReady, guestReady);
+        }
+
+        private bool ArePlayersReady()
+        {
+            if (_currentSession == null || _currentSession.PlayerCount < 2)
+            {
+                return false;
+            }
+
+            GetReadyStates(out bool hostReady, out bool guestReady);
+            return hostReady && guestReady;
+        }
+
+        private void GetReadyStates(out bool hostReady, out bool guestReady)
+        {
+            hostReady = false;
+            guestReady = false;
+
+            if (_currentSession == null)
+            {
+                return;
+            }
+
+            foreach (IReadOnlyPlayer player in _currentSession.Players)
+            {
+                bool isReady =
+                    player.Properties.TryGetValue(ReadyPropertyKey, out PlayerProperty property) &&
+                    property.Value == ReadyValue;
+
+                if (player.Id == _currentSession.Host)
                 {
-                    GUILayout.Label("<i>Conectando a la nube...</i>");
+                    hostReady = isReady;
                 }
                 else
                 {
-                    if (GUILayout.Button("Start Host (P1: Transformador)", GUILayout.Height(35)))
-                    {
-                        _ = StartHostWithRelayAsync();
-                    }
-
-                    GUILayout.Space(10);
-                    GUILayout.Label("Unirse como Cliente (P2: Ágil):");
-                    
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label("Code:", GUILayout.Width(45));
-                    _inputJoinCode = GUILayout.TextField(_inputJoinCode.ToUpper(), 8);
-                    GUILayout.EndHorizontal();
-
-                    if (GUILayout.Button("Join Session", GUILayout.Height(35)))
-                    {
-                        _ = JoinSessionWithRelayAsync(_inputJoinCode);
-                    }
+                    guestReady = isReady;
                 }
             }
-            else if (NetworkManager.Singleton != null)
+        }
+
+        private void SubscribeToNetworkSceneEvents()
+        {
+            UnsubscribeFromNetworkSceneEvents();
+
+            if (NetworkManager.Singleton != null)
             {
-                GUILayout.Label($"<b>Modo:</b> {(NetworkManager.Singleton.IsHost ? "Host (Jugador 1)" : "Cliente (Jugador 2)")}");
-                
-                if (!string.IsNullOrEmpty(_joinCode))
+                NetworkManager.Singleton.SceneManager.OnLoadEventCompleted += OnNetworkSceneLoadCompleted;
+            }
+        }
+
+        private void UnsubscribeFromNetworkSceneEvents()
+        {
+            if (NetworkManager.Singleton != null && NetworkManager.Singleton.SceneManager != null)
+            {
+                NetworkManager.Singleton.SceneManager.OnLoadEventCompleted -= OnNetworkSceneLoadCompleted;
+            }
+        }
+
+        private void OnNetworkSceneLoadCompleted(
+            string sceneName,
+            LoadSceneMode loadSceneMode,
+            List<ulong> clientsCompleted,
+            List<ulong> clientsTimedOut)
+        {
+            if (NetworkManager.Singleton == null ||
+                !NetworkManager.Singleton.IsServer ||
+                !IsLevelSceneActive())
+            {
+                return;
+            }
+
+            foreach (ulong clientId in NetworkManager.Singleton.ConnectedClientsIds)
+            {
+                SpawnPlayerForClient(clientId);
+            }
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
+        {
+            DestroyDuplicateNetworkManagers();
+            BindLobbyUI(FindFirstObjectByType<LobbyUIController>());
+        }
+
+        private static void DestroyDuplicateNetworkManagers()
+        {
+            NetworkManager singleton = NetworkManager.Singleton;
+            if (singleton == null)
+            {
+                return;
+            }
+
+            NetworkManager[] networkManagers = FindObjectsByType<NetworkManager>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+
+            foreach (NetworkManager networkManager in networkManagers)
+            {
+                if (networkManager != singleton)
                 {
-                    GUILayout.Label($"<b>JOIN CODE:</b> <color=yellow>{_joinCode}</color>");
+                    Destroy(networkManager.gameObject);
+                }
+            }
+        }
+
+        private bool IsLevelSceneActive()
+        {
+            return FindFirstObjectByType<LevelUIController>(FindObjectsInactive.Include) != null;
+        }
+
+        private void DespawnPlayersForSceneChange()
+        {
+            foreach (GameObject playerObject in _spawnedPlayers.Values)
+            {
+                if (playerObject == null)
+                {
+                    continue;
                 }
 
-                GUILayout.Label($"<b>Jugadores Conectados:</b> {NetworkManager.Singleton.ConnectedClientsIds.Count}");
-
-                if (GUILayout.Button("Desconectar", GUILayout.Height(30)))
+                NetworkObject networkObject = playerObject.GetComponent<NetworkObject>();
+                if (networkObject != null && networkObject.IsSpawned)
                 {
-                    _ = DisconnectAsync();
+                    networkObject.Despawn(true);
                 }
             }
 
-            GUILayout.EndArea();
+            _spawnedPlayers.Clear();
+        }
+
+        private void ShowLobbyError(string message)
+        {
+            _lobbyUIController?.ShowError(message);
         }
     }
 }
