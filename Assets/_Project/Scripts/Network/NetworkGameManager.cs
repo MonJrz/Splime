@@ -136,6 +136,14 @@ namespace Splime.Network
                     jump.InitializeData(dataToAssign);
                 }
 
+                // Inicializar el SlimeStatsModifier con los datos base del Slime
+                // Debe inicializarse DESPUÉS de Movement y Jump para que estén listos cuando lean de él
+                SlimeStatsModifier statsModifier = playerInstance.GetComponent<SlimeStatsModifier>();
+                if (statsModifier != null && dataToAssign != null)
+                {
+                    statsModifier.Initialize(dataToAssign);
+                }
+
                 Debug.Log($"[{nameof(NetworkGameManager)}] 🎮 Jugador {clientId + 1} ({prefabToSpawn.name}) instanciado exitosamente en {spawnPos} con Ownership para clientId {clientId}.", this);
             }
         }

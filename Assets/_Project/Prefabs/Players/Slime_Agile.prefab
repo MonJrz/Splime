@@ -19,7 +19,8 @@ GameObject:
   - component: {fileID: -8882551678882153160}
   - component: {fileID: -1574916520840580265}
   - component: {fileID: 7127969660343803864}
-  m_Layer: 0
+  - component: {fileID: -291485108057008616}
+  m_Layer: 6
   m_Name: Slime_Agile
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -272,3 +273,15 @@ MonoBehaviour:
   _normalRadius: 0.5
   _squeezedHeight: 0.6
   _squeezedRadius: 0.25
+--- !u!114 &-291485108057008616
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7538095413511950189}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60e49a3a6bee2114eb3ded9fce304a6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.Core.SlimeStatsModifier

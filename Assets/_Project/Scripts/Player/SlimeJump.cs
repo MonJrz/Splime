@@ -23,6 +23,7 @@ namespace Splime.Player
         // Components
         private CharacterController _characterController;
         private SlimeInput _slimeInput;
+        private SlimeStatsModifier _statsModifier;
 
         // Jump & Gravity State
         private float _verticalVelocity;
@@ -38,6 +39,7 @@ namespace Splime.Player
         {
             _characterController = GetComponent<CharacterController>();
             _slimeInput = GetComponent<SlimeInput>();
+            _statsModifier = GetComponent<SlimeStatsModifier>();
         }
 
         private void OnEnable()
@@ -83,11 +85,28 @@ namespace Splime.Player
 
         private void CheckGrounded()
         {
-            bool ccGrounded = _characterController.isGrounded;
+            // LayerMask: sólo detectar capas de suelo (configuradas en SlimeData).
+            // Esto excluye los CharacterControllers de otros Slimes (capa "Player"),
+            // evitando que el Slime Ágil encogido pueda saltar infinitamente sobre el otro Slime.
+            LayerMask groundMask = _slimeData != null ? _slimeData.GroundLayer : Physics.DefaultRaycastLayers;
 
-            Vector3 rayStart = transform.position + _characterController.center;
-            float rayDistance = (_characterController.height / 2.0f) + 0.15f;
-            bool rayGrounded = Physics.Raycast(rayStart, Vector3.down, rayDistance);
+            // CharacterController.isGrounded no acepta LayerMask, así que
+            // filtramos adicionalmente: solo lo consideramos válido si el raycast
+            // con la máscara correcta también confirma el suelo.
+            Vector3 rayStart = _characterController.bounds.center;
+            float rayDistance = _characterController.bounds.extents.y + 0.15f;
+
+            // Raycast con máscara de capas — ignora triggers y capas no-suelo (ej. capa "Player")
+            bool rayGrounded = Physics.Raycast(
+                rayStart,
+                Vector3.down,
+                rayDistance,
+                groundMask,
+                QueryTriggerInteraction.Ignore);
+
+            // ccGrounded es el check nativo del CharacterController (rápido pero sin LayerMask).
+            // Lo combinamos con AND del raycast para evitar falsos positivos sobre otros Slimes.
+            bool ccGrounded = _characterController.isGrounded && rayGrounded;
 
             _isGrounded = ccGrounded || rayGrounded;
 
@@ -111,7 +130,9 @@ namespace Splime.Player
 
             if (_coyoteTimer > 0f)
             {
-                float jumpForce = _slimeData != null ? _slimeData.JumpForce : 8.0f;
+                // Leer fuerza de salto del modifier (puede ser 2x si Agile está activo, 0.1x si Solid activo)
+                float jumpForce = _statsModifier != null ? _statsModifier.JumpForce
+                                : (_slimeData != null ? _slimeData.JumpForce : 8.0f);
                 _verticalVelocity = jumpForce;
                 _coyoteTimer = 0f;
             }
@@ -119,7 +140,9 @@ namespace Splime.Player
 
         private void ApplyGravity()
         {
-            float gravity = _slimeData != null ? _slimeData.Gravity : -20.0f;
+            // Leer gravedad del modifier (Slime Sólido en forma pesada tendrá más gravedad)
+            float gravity = _statsModifier != null ? _statsModifier.Gravity
+                          : (_slimeData != null ? _slimeData.Gravity : -20.0f);
             _verticalVelocity += gravity * Time.deltaTime;
         }
     }
