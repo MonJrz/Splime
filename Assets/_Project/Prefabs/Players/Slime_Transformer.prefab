@@ -19,6 +19,7 @@ GameObject:
   - component: {fileID: 1582647472759613454}
   - component: {fileID: -5446737986640454462}
   - component: {fileID: -6240373175445343251}
+  - component: {fileID: 6285129304420660674}
   m_Layer: 0
   m_Name: Slime_Transformer
   m_TagString: Untagged
@@ -74,7 +75,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -270,3 +271,15 @@ MonoBehaviour:
   _platformScale: {x: 2.2, y: 0.4, z: 2.2}
   _normalHeight: 2
   _platformHeight: 0.8
+--- !u!114 &6285129304420660674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7538095413511950189}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60e49a3a6bee2114eb3ded9fce304a6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.Core.SlimeStatsModifier

@@ -1,5 +1,6 @@
 using Unity.Netcode;
 using UnityEngine;
+using Splime.Core;
 
 namespace Splime.Abilities
 {
@@ -23,6 +24,7 @@ namespace Splime.Abilities
 
         // Componentes
         private CharacterController _characterController;
+        private SlimeStatsModifier _statsModifier;
 
         // Variable de Red Sincronizada
         private readonly NetworkVariable<bool> _isAgileModeActive = new NetworkVariable<bool>(
@@ -36,6 +38,7 @@ namespace Splime.Abilities
         private void Awake()
         {
             _characterController = GetComponent<CharacterController>();
+            _statsModifier = GetComponent<SlimeStatsModifier>();
         }
 
         public override void OnNetworkSpawn()
@@ -79,6 +82,16 @@ namespace Splime.Abilities
             else
             {
                 _isAgileModeActive.Value = active;
+            }
+
+            // Aplicar multiplicadores de stats según el estado
+            // Slime Líquido activo: doble de fuerza de salto
+            // Slime Líquido normal: stats base
+            if (_statsModifier != null)
+            {
+                _statsModifier.JumpMultiplier = active ? 2f : 1f;
+                Debug.Log($"[{nameof(AgileAbility)}] 📊 JumpMultiplier = {_statsModifier.JumpMultiplier} " +
+                          $"(JumpForce efectivo: {_statsModifier.JumpForce})");
             }
         }
 

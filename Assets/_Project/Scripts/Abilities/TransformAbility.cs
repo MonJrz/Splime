@@ -1,5 +1,6 @@
 using Unity.Netcode;
 using UnityEngine;
+using Splime.Core;
 
 namespace Splime.Abilities
 {
@@ -31,6 +32,7 @@ namespace Splime.Abilities
 
         // Components
         private CharacterController _characterController;
+        private SlimeStatsModifier _statsModifier;
 
         // Synchronized Network Variable (0 = Normal, 1 = Platform, etc.)
         private readonly NetworkVariable<int> _currentFormIndex = new NetworkVariable<int>(
@@ -45,6 +47,7 @@ namespace Splime.Abilities
         private void Awake()
         {
             _characterController = GetComponent<CharacterController>();
+            _statsModifier = GetComponent<SlimeStatsModifier>();
         }
 
         public override void OnNetworkSpawn()
@@ -103,6 +106,28 @@ namespace Splime.Abilities
             {
                 // Modo Red NGO (escribir en NetworkVariable)
                 _currentFormIndex.Value = newIndex;
+            }
+
+            // Aplicar multiplicadores de stats según la forma activa
+            // Forma PLATAFORMA (Sólido): casi no puede saltar, más pesado (más gravedad)
+            // Forma NORMAL: stats base
+            if (_statsModifier != null)
+            {
+                if (newForm == SlimeForm.Platform)
+                {
+                    _statsModifier.JumpMultiplier    = 0.1f; // casi sin salto
+                    _statsModifier.GravityMultiplier = 2.0f; // más pesado, cae más rápido
+                    Debug.Log($"[{nameof(TransformAbility)}] 📊 MODO PESADO | " +
+                              $"JumpForce efectivo: {_statsModifier.JumpForce:F2} | " +
+                              $"Gravity efectivo: {_statsModifier.Gravity:F2}");
+                }
+                else
+                {
+                    _statsModifier.ResetMultipliers();
+                    Debug.Log($"[{nameof(TransformAbility)}] 📊 MODO NORMAL | " +
+                              $"JumpForce efectivo: {_statsModifier.JumpForce:F2} | " +
+                              $"Gravity efectivo: {_statsModifier.Gravity:F2}");
+                }
             }
         }
 

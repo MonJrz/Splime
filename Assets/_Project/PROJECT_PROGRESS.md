@@ -1,6 +1,10 @@
-# Splime - Estado del Proyecto y Progreso (Paso 4 Completado)
+# Splime - Estado del Proyecto y Progreso (Fase 2 Completada — Online Multiplayer Activo)
 
-**ID de Conversación de Referencia**: `cd184943-2a76-4d43-90c4-7d01bc673e5c`
+**ID de Conversación Fase 1**: `cd184943-2a76-4d43-90c4-7d01bc673e5c`
+**ID de Conversación Fase 2**: `390494b5-e69d-469e-8373-6369668c606e`
+
+> ⚠️ **RUTA ACTIVA DEL PROYECTO**: `C:\Splime`
+> (Movido desde `C:\Users\Darlin\Desktop\Splime` para evitar conflictos de permisos EPERM con UnityPackageManager en Windows 11)
 
 ---
 
@@ -122,4 +126,55 @@
        Estado Sincronizado
 ```
 
+---
 
+## 🌐 FASE 2 — Online Multiplayer Real por Internet (Unity Relay)
+
+**Completado el**: 2026-08-12
+**Versiones usadas**:
+- Unity: 6000.3.16f1
+- Netcode for GameObjects: 2.13.1
+- Unity Transport: 2.7.3
+- Multiplayer Services SDK: 2.3.0
+
+### Paso 2-F2: Inicialización de Unity Gaming Services + Autenticación Anónima
+- Integrado en `NetworkGameManager.cs` (método `InitializeServicesAsync()`).
+- Llama a `UnityServices.InitializeAsync()` y `AuthenticationService.Instance.SignInAnonymouslyAsync()`.
+- Reutiliza token cacheado si el jugador ya estaba autenticado previamente.
+- Si UGS falla (Project ID no vinculado, sin internet), muestra error descriptivo en consola.
+
+### Paso 3-F2 & 4-F2: Creación de Sesión como Host (Unity Relay)
+- Método `StartHostWithRelayAsync()` en `NetworkGameManager.cs`.
+- Usa `MultiplayerService.Instance.CreateSessionAsync(options)` con `MaxPlayers = 2` y `.WithRelayNetwork()`.
+- Unity Relay asigna automáticamente servidores en la nube según la región óptima (QoS automático).
+- Genera y muestra en pantalla el **JOIN CODE** (6 caracteres) para compartir con el Cliente.
+- NGO se inicia automáticamente como Host vinculado al Relay.
+
+### Paso 5-F2: Conexión de Cliente por Join Code (Unity Relay)
+- Método `JoinSessionWithRelayAsync(string codeToJoin)` en `NetworkGameManager.cs`.
+- UI OnGUI actualizada con campo de texto para ingresar el Join Code.
+- Usa `MultiplayerService.Instance.JoinSessionByCodeAsync(formattedCode)`.
+- El código se normaliza automáticamente a mayúsculas antes de enviarlo.
+
+### Paso 9-F2: Desconexión Limpia (UGS + NGO)
+- Método `DisconnectAsync()` en `NetworkGameManager.cs`.
+- Orden de cierre correcto: `_currentSession.LeaveAsync()` → `NetworkManager.Singleton.Shutdown()` → limpieza de estado local.
+- Corregida la advertencia NGO `"Attempted despawn before NetworkObject was spawned"` añadiendo validación `netObj.IsSpawned` antes del despawn manual en `OnClientDisconnected`.
+
+### ✅ Resultado de Prueba Final
+- **Prueba local (mismo equipo):** ✅ Exitosa.
+- **Prueba real entre dos PCs en redes distintas (Internet):** ✅ **EXITOSA con JOIN CODE `PWNDH8`**.
+- Spawn de Slimes, Ownership, habilidades (Plataforma / Escurrirse) y cámara cooperativa funcionando correctamente en conexión online real.
+
+### Nota de Infraestructura
+- Proyecto movido de `C:\Users\Darlin\Desktop\Splime` a `C:\Splime` para resolver errores `EPERM: operation not permitted` del `UnityPackageManager` causados por políticas de permisos de Windows 11 sobre carpetas de usuario.
+
+---
+
+## 🚀 PRÓXIMOS PASOS SUGERIDOS (Fase 3)
+
+- Diseño e implementación del Nivel 1 completo con puzzles cooperativos.
+- Sistema de diálogos / narrativa del laboratorio.
+- UI de juego definitiva (reemplazar el debug OnGUI).
+- Sistema de victoria/derrota y reinicio de nivel.
+- Sonido y efectos visuales para las habilidades.

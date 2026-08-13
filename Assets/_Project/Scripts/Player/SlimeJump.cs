@@ -23,6 +23,7 @@ namespace Splime.Player
         // Components
         private CharacterController _characterController;
         private SlimeInput _slimeInput;
+        private SlimeStatsModifier _statsModifier;
 
         // Jump & Gravity State
         private float _verticalVelocity;
@@ -38,6 +39,7 @@ namespace Splime.Player
         {
             _characterController = GetComponent<CharacterController>();
             _slimeInput = GetComponent<SlimeInput>();
+            _statsModifier = GetComponent<SlimeStatsModifier>();
         }
 
         private void OnEnable()
@@ -85,8 +87,13 @@ namespace Splime.Player
         {
             bool ccGrounded = _characterController.isGrounded;
 
-            Vector3 rayStart = transform.position + _characterController.center;
-            float rayDistance = (_characterController.height / 2.0f) + 0.15f;
+            // Usar bounds del CharacterController para calcular el origen y distancia del raycast.
+            // Bounds ya tiene en cuenta la escala del transform en world space,
+            // por lo que funciona correctamente cuando el Slime Ágil se encoge (scale 0.5).
+            // Sin esto, el raycast detecta suelo con el doble de distancia real
+            // y cancela la gravedad en caída, produciendo el efecto de "planeo".
+            Vector3 rayStart = _characterController.bounds.center;
+            float rayDistance = _characterController.bounds.extents.y + 0.15f;
             bool rayGrounded = Physics.Raycast(rayStart, Vector3.down, rayDistance);
 
             _isGrounded = ccGrounded || rayGrounded;
@@ -111,7 +118,9 @@ namespace Splime.Player
 
             if (_coyoteTimer > 0f)
             {
-                float jumpForce = _slimeData != null ? _slimeData.JumpForce : 8.0f;
+                // Leer fuerza de salto del modifier (puede ser 2x si Agile está activo, 0.1x si Solid activo)
+                float jumpForce = _statsModifier != null ? _statsModifier.JumpForce
+                                : (_slimeData != null ? _slimeData.JumpForce : 8.0f);
                 _verticalVelocity = jumpForce;
                 _coyoteTimer = 0f;
             }
@@ -119,7 +128,9 @@ namespace Splime.Player
 
         private void ApplyGravity()
         {
-            float gravity = _slimeData != null ? _slimeData.Gravity : -20.0f;
+            // Leer gravedad del modifier (Slime Sólido en forma pesada tendrá más gravedad)
+            float gravity = _statsModifier != null ? _statsModifier.Gravity
+                          : (_slimeData != null ? _slimeData.Gravity : -20.0f);
             _verticalVelocity += gravity * Time.deltaTime;
         }
     }

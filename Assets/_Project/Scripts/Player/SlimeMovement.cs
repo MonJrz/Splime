@@ -24,6 +24,7 @@ namespace Splime.Player
         private CharacterController _characterController;
         private SlimeInput _slimeInput;
         private SlimeJump _slimeJump;
+        private SlimeStatsModifier _statsModifier;
         private Transform _mainCameraTransform;
 
         // Movement State
@@ -39,6 +40,7 @@ namespace Splime.Player
             _characterController = GetComponent<CharacterController>();
             _slimeInput = GetComponent<SlimeInput>();
             _slimeJump = GetComponent<SlimeJump>();
+            _statsModifier = GetComponent<SlimeStatsModifier>();
         }
 
         public override void OnNetworkSpawn()
@@ -100,7 +102,12 @@ namespace Splime.Player
 
         private void ApplyMovement()
         {
-            float targetSpeed = _targetDirection.magnitude * (_slimeData != null ? _slimeData.MoveSpeed : 6.0f);
+            // Leer velocidad de SlimeStatsModifier (tiene los multiplicadores de habilidades aplicados)
+            // Si no existe el modifier, usar SlimeData directamente como fallback
+            float baseMoveSpeed = _statsModifier != null ? _statsModifier.MoveSpeed
+                                : (_slimeData != null ? _slimeData.MoveSpeed : 6.0f);
+
+            float targetSpeed = _targetDirection.magnitude * baseMoveSpeed;
             Vector3 desiredVelocity = _targetDirection * targetSpeed;
 
             float accelRate = (_targetDirection.magnitude > 0.01f) ? _acceleration : _deceleration;
@@ -117,7 +124,8 @@ namespace Splime.Player
         {
             if (_targetDirection.sqrMagnitude > 0.001f)
             {
-                float rotSpeed = _slimeData != null ? _slimeData.RotationSpeed : 12.0f;
+                float rotSpeed = _statsModifier != null ? _statsModifier.RotationSpeed
+                               : (_slimeData != null ? _slimeData.RotationSpeed : 12.0f);
                 Quaternion targetRotation = Quaternion.LookRotation(_targetDirection, Vector3.up);
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotSpeed * Time.deltaTime);
             }
