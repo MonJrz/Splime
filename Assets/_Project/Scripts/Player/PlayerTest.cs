@@ -14,11 +14,6 @@ public class PlayerTest : MonoBehaviour
     [Header("Jump")]
     public float jumpForce = 7f;
 
-    [Header("Ground Check")]
-    // public Transform groundCheck;
-    public float groundCheckRadius = 0.2f;
-    public LayerMask groundLayer;
-
     private Vector2 moveInput;
     private Rigidbody rb;
 
@@ -46,14 +41,6 @@ public class PlayerTest : MonoBehaviour
     {
         moveInput = moveAction.ReadValue<Vector2>();
 
-        // Comprobar si estamos tocando el suelo
-        // isGrounded = Physics.CheckSphere(
-        //     groundCheck.position,
-        //     groundCheckRadius,
-        //     groundLayer
-        // );
-
-        // Guardamos la petición para ejecutarla en FixedUpdate
         if (jumpAction.WasPressedThisFrame() && isGrounded)
         {
             jumpRequested = true;
@@ -86,23 +73,35 @@ public class PlayerTest : MonoBehaviour
 
         rb.MovePosition(newPosition);
 
-        // Salto
         if (jumpRequested)
         {
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
             jumpRequested = false;
+            isGrounded = false;
         }
     }
 
-    // Permite visualizar el Ground Check en la escena
-    // void OnDrawGizmosSelected()
-    // {
-    //     if (groundCheck == null)
-    //         return;
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isGrounded = true;
+        }
+    }
 
-    //     Gizmos.DrawWireSphere(
-    //         groundCheck.position,
-    //         groundCheckRadius
-    //     );
-    // }
+    private void OnCollisionStay(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isGrounded = true;
+        }
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isGrounded = false;
+        }
+    }
 }
