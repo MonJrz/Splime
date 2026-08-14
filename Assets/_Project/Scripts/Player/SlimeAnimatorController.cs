@@ -89,8 +89,9 @@ namespace Splime.Player
         /// Dispara la animación de interacción (Action). Se llama desde el punto donde
         /// efectivamente ocurre la interacción con un objeto del mundo (Paso 4).
         /// </summary>
-        public void TriggerAction()
+public void TriggerAction()
         {
+            Debug.Log($"[{nameof(SlimeAnimatorController)}] TriggerAction llamado en '{gameObject.name}'. animator={(_animator != null ? _animator.name : "NULL")}", this);
             if (_animator == null) return;
             _animator.SetTrigger(ActionParam);
         }
