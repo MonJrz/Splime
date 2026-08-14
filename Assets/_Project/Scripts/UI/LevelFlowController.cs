@@ -47,11 +47,13 @@ namespace Splime.UI
             }
 
             _levelUIController.RestartRequested += HandleRestartRequested;
+            _levelUIController.PauseRequested += HandlePauseRequested;
             _levelUIController.LeaveSessionRequested += HandleLeaveRequested;
             _levelUIController.NextLevelRequested += HandleNextLevelRequested;
             _levelUIController.LevelSelectionRequested += HandleLevelSelectionRequested;
             _levelUIController.InputBlockChanged += HandleInputBlockChanged;
             SlimeInput.LocalInputReady += HandleLocalInputReady;
+            SlimeInput.PauseReceived += HandlePauseReceived;
 
             BindNetworkEvents();
             FindLocalInput();
@@ -64,6 +66,7 @@ namespace Splime.UI
             if (_levelUIController != null)
             {
                 _levelUIController.RestartRequested -= HandleRestartRequested;
+                _levelUIController.PauseRequested -= HandlePauseRequested;
                 _levelUIController.LeaveSessionRequested -= HandleLeaveRequested;
                 _levelUIController.NextLevelRequested -= HandleNextLevelRequested;
                 _levelUIController.LevelSelectionRequested -= HandleLevelSelectionRequested;
@@ -71,6 +74,7 @@ namespace Splime.UI
             }
 
             SlimeInput.LocalInputReady -= HandleLocalInputReady;
+            SlimeInput.PauseReceived -= HandlePauseReceived;
             UnbindNetworkEvents();
 
             if (_localInput != null)
@@ -82,6 +86,21 @@ namespace Splime.UI
         private void HandleRestartRequested()
         {
             RequestLevelLoad(SceneManager.GetActiveScene().name);
+        }
+
+        private void HandlePauseRequested()
+        {
+            if (_localInput == null)
+            {
+                FindLocalInput();
+            }
+
+            _localInput?.RequestPauseForAllPlayers();
+        }
+
+        private void HandlePauseReceived()
+        {
+            _levelUIController.ShowPause();
         }
 
         private void HandleNextLevelRequested()
@@ -190,7 +209,7 @@ namespace Splime.UI
             }
         }
 
-        private void HandleClientDisconnected(ulong clientId)
+        private async void HandleClientDisconnected(ulong clientId)
         {
             if (_isChangingScene || _networkManager == null || _networkManager.IsServer)
             {
@@ -198,6 +217,11 @@ namespace Splime.UI
             }
 
             _isChangingScene = true;
+
+            if (NetworkGameManager.Instance != null)
+            {
+                await NetworkGameManager.Instance.DisconnectAsync();
+            }
 
             if (Application.CanStreamedLevelBeLoaded(_leaveDestinationSceneName))
             {

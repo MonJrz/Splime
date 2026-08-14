@@ -22,6 +22,12 @@ namespace Splime.UI
         [SerializeField] private GameObject _guestWaitingRoomPanel;
         [SerializeField] private GameObject _sharedLobbyPanel;
 
+        [Header("Connection Feedback")]
+        [SerializeField] private GameObject _connectionOverlayPanel;
+        [SerializeField] private TMP_Text _connectionStatusText;
+        [SerializeField] private GameObject _errorPanel;
+        [SerializeField] private TMP_Text _errorText;
+
         [Header("Lobby Buttons")]
         [SerializeField] private Button _hostGameButton;
         [SerializeField] private Button _joinGameButton;
@@ -116,6 +122,7 @@ namespace Splime.UI
 
             ClearJoinCode();
             ClearFeedback();
+            HideWarning();
             ShowView(LobbyView.GuestWaitingRoom);
         }
 
@@ -128,6 +135,7 @@ namespace Splime.UI
 
             ClearJoinCode();
             ClearFeedback();
+            HideWarning();
             ShowView(LobbyView.Lobby);
         }
 
@@ -148,6 +156,8 @@ namespace Splime.UI
                 return;
             }
 
+            HideWarning();
+            ShowConnectionProgress("Creating room...");
             SetBusy(true, "Creating room...");
             HostRequested?.Invoke();
         }
@@ -159,6 +169,8 @@ namespace Splime.UI
                 return;
             }
 
+            HideWarning();
+            ShowConnectionProgress("Joining room...");
             SetBusy(true, "Joining room...");
             JoinRequested?.Invoke(_normalizedJoinCode);
         }
@@ -217,6 +229,7 @@ namespace Splime.UI
             }
 
             SetBusy(false);
+            HideConnectionProgress();
             ShowView(LobbyView.HostWaitingRoom);
         }
 
@@ -238,6 +251,7 @@ namespace Splime.UI
             _readyRequestPending = false;
             SetBusy(false);
             ClearFeedback();
+            HideConnectionProgress();
             ShowView(LobbyView.SharedLobby);
         }
 
@@ -270,7 +284,43 @@ namespace Splime.UI
         public void ShowError(string message)
         {
             _readyRequestPending = false;
-            SetBusy(false, message);
+            SetBusy(false);
+            HideConnectionProgress();
+            ShowWarning(message);
+        }
+
+        public void ShowConnectionProgress(string message)
+        {
+            if (_connectionStatusText != null)
+            {
+                _connectionStatusText.text = message ?? string.Empty;
+            }
+
+            SetPanelActive(_connectionOverlayPanel, true);
+        }
+
+        public void ShowGuestWaitingRoomWithWarning(string message)
+        {
+            ResetSessionState();
+            ShowView(LobbyView.GuestWaitingRoom);
+            ShowWarning(message);
+        }
+
+        public void ShowLobbyWithWarning(string message)
+        {
+            ResetLobbyState();
+            ShowWarning(message);
+        }
+
+        public void ShowHostWaitingRoomWithWarning(string roomCode, string message)
+        {
+            ShowHostWaitingRoom(roomCode);
+            ShowWarning(message);
+        }
+
+        public void HandleDismissErrorButtonPressed()
+        {
+            HideWarning();
         }
 
         public void NotifySessionLeft()
@@ -392,6 +442,17 @@ namespace Splime.UI
 
         private void ResetLobbyState()
         {
+            ResetSessionState();
+
+            ClearJoinCode();
+            ClearFeedback();
+            HideWarning();
+            ShowView(LobbyView.Lobby);
+            RefreshControls();
+        }
+
+        private void ResetSessionState()
+        {
             _hasActiveSession = false;
             _isBusy = false;
             _isLocalHost = false;
@@ -400,10 +461,7 @@ namespace Splime.UI
             _guestReady = false;
             _readyRequestPending = false;
             _connectedPlayerCount = 0;
-
-            ClearJoinCode();
-            ClearFeedback();
-            ShowView(LobbyView.Lobby);
+            HideConnectionProgress();
             RefreshControls();
         }
 
@@ -425,6 +483,30 @@ namespace Splime.UI
             {
                 _feedbackText.text = string.Empty;
             }
+        }
+
+        private void HideConnectionProgress()
+        {
+            SetPanelActive(_connectionOverlayPanel, false);
+        }
+
+        private void ShowWarning(string message)
+        {
+            if (_errorText != null)
+            {
+                _errorText.text = message ?? string.Empty;
+            }
+            else if (_feedbackText != null)
+            {
+                _feedbackText.text = message ?? string.Empty;
+            }
+
+            SetPanelActive(_errorPanel, true);
+        }
+
+        private void HideWarning()
+        {
+            SetPanelActive(_errorPanel, false);
         }
 
         private void ShowView(LobbyView view)

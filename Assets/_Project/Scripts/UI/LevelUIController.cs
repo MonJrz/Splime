@@ -43,6 +43,7 @@ namespace Splime.UI
         private CursorLockMode _initialCursorLockMode;
 
         public event Action RestartRequested;
+        public event Action PauseRequested;
         public event Action LeaveSessionRequested;
         public event Action NextLevelRequested;
         public event Action LevelSelectionRequested;
@@ -106,6 +107,7 @@ namespace Splime.UI
             if (_currentView == LevelUIView.Gameplay)
             {
                 SetView(LevelUIView.Paused);
+                PauseRequested?.Invoke();
             }
         }
 
@@ -194,6 +196,11 @@ namespace Splime.UI
         public void ShowGameplay()
         {
             SetView(LevelUIView.Gameplay);
+        }
+
+        public void ShowPause()
+        {
+            SetView(LevelUIView.Paused);
         }
 
         public void ShowLevelComplete()
