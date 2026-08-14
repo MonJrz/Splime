@@ -165,8 +165,10 @@ namespace Splime.UI
 
         public void HandleHostReadyButtonPressed()
         {
+            Debug.Log($"[LobbyUIController] 🖱️ HandleHostReadyButtonPressed clickeado. LocalRoleAssigned: {_localRoleAssigned}, IsLocalHost: {_isLocalHost}, HostReady: {_hostReady}");
             if (!_localRoleAssigned || !_isLocalHost)
             {
+                Debug.LogWarning("[LobbyUIController] ⚠️ Ignorando HostReady: no es host local o rol no asignado.");
                 return;
             }
 
@@ -175,8 +177,10 @@ namespace Splime.UI
 
         public void HandleGuestReadyButtonPressed()
         {
+            Debug.Log($"[LobbyUIController] 🖱️ HandleGuestReadyButtonPressed clickeado. LocalRoleAssigned: {_localRoleAssigned}, IsLocalHost: {_isLocalHost}, GuestReady: {_guestReady}");
             if (!_localRoleAssigned || _isLocalHost)
             {
+                Debug.LogWarning("[LobbyUIController] ⚠️ Ignorando GuestReady: es host local o rol no asignado.");
                 return;
             }
 
@@ -185,6 +189,7 @@ namespace Splime.UI
 
         public void HandleStartButtonPressed()
         {
+            Debug.Log($"[LobbyUIController] 🎮 HandleStartButtonPressed clickeado. CanStartGame: {CanStartGame}");
             if (!CanStartGame)
             {
                 return;
@@ -280,8 +285,10 @@ namespace Splime.UI
 
         private void RequestReadyChange(bool requestedReadyState)
         {
+            Debug.Log($"[LobbyUIController] 📡 RequestReadyChange a: {requestedReadyState}. HasSession: {_hasActiveSession}, IsBusy: {_isBusy}, Pending: {_readyRequestPending}, PlayerCount: {_connectedPlayerCount}");
             if (!_hasActiveSession || _isBusy || _readyRequestPending || _connectedPlayerCount < 2)
             {
+                Debug.LogWarning($"[LobbyUIController] ⚠️ RequestReadyChange bloqueado. PlayerCount < 2 o pendiente.");
                 return;
             }
 
