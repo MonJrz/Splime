@@ -5,6 +5,7 @@ using Splime.Core;
 using Splime.Player;
 using Splime.UI;
 using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Multiplayer;
@@ -96,6 +97,7 @@ namespace Splime.Network
         {
             if (NetworkManager.Singleton != null)
             {
+                EnsureTransportOptimized();
                 NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
                 NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
             }
@@ -126,6 +128,8 @@ namespace Splime.Network
 
         private void OnClientConnected(ulong clientId)
         {
+            Debug.Log($"[{nameof(NetworkGameManager)}] 🟢 OnClientConnected disparado. ClientId: {clientId}, IsServer: {NetworkManager.Singleton?.IsServer}, IsLevelScene: {IsLevelSceneActive()}");
+
             if (NetworkManager.Singleton != null &&
                 NetworkManager.Singleton.IsServer &&
                 IsLevelSceneActive())
@@ -199,6 +203,7 @@ namespace Splime.Network
                 return;
             }
 
+            Debug.Log($"[{nameof(NetworkGameManager)}] 🚀 Intentando SpawnPlayerForClient para ClientId: {clientId}, Prefab: {prefabToSpawn.name}, Pos: {spawnPos}");
             GameObject playerInstance = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
             NetworkObject netObj = playerInstance.GetComponent<NetworkObject>();
 
@@ -318,10 +323,16 @@ namespace Splime.Network
 
                 Debug.Log($"[{nameof(NetworkGameManager)}] 🌐 Creando Sesión de Relay (MaxPlayers = 2)...");
 
+                EnsureTransportOptimized();
+
+                // Forzar protocolo WSS para compatibilidad WebGL ↔ Windows.
+                // WSS es el único protocolo soportado por navegadores (WebGL).
+                // Usar el mismo protocolo en Desktop garantiza la conexión cruzada.
                 var options = new SessionOptions
                 {
                     MaxPlayers = 2
-                }.WithRelayNetwork();
+                }.WithRelayNetwork()
+                 .WithNetworkOptions(new NetworkOptions { RelayProtocol = RelayProtocol.WSS });
 
                 ISession session = await MultiplayerService.Instance.CreateSessionAsync(options);
 
@@ -341,7 +352,7 @@ namespace Splime.Network
             }
             catch (SessionException e)
             {
-                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error al crear la sesión: {e.Message}");
+                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error al crear la sesión: {e}", this);
                 await HandleConnectionAttemptFailedAsync(
                     operationVersion,
                     SessionRole.Host,
@@ -349,7 +360,7 @@ namespace Splime.Network
             }
             catch (Exception e)
             {
-                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error inesperado al iniciar Host: {e.Message}");
+                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error inesperado al iniciar Host: {e}", this);
                 await HandleConnectionAttemptFailedAsync(
                     operationVersion,
                     SessionRole.Host,
@@ -401,7 +412,14 @@ namespace Splime.Network
                 string formattedCode = codeToJoin.Trim().ToUpper();
                 Debug.Log($"[{nameof(NetworkGameManager)}] 🌐 Conectándose a la sesión con Join Code: {formattedCode}...");
 
-                ISession session = await MultiplayerService.Instance.JoinSessionByCodeAsync(formattedCode);
+                EnsureTransportOptimized();
+
+                // Forzar protocolo WSS al unirse: necesario para que el cliente Desktop
+                // se comunique correctamente con un Host WebGL (que solo soporta WSS).
+                var joinOptions = new JoinSessionOptions()
+                    .WithNetworkOptions(new NetworkOptions { RelayProtocol = RelayProtocol.WSS });
+
+                ISession session = await MultiplayerService.Instance.JoinSessionByCodeAsync(formattedCode, joinOptions);
 
                 if (operationVersion != _sessionOperationVersion)
                 {
@@ -417,7 +435,7 @@ namespace Splime.Network
             }
             catch (SessionException e)
             {
-                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error al unirse a la sesión: {e.Message}");
+                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error al unirse a la sesión: {e}", this);
                 await HandleConnectionAttemptFailedAsync(
                     operationVersion,
                     SessionRole.Guest,
@@ -425,7 +443,7 @@ namespace Splime.Network
             }
             catch (Exception e)
             {
-                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error inesperado al unirse como Cliente: {e.Message}");
+                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error inesperado al unirse como Cliente: {e}", this);
                 await HandleConnectionAttemptFailedAsync(
                     operationVersion,
                     SessionRole.Guest,
@@ -696,9 +714,12 @@ namespace Splime.Network
 
             if (session == null)
             {
+                Debug.LogWarning($"[{nameof(NetworkGameManager)}] ⚠️ HandleReadyChangeRequested: No hay sesión activa.");
                 ShowLobbyError("No hay una sala activa.");
                 return;
             }
+
+            Debug.Log($"[{nameof(NetworkGameManager)}] 🔄 Solicitando cambio de Ready a: {isReady} por jugador ID: {session.CurrentPlayer?.Id} (IsHost: {session.IsHost})");
 
             session.CurrentPlayer.Properties.TryGetValue(ReadyPropertyKey, out PlayerProperty previousValue);
             session.CurrentPlayer.SetProperty(
@@ -708,12 +729,13 @@ namespace Splime.Network
             try
             {
                 await session.SaveCurrentPlayerDataAsync();
+                Debug.Log($"[{nameof(NetworkGameManager)}] ✅ Ready guardado exitosamente en UGS. Refrescando UI...");
                 RefreshLobbyUI();
             }
             catch (Exception e)
             {
                 session.CurrentPlayer.SetProperty(ReadyPropertyKey, previousValue);
-                Debug.LogError($"[{nameof(NetworkGameManager)}] No se pudo actualizar Ready: {e.Message}", this);
+                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ No se pudo actualizar Ready: {e.Message}", this);
                 ShowLobbyError("No se pudo actualizar tu estado.");
             }
         }
@@ -793,6 +815,7 @@ namespace Splime.Network
 
         private void OnSessionChanged()
         {
+            Debug.Log($"[{nameof(NetworkGameManager)}] 🔄 OnSessionChanged recibido de UGS.");
             RefreshLobbyUI();
         }
 
@@ -815,6 +838,7 @@ namespace Splime.Network
 
         private void OnSessionPlayerJoined(string playerId)
         {
+            Debug.Log($"[{nameof(NetworkGameManager)}] 👤 OnSessionPlayerJoined recibido para PlayerId: {playerId}. PlayerCount: {_currentSession?.PlayerCount}");
             RefreshLobbyUI();
         }
 
@@ -921,6 +945,11 @@ namespace Splime.Network
             }
 
             GetReadyStates(out bool hostReady, out bool guestReady);
+            Debug.Log(
+                $"[{nameof(NetworkGameManager)}] 📊 RefreshLobbyUI | " +
+                $"PlayerCount: {playerCount} | NetworkReady: {networkReady} | " +
+                $"HostReady: {hostReady} | GuestReady: {guestReady} | " +
+                $"Role: {_sessionRole}");
             _lobbyUIController.SetConnectedPlayerCount(networkReady ? playerCount : 0);
             _lobbyUIController.SetReadyStates(hostReady, guestReady);
         }
@@ -975,6 +1004,9 @@ namespace Splime.Network
                     player.Properties.TryGetValue(ReadyPropertyKey, out PlayerProperty property) &&
                     property.Value == ReadyValue;
 
+                string propVal = property?.Value ?? "(null)";
+                Debug.Log($"[{nameof(NetworkGameManager)}] 🔍 Player in Session: Id={player.Id} | IsHost={player.Id == _currentSession.Host} | ReadyKey={propVal} | IsReady={isReady}");
+
                 if (player.Id == _currentSession.Host)
                 {
                     hostReady = isReady;
@@ -1010,6 +1042,8 @@ namespace Splime.Network
             List<ulong> clientsCompleted,
             List<ulong> clientsTimedOut)
         {
+            Debug.Log($"[{nameof(NetworkGameManager)}] 🎬 OnNetworkSceneLoadCompleted para escena: '{sceneName}'. IsServer: {NetworkManager.Singleton?.IsServer}, IsLevel: {IsLevelSceneActive()}");
+
             if (NetworkManager.Singleton == null ||
                 !NetworkManager.Singleton.IsServer ||
                 !IsLevelSceneActive())
@@ -1019,6 +1053,7 @@ namespace Splime.Network
 
             foreach (ulong clientId in NetworkManager.Singleton.ConnectedClientsIds)
             {
+                Debug.Log($"[{nameof(NetworkGameManager)}] 👥 Spawneando jugador para ClientId: {clientId}");
                 SpawnPlayerForClient(clientId);
             }
         }
@@ -1077,6 +1112,48 @@ namespace Splime.Network
         private void ShowLobbyError(string message)
         {
             _lobbyUIController?.ShowError(message);
+        }
+
+        /// <summary>
+        /// Garantiza que el UnityTransport del NetworkManager esté optimizado para WebSockets y WebGL.
+        /// Aumenta MaxPacketQueueSize y ajusta Timeouts para evitar que la cola se sature (cola llena)
+        /// y se pierda la conexión con Relay en el navegador.
+        /// </summary>
+        private static void EnsureTransportOptimized()
+        {
+            if (NetworkManager.Singleton == null)
+            {
+                return;
+            }
+
+            UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+            if (transport == null)
+            {
+                return;
+            }
+
+            if (!transport.UseWebSockets)
+            {
+                transport.UseWebSockets = true;
+                Debug.Log("[NetworkGameManager] 🔌 UseWebSockets activado en UnityTransport.");
+            }
+
+            // Aumentar la cola de paquetes de 128 a 512 para evitar 'Receive queue is full' en WebGL
+            if (transport.MaxPacketQueueSize < 512)
+            {
+                transport.MaxPacketQueueSize = 512;
+            }
+
+            // Aumentar los timeouts para que la conexión a través de Relay/WSS no se caiga por latencia
+            if (transport.HeartbeatTimeoutMS < 1000)
+            {
+                transport.HeartbeatTimeoutMS = 1000;
+            }
+
+            if (transport.DisconnectTimeoutMS < 30000)
+            {
+                transport.DisconnectTimeoutMS = 30000;
+            }
         }
     }
 }

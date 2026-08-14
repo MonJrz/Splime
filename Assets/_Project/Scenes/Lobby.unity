@@ -1902,8 +1902,8 @@ MonoBehaviour:
   _slimeAgilePrefab: {fileID: 7538095413511950189, guid: 163907bdb5f425f47b42e8ab16bf2952, type: 3}
   _transformerData: {fileID: 11400000, guid: 4b0903865f5d12d40a361e21b4c1c523, type: 2}
   _agileData: {fileID: 11400000, guid: fbc69a99f0cbe654e821fe0c4a4e6627, type: 2}
-  _player1SpawnPosition: {x: -2, y: 1, z: 0}
-  _player2SpawnPosition: {x: 2, y: 1, z: 0}
+  _player1SpawnPosition: {x: 6, y: 6, z: -4.5}
+  _player2SpawnPosition: {x: 10, y: 6, z: -4.5}
   _lobbyUIController: {fileID: 884226669}
   _mainMenuSceneName: Main
   _gameplaySceneName: Level1
