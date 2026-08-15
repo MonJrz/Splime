@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using TMPro;
+using UnityEngine.UI;
 using UnityEngine;
 
 namespace Splime.UI
@@ -32,6 +33,7 @@ namespace Splime.UI
         [Header("Connection Feedback")]
         [SerializeField] private GameObject _connectionLostPanel;
         [SerializeField] private TMP_Text _connectionLostText;
+        [SerializeField] private Button _connectionLostReturnButton;
 
         [Header("Reusable Views")]
         [SerializeField] private PagedContentUIController _dialogueController;
@@ -52,6 +54,7 @@ namespace Splime.UI
         public event Action PauseRequested;
         public event Action ResumeRequested;
         public event Action LeaveSessionRequested;
+        public event Action ConnectionLostAcknowledged;
         public event Action NextLevelRequested;
         public event Action LevelSelectionRequested;
         public event Action<LevelUIView> ViewChanged;
@@ -73,6 +76,16 @@ namespace Splime.UI
             if (_dialogueController != null)
             {
                 _dialogueController.Completed += HandleDialogueCompleted;
+            }
+
+            if (_connectionLostReturnButton == null && _connectionLostPanel != null)
+            {
+                _connectionLostReturnButton = _connectionLostPanel.GetComponentInChildren<Button>(true);
+            }
+
+            if (_connectionLostReturnButton != null)
+            {
+                _connectionLostReturnButton.onClick.AddListener(HandleConnectionLostReturnButtonPressed);
             }
 
             if (_tutorialController != null)
@@ -97,6 +110,11 @@ namespace Splime.UI
             {
                 StopCoroutine(_checkpointRoutine);
                 _checkpointRoutine = null;
+            }
+
+            if (_connectionLostReturnButton != null)
+            {
+                _connectionLostReturnButton.onClick.RemoveListener(HandleConnectionLostReturnButtonPressed);
             }
         }
 
@@ -176,6 +194,11 @@ namespace Splime.UI
         public void HandleRestartButtonPressed()
         {
             RestartRequested?.Invoke();
+        }
+
+        public void HandleConnectionLostReturnButtonPressed()
+        {
+            ConnectionLostAcknowledged?.Invoke();
         }
 
         public void HandleReplayButtonPressed()

@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using System.Collections;
 using Splime.Network;
 using Splime.Player;
 using Unity.Netcode;
@@ -29,6 +30,7 @@ namespace Splime.UI
         private SlimeInput _localInput;
         private NetworkManager _networkManager;
         private bool _isChangingScene;
+        private Coroutine _connectionFailureCoroutine;
 
         public bool IsChangingScene => _isChangingScene;
         public bool CanControlLevel =>
@@ -57,6 +59,7 @@ namespace Splime.UI
             _levelUIController.PauseRequested += HandlePauseRequested;
             _levelUIController.ResumeRequested += HandleResumeRequested;
             _levelUIController.LeaveSessionRequested += HandleLeaveRequested;
+            _levelUIController.ConnectionLostAcknowledged += HandleConnectionLostAcknowledged;
             _levelUIController.NextLevelRequested += HandleNextLevelRequested;
             _levelUIController.LevelSelectionRequested += HandleLevelSelectionRequested;
             _levelUIController.InputBlockChanged += HandleInputBlockChanged;
@@ -77,6 +80,7 @@ namespace Splime.UI
                 _levelUIController.PauseRequested -= HandlePauseRequested;
                 _levelUIController.ResumeRequested -= HandleResumeRequested;
                 _levelUIController.LeaveSessionRequested -= HandleLeaveRequested;
+                _levelUIController.ConnectionLostAcknowledged -= HandleConnectionLostAcknowledged;
                 _levelUIController.NextLevelRequested -= HandleNextLevelRequested;
                 _levelUIController.LevelSelectionRequested -= HandleLevelSelectionRequested;
                 _levelUIController.InputBlockChanged -= HandleInputBlockChanged;
@@ -261,11 +265,71 @@ namespace Splime.UI
                 return;
             }
 
-            _ = HandleConnectionFailureAsync();
+            if (_connectionFailureCoroutine != null)
+            {
+                return;
+            }
+
+            _connectionFailureCoroutine = StartCoroutine(HandleConnectionFailureCoroutine());
+        }
+        
+        private IEnumerator HandleConnectionFailureCoroutine()
+        {
+            string destinationSceneName = string.IsNullOrWhiteSpace(_connectionFailureDestinationSceneName)
+                ? "Lobby"
+                : _connectionFailureDestinationSceneName;
+
+            if (!Application.CanStreamedLevelBeLoaded(destinationSceneName))
+            {
+                Debug.LogError(
+                    $"[{nameof(LevelFlowController)}] Scene '{destinationSceneName}' is not in Build Settings.",
+                    this);
+                _connectionFailureCoroutine = null;
+                yield break;
+            }
+
+            _isChangingScene = true;
+            _levelUIController.ShowConnectionLost(_connectionFailureMessage);
+
+            float delay = Mathf.Max(0f, _connectionFailureRedirectDelay);
+            if (delay > 0f)
+            {
+                yield return new WaitForSecondsRealtime(delay);
+            }
+
+            if (this == null)
+            {
+                _connectionFailureCoroutine = null;
+                yield break;
+            }
+
+            if (NetworkGameManager.Instance != null)
+            {
+                var task = NetworkGameManager.Instance.DisconnectAsync();
+                yield return new WaitUntil(() => task.IsCompleted);
+            }
+            else if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+            {
+                NetworkManager.Singleton.Shutdown();
+            }
+
+            SceneManager.LoadScene(destinationSceneName);
+            _connectionFailureCoroutine = null;
         }
 
-        private async Task HandleConnectionFailureAsync()
+        private void HandleConnectionLostAcknowledged()
         {
+            if (_isChangingScene)
+            {
+                return;
+            }
+
+            if (_connectionFailureCoroutine != null)
+            {
+                StopCoroutine(_connectionFailureCoroutine);
+                _connectionFailureCoroutine = null;
+            }
+
             string destinationSceneName = string.IsNullOrWhiteSpace(_connectionFailureDestinationSceneName)
                 ? "Lobby"
                 : _connectionFailureDestinationSceneName;
@@ -280,23 +344,15 @@ namespace Splime.UI
 
             _isChangingScene = true;
             _levelUIController.ShowConnectionLost(_connectionFailureMessage);
+            _connectionFailureCoroutine = StartCoroutine(DisconnectAndLoadSceneCoroutine(destinationSceneName));
+        }
 
-            int redirectDelayMilliseconds = Mathf.RoundToInt(
-                Mathf.Max(0f, _connectionFailureRedirectDelay) * 1000f);
-
-            if (redirectDelayMilliseconds > 0)
-            {
-                await Task.Delay(redirectDelayMilliseconds);
-            }
-
-            if (this == null)
-            {
-                return;
-            }
-
+        private IEnumerator DisconnectAndLoadSceneCoroutine(string destinationSceneName)
+        {
             if (NetworkGameManager.Instance != null)
             {
-                await NetworkGameManager.Instance.DisconnectAsync();
+                var task = NetworkGameManager.Instance.DisconnectAsync();
+                yield return new WaitUntil(() => task.IsCompleted);
             }
             else if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
             {
@@ -304,6 +360,7 @@ namespace Splime.UI
             }
 
             SceneManager.LoadScene(destinationSceneName);
+            _connectionFailureCoroutine = null;
         }
 
         private void HandleInputBlockChanged(bool isBlocked)
