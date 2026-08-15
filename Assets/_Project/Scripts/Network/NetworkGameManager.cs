@@ -144,8 +144,25 @@ namespace Splime.Network
             }
 
             GameObject prefabToSpawn = (clientId == 0) ? _slimeTransformerPrefab : _slimeAgilePrefab;
-            Vector3 spawnPos = (clientId == 0) ? _player1SpawnPosition : _player2SpawnPosition;
             SlimeData dataToAssign = (clientId == 0) ? _transformerData : _agileData;
+            SpawnPlayerRole targetRole = (clientId == 0) ? SpawnPlayerRole.Player1 : SpawnPlayerRole.Player2;
+
+            // 1. Obtener la posición y rotación desde UniversalSpawnPoint en la escena actual (si existen)
+            Vector3 spawnPos = (clientId == 0) ? _player1SpawnPosition : _player2SpawnPosition;
+            Quaternion spawnRot = Quaternion.identity;
+
+            UniversalSpawnPoint spawnPoint = UniversalSpawnPoint.GetPlayerSpawn(targetRole);
+
+            if (spawnPoint != null)
+            {
+                spawnPos = spawnPoint.Position;
+                spawnRot = spawnPoint.Rotation;
+                Debug.Log($"[{nameof(NetworkGameManager)}] 📍 Usando UniversalSpawnPoint de la escena para {targetRole}: {spawnPos}, Rot: {spawnRot.eulerAngles}");
+            }
+            else
+            {
+                Debug.Log($"[{nameof(NetworkGameManager)}] ℹ️ No se encontró UniversalSpawnPoint para {targetRole}, usando posición por defecto: {spawnPos}");
+            }
 
             if (prefabToSpawn == null)
             {
@@ -154,7 +171,7 @@ namespace Splime.Network
             }
 
             Debug.Log($"[{nameof(NetworkGameManager)}] 🚀 Intentando SpawnPlayerForClient para ClientId: {clientId}, Prefab: {prefabToSpawn.name}, Pos: {spawnPos}");
-            GameObject playerInstance = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
+            GameObject playerInstance = Instantiate(prefabToSpawn, spawnPos, spawnRot);
             NetworkObject netObj = playerInstance.GetComponent<NetworkObject>();
 
             if (netObj != null)
@@ -341,6 +358,13 @@ namespace Splime.Network
                     .WithNetworkOptions(new NetworkOptions { RelayProtocol = RelayProtocol.WSS });
 
                 ISession session = await MultiplayerService.Instance.JoinSessionByCodeAsync(formattedCode, joinOptions);
+                if (session == null)
+                {
+                    Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ JoinSessionByCodeAsync retornó null para el código: {formattedCode}");
+                    ShowLobbyError("No se pudo conectar a la sala (sesión nula).");
+                    return;
+                }
+
                 SetCurrentSession(session);
 
                 Debug.Log($"[{nameof(NetworkGameManager)}] 🎉 ¡CONEXIÓN COMO CLIENTE EXITOSA!");
@@ -651,18 +675,27 @@ namespace Splime.Network
             hostReady = false;
             guestReady = false;
 
-            if (_currentSession == null)
+            if (_currentSession == null || _currentSession.Players == null)
             {
                 return;
             }
 
             foreach (IReadOnlyPlayer player in _currentSession.Players)
             {
-                bool isReady =
-                    player.Properties.TryGetValue(ReadyPropertyKey, out PlayerProperty property) &&
-                    property.Value == ReadyValue;
+                if (player == null)
+                {
+                    continue;
+                }
 
-                string propVal = property?.Value ?? "(null)";
+                bool isReady = false;
+                string propVal = "(null)";
+
+                if (player.Properties != null && player.Properties.TryGetValue(ReadyPropertyKey, out PlayerProperty property))
+                {
+                    propVal = property?.Value ?? "(null)";
+                    isReady = propVal == ReadyValue;
+                }
+
                 Debug.Log($"[{nameof(NetworkGameManager)}] 🔍 Player in Session: Id={player.Id} | IsHost={player.Id == _currentSession.Host} | ReadyKey={propVal} | IsReady={isReady}");
 
                 if (player.Id == _currentSession.Host)
