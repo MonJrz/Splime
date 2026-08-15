@@ -14,7 +14,7 @@ namespace Splime.Player
     public class SlimeInput : NetworkBehaviour
     {
         public static event Action<SlimeInput> LocalInputReady;
-        public static event Action PauseReceived;
+        public static event Action<bool> PauseStateReceived;
 
         [Header("Input Action Asset Reference")]
         [SerializeField] private InputActionAsset _inputActionAsset;
@@ -153,27 +153,27 @@ namespace Splime.Player
             ApplyInputMapState();
         }
 
-        public void RequestPauseForAllPlayers()
+        public void RequestPauseStateForAllPlayers(bool isPaused)
         {
             if (!IsSpawned)
             {
-                PauseReceived?.Invoke();
+                PauseStateReceived?.Invoke(isPaused);
                 return;
             }
 
-            RequestPauseRpc();
+            RequestPauseStateRpc(isPaused);
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        private void RequestPauseRpc()
+        private void RequestPauseStateRpc(bool isPaused)
         {
-            ShowPauseRpc();
+            BroadcastPauseStateRpc(isPaused);
         }
 
         [Rpc(SendTo.ClientsAndHost)]
-        private void ShowPauseRpc()
+        private void BroadcastPauseStateRpc(bool isPaused)
         {
-            PauseReceived?.Invoke();
+            PauseStateReceived?.Invoke(isPaused);
         }
 
         private void ApplyInputMapState()

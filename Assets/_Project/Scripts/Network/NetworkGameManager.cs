@@ -469,6 +469,16 @@ namespace Splime.Network
                 return;
             }
 
+            NetworkManager networkManager = NetworkManager.Singleton;
+            bool networkIsListening = networkManager != null && networkManager.IsListening;
+
+            if (_currentSession == null &&
+                _sessionRole == SessionRole.None &&
+                !networkIsListening)
+            {
+                return;
+            }
+
             _cleanupTask = DisconnectInternalAsync();
 
             try
@@ -577,7 +587,10 @@ namespace Splime.Network
 
         private static async Task CloseSessionSafelyAsync(ISession session)
         {
-            if (session == null)
+            if (session == null ||
+                session.State == SessionState.None ||
+                session.State == SessionState.Disconnected ||
+                session.State == SessionState.Deleted)
             {
                 return;
             }
