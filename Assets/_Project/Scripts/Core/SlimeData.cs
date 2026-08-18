@@ -19,6 +19,10 @@ namespace Splime.Core
         [SerializeField] private float _groundCheckDistance = 0.2f;
         [SerializeField] private LayerMask _groundLayer = 1; // Default layer
 
+        [Header("Physical Settings")]
+        [SerializeField] private float _baseWeight = 1f;
+        [SerializeField] private float _baseStrength = 0f;
+
         // Properties
         public string SlimeName => _slimeName;
         public Color SlimeColor => _slimeColor;
@@ -28,5 +32,7 @@ namespace Splime.Core
         public float Gravity => _gravity;
         public float GroundCheckDistance => _groundCheckDistance;
         public LayerMask GroundLayer => _groundLayer;
+        public float BaseWeight => _baseWeight;
+        public float BaseStrength => _baseStrength;
     }
 }

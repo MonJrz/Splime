@@ -117,7 +117,14 @@ namespace Splime.Player
             float verticalVel = _slimeJump != null ? _slimeJump.VerticalVelocity : 0f;
 
             Vector3 totalVelocity = _currentVelocity + new Vector3(0f, verticalVel, 0f);
-            _characterController.Move(totalVelocity * Time.deltaTime);
+
+            CollisionFlags collisionFlags =
+                _characterController.Move(totalVelocity * Time.deltaTime);
+
+            if (_slimeJump != null)
+            {
+                _slimeJump.HandleCollisionFlags(collisionFlags);
+            }
         }
 
         private void ApplyRotation()
