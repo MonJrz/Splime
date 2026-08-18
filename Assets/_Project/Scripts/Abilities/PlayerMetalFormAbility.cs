@@ -15,11 +15,12 @@ namespace Splime.Abilities
         [SerializeField] private float _normalMoveSpeed = 6f;
         [SerializeField] private float _metalMoveSpeed = 3f;
 
-        [Header("Push Settings")]
-        [SerializeField] private float _pushStrength = 10f;
-
-        [Header("Jump Settings")]
-        [SerializeField] private float _metalJumpForce = 0f;
+        [Header("Metal Form Stats")]
+        [SerializeField] private float _metalSpeedMultiplier = 0.6f;
+        [SerializeField] private float _metalJumpMultiplier = 0.5f;
+        [SerializeField] private float _metalGravityMultiplier = 1.35f;
+        [SerializeField] private float _metalWeightMultiplier = 5f;
+        [SerializeField] private float _metalPushStrength = 10f;
 
         private Material _normalMaterial;
         private SlimeStatsModifier _statsModifier;
@@ -30,9 +31,14 @@ namespace Splime.Abilities
             NetworkVariableWritePermission.Owner
         );
 
-        public bool IsAbilityActive => _isMetalFormActive.Value;
+        private bool _localMetalFormActive;
 
-private void Awake()
+        public bool IsAbilityActive =>
+            IsSpawned
+                ? _isMetalFormActive.Value
+                : _localMetalFormActive;
+
+        private void Awake()
         {
             _statsModifier = GetComponent<SlimeStatsModifier>();
 
@@ -47,67 +53,64 @@ private void Awake()
             }
         }
 
-private void Update()
-        {
-            if (_statsModifier != null)
-            {
-                _statsModifier.MoveSpeedOverride = IsAbilityActive ? _metalMoveSpeed : _normalMoveSpeed;
-                _statsModifier.PushStrength = IsAbilityActive ? _pushStrength : 0f;
-                _statsModifier.JumpForceOverride = IsAbilityActive ? _metalJumpForce : (float?)null;
-            }
-        }
-
-
-public override void OnNetworkSpawn()
+        public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
 
             _isMetalFormActive.OnValueChanged += OnMetalFormStateChanged;
+            bool active = _isMetalFormActive.Value;
+            
             ApplyMetalFormVisuals(_isMetalFormActive.Value);
+            ApplyMetalStats(active);
         }
 
-public override void OnNetworkDespawn()
+        public override void OnNetworkDespawn()
         {
             base.OnNetworkDespawn();
             _isMetalFormActive.OnValueChanged -= OnMetalFormStateChanged;
         }
 
-public void ActivateAbility()
+        public void ActivateAbility()
         {
             SetMetalForm(true);
         }
 
-public void DeactivateAbility()
+        public void DeactivateAbility()
         {
             SetMetalForm(false);
         }
 
-public void ToggleAbility()
+        public void ToggleAbility()
         {
-            SetMetalForm(!_isMetalFormActive.Value);
+            SetMetalForm(!IsAbilityActive);
         }
 
-public void SetMetalForm(bool active)
+        public void SetMetalForm(bool active)
         {
-            if (IsSpawned && !IsOwner) return;
+            // Partida en red
+            if (IsSpawned)
+            {
+                if (!IsOwner)
+                    return;
 
-            if (!IsSpawned)
-            {
                 _isMetalFormActive.Value = active;
-                ApplyMetalFormVisuals(active);
+                return;
             }
-            else
-            {
-                _isMetalFormActive.Value = active;
-            }
+
+            // Prueba local
+            _localMetalFormActive = active;
+
+            ApplyMetalFormVisuals(active);
+            ApplyMetalStats(active);
         }
 
-private void OnMetalFormStateChanged(bool previousValue, bool newValue)
+        private void OnMetalFormStateChanged(bool previousValue, bool newValue)
         {
             ApplyMetalFormVisuals(newValue);
+            ApplyMetalStats(newValue);
         }
 
-private void ApplyMetalFormVisuals(bool active)
+        private void ApplyMetalFormVisuals(bool active)
         {
             if (_bodyRenderer == null) return;
 
@@ -125,9 +128,32 @@ private void ApplyMetalFormVisuals(bool active)
                 Debug.Log($"[{nameof(PlayerMetalFormAbility)}] Modo normal en {gameObject.name}.", this);
             }
         }
+
+        private void ApplyMetalStats(bool active)
+        {
+            if (_statsModifier == null)
+                return;
+
+            if (active)
+            {
+                _statsModifier.SpeedMultiplier = _metalSpeedMultiplier;
+                _statsModifier.JumpMultiplier = _metalJumpMultiplier;
+                _statsModifier.GravityMultiplier = _metalGravityMultiplier;
+                _statsModifier.WeightMultiplier = _metalWeightMultiplier;
+                _statsModifier.StrengthOverride = _metalPushStrength;
+            }
+            else
+            {
+                _statsModifier.SpeedMultiplier = 1f;
+                _statsModifier.JumpMultiplier = 1f;
+                _statsModifier.GravityMultiplier = 1f;
+                _statsModifier.WeightMultiplier = 1f;
+                _statsModifier.StrengthOverride = null;
+            }
+        }
     
 
-private void OnControllerColliderHit(ControllerColliderHit hit)
+        private void OnControllerColliderHit(ControllerColliderHit hit)
         {
             if (!IsAbilityActive) return;
 
@@ -136,7 +162,9 @@ private void OnControllerColliderHit(ControllerColliderHit hit)
 
             Vector3 direction = hit.moveDirection;
             direction.y = 0f;
-            pushable.TryPush(direction.normalized, _pushStrength, Time.deltaTime);
+
+            float strength = _statsModifier != null ? _statsModifier.PushStrength : 0f;
+            pushable.TryPush(direction.normalized, strength, Time.deltaTime);
         }
-}
+    }
 }

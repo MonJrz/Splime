@@ -12,17 +12,18 @@ namespace Splime.Abilities
     /// </summary>
     public class PlayerSqueezeAbility : NetworkBehaviour, ISlimeAbility
     {
-        [Header("Agile Mode Scale Settings")]
-        [SerializeField] private Vector3 _normalScale = new Vector3(1.0f, 1.0f, 1.0f);
-        [SerializeField] private Vector3 _squeezedScale = new Vector3(0.5f, 0.5f, 0.5f);
+        [Header("Visual Settings")]
+        [SerializeField] private Transform _visualRoot;
+        [SerializeField] private float _visualScaleFactor = 0.5f;
+
+        private Vector3 _normalVisualScale;
 
         [Header("Character Controller Settings")]
         [SerializeField] private float _squeezeHeightFactor = 0.3f;
         [SerializeField] private float _squeezeRadiusFactor = 0.5f;
 
-        [Header("Jump Settings")]
-        [SerializeField] private float _normalJumpForce = 10.5f;
-        [SerializeField] private float _squeezeJumpForce = 21f;
+        [Header("Agile Stats")]
+        [SerializeField] private float _squeezeWeightMultiplier = 0.5f;
 
         private float _normalHeight;
         private float _normalRadius;
@@ -33,23 +34,19 @@ namespace Splime.Abilities
         private SlimeStatsModifier _statsModifier;
 
         // Variable de Red Sincronizada
+        private bool _localAgileModeActive;
         private readonly NetworkVariable<bool> _isAgileModeActive = new NetworkVariable<bool>(
             false,
             NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Owner
         );
 
-        public bool IsAbilityActive => _isAgileModeActive.Value;
+        public bool IsAbilityActive =>
+            IsSpawned
+                ? _isAgileModeActive.Value
+                : _localAgileModeActive;
 
-private void Update()
-        {
-            if (_statsModifier != null)
-            {
-                _statsModifier.JumpForceOverride = IsAbilityActive ? _squeezeJumpForce : _normalJumpForce;
-            }
-        }
-
-private void Awake()
+        private void Awake()
         {
             _characterController = GetComponent<CharacterController>();
             _statsModifier = GetComponent<SlimeStatsModifier>();
@@ -57,6 +54,11 @@ private void Awake()
             _normalHeight = _characterController.height;
             _normalRadius = _characterController.radius;
             _normalCenter = _characterController.center;
+
+            if (_visualRoot != null)
+            {
+                _normalVisualScale = _visualRoot.localScale;
+            }
         }
 
         public override void OnNetworkSpawn()
@@ -64,7 +66,11 @@ private void Awake()
             base.OnNetworkSpawn();
 
             _isAgileModeActive.OnValueChanged += OnAgileModeStateChanged;
-            ApplyAgileVisuals(_isAgileModeActive.Value);
+
+            bool active = _isAgileModeActive.Value;
+
+            ApplyAgileVisuals(active);
+            ApplyAgileStats(active);
         }
 
         public override void OnNetworkDespawn()
@@ -85,58 +91,95 @@ private void Awake()
 
         public void ToggleAbility()
         {
-            SetAgileMode(!_isAgileModeActive.Value);
+            SetAgileMode(!IsAbilityActive);
         }
 
         public void SetAgileMode(bool active)
         {
-            if (IsSpawned && !IsOwner) return;
+            // Partida en red
+            if (IsSpawned)
+            {
+                if (!IsOwner)
+                    return;
 
-            if (!IsSpawned)
-            {
                 _isAgileModeActive.Value = active;
-                ApplyAgileVisuals(active);
-            }
-            else
-            {
-                _isAgileModeActive.Value = active;
+                return;
             }
 
-            if (_statsModifier != null)
-            {
-                Debug.Log($"[{nameof(PlayerSqueezeAbility)}] 📊 JumpForce efectivo = {_statsModifier.JumpForce}");
-            }
+            // Prueba local
+            _localAgileModeActive = active;
+
+            ApplyAgileVisuals(active);
+            ApplyAgileStats(active);
+
+            Debug.Log(
+                $"[{nameof(PlayerSqueezeAbility)}] " +
+                $"Local Agile={active} | " +
+                $"MaxJumps={_statsModifier?.MaxJumpCount} | " +
+                $"Weight={_statsModifier?.Weight}",
+                this
+            );
         }
 
         private void OnAgileModeStateChanged(bool previousValue, bool newValue)
         {
             ApplyAgileVisuals(newValue);
+            ApplyAgileStats(newValue);
         }
 
-private void ApplyAgileVisuals(bool active)
+        private void ApplyAgileVisuals(bool active)
         {
-            if (active)
+            if (_visualRoot != null)
             {
-                transform.localScale = _squeezedScale;
-                if (_characterController != null)
-                {
-                    _characterController.height = _normalHeight * _squeezeHeightFactor;
-                    _characterController.radius = _normalRadius * _squeezeRadiusFactor;
-                    _characterController.center = _normalCenter * _squeezeHeightFactor;
-                }
-                Debug.Log($"[{nameof(PlayerSqueezeAbility)}] 🔵 Slime Ágil activó MODO ESCURRIRSE (Compacto para tuberías) en {gameObject.name}.", this);
+                _visualRoot.localScale = active
+                    ? _normalVisualScale * _visualScaleFactor
+                    : _normalVisualScale;
             }
-            else
+
+            if (_characterController != null)
             {
-                transform.localScale = _normalScale;
-                if (_characterController != null)
+                if (active)
+                {
+                    float newHeight = _normalHeight * _squeezeHeightFactor;
+                    float newRadius = _normalRadius * _squeezeRadiusFactor;
+
+                    _characterController.height = newHeight;
+                    _characterController.radius = newRadius;
+
+                    Vector3 newCenter = _normalCenter;
+
+                    // Keep the base of the collider roughly
+                    // at the same point while reducing its height.
+                    float originalBottom =
+                        _normalCenter.y - (_normalHeight * 0.5f);
+
+                    newCenter.y =
+                        originalBottom + (newHeight * 0.5f) - 0.05f; // Additional adjustment to avoid collisions with the ground
+
+                    _characterController.center = newCenter;
+                }
+                else
                 {
                     _characterController.height = _normalHeight;
                     _characterController.radius = _normalRadius;
                     _characterController.center = _normalCenter;
                 }
-                Debug.Log($"[{nameof(PlayerSqueezeAbility)}] 🟢 Slime Ágil volvió a MODO NORMAL en {gameObject.name}.", this);
             }
+
+            Debug.Log(
+                $"[{nameof(PlayerSqueezeAbility)}] " +
+                $"{(active ? "MODO SMALL" : "MODO NORMAL")} en {gameObject.name}.",
+                this);
+        }
+
+        private void ApplyAgileStats(bool active)
+        {
+            if (_statsModifier == null)
+                return;
+
+            _statsModifier.MaxJumpCount = active ? 2 : 1;
+            _statsModifier.WeightMultiplier =
+                active ? _squeezeWeightMultiplier : 1f;
         }
     }
 }
