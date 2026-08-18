@@ -52,6 +52,7 @@ namespace Splime.Network
         private string _joinCode = string.Empty;
         private bool _isInitialized;
         private bool _isConnecting;
+        private bool _isHostInitiator;
 
         private void Awake()
         {
@@ -296,6 +297,7 @@ namespace Splime.Network
                  .WithNetworkOptions(new NetworkOptions { RelayProtocol = RelayProtocol.WSS });
 
                 ISession session = await MultiplayerService.Instance.CreateSessionAsync(options);
+                _isHostInitiator = true;
                 SetCurrentSession(session);
 
                 Debug.Log($"[{nameof(NetworkGameManager)}] 🎉 ¡HOST CREADO EXITOSAMENTE!");
@@ -365,6 +367,7 @@ namespace Splime.Network
                     return;
                 }
 
+                _isHostInitiator = false;
                 SetCurrentSession(session);
 
                 Debug.Log($"[{nameof(NetworkGameManager)}] 🎉 ¡CONEXIÓN COMO CLIENTE EXITOSA!");
@@ -426,6 +429,7 @@ namespace Splime.Network
 
             _joinCode = string.Empty;
             _spawnedPlayers.Clear();
+            _isHostInitiator = false;
             _isConnecting = false;
             _lobbyUIController?.NotifySessionLeft();
         }
@@ -553,7 +557,7 @@ namespace Splime.Network
 
         private void HandleStartGameRequested()
         {
-            if (_currentSession == null || !_currentSession.IsHost || !ArePlayersReady())
+            if (_currentSession == null || !_isHostInitiator || !ArePlayersReady())
             {
                 ShowLobbyError("Ambos jugadores deben estar listos.");
                 return;
@@ -643,18 +647,19 @@ namespace Splime.Network
             }
 
             int playerCount = _currentSession.PlayerCount;
+            bool isLocalHost = _isHostInitiator;
 
-            if (_currentSession.IsHost && playerCount < 2)
+            if (isLocalHost && playerCount < 2)
             {
                 _lobbyUIController.ShowHostWaitingRoom(_joinCode);
             }
             else
             {
-                _lobbyUIController.ShowSharedLobby(_currentSession.IsHost);
+                _lobbyUIController.ShowSharedLobby(isLocalHost);
             }
 
             GetReadyStates(out bool hostReady, out bool guestReady);
-            Debug.Log($"[{nameof(NetworkGameManager)}] 📊 RefreshLobbyUI | PlayerCount: {playerCount} | HostReady: {hostReady} | GuestReady: {guestReady} | IsLocalHost: {_currentSession.IsHost}");
+            Debug.Log($"[{nameof(NetworkGameManager)}] 📊 RefreshLobbyUI | PlayerCount: {playerCount} | HostReady: {hostReady} | GuestReady: {guestReady} | IsLocalHost: {isLocalHost}");
             _lobbyUIController.SetConnectedPlayerCount(playerCount);
             _lobbyUIController.SetReadyStates(hostReady, guestReady);
         }
@@ -713,7 +718,7 @@ namespace Splime.Network
         {
             UnsubscribeFromNetworkSceneEvents();
 
-            if (NetworkManager.Singleton != null)
+            if (NetworkManager.Singleton != null && NetworkManager.Singleton.SceneManager != null)
             {
                 NetworkManager.Singleton.SceneManager.OnLoadEventCompleted += OnNetworkSceneLoadCompleted;
             }
