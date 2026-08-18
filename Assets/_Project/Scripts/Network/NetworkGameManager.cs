@@ -24,6 +24,25 @@ namespace Splime.Network
     /// </summary>
     public class NetworkGameManager : MonoBehaviour
     {
+        private enum SessionRole
+        {
+            None,
+            Host,
+            Guest
+        }
+
+        private enum SessionFlowState
+        {
+            Idle,
+            CreatingHost,
+            HostWaiting,
+            JoiningGuest,
+            Synchronizing,
+            SharedLobby,
+            Leaving,
+            Recovering
+        }
+
         private const string ReadyPropertyKey = "ready";
         private const string ReadyValue = "1";
 
@@ -52,7 +71,6 @@ namespace Splime.Network
         private string _joinCode = string.Empty;
         private bool _isInitialized;
         private bool _isConnecting;
-        private bool _isHostInitiator;
         private bool _isCleaningUp;
         private int _sessionOperationVersion;
         private Task _cleanupTask;
@@ -124,8 +142,10 @@ namespace Splime.Network
 
         private void OnClientDisconnected(ulong clientId)
         {
-            if (NetworkManager.Singleton != null &&
-                NetworkManager.Singleton.IsServer &&
+            NetworkManager networkManager = NetworkManager.Singleton;
+
+            if (networkManager != null &&
+                networkManager.IsServer &&
                 _spawnedPlayers.TryGetValue(clientId, out GameObject playerObj))
             {
                 if (playerObj != null)
@@ -139,7 +159,31 @@ namespace Splime.Network
                 _spawnedPlayers.Remove(clientId);
             }
 
-            RefreshLobbyUI();
+            if (_isCleaningUp || IsLevelSceneActive())
+            {
+                return;
+            }
+
+            if (networkManager != null && networkManager.IsServer)
+            {
+                bool wasInSharedLobby = _sessionFlowState == SessionFlowState.SharedLobby;
+                RefreshLobbyUI();
+
+                if (wasInSharedLobby && _currentSession != null)
+                {
+                    _lobbyUIController?.ShowHostWaitingRoomWithWarning(
+                        _joinCode,
+                        "The guest disconnected. You can wait for them to join again.");
+                }
+
+                return;
+            }
+
+            if (_currentSession != null)
+            {
+                _ = RecoverFromConnectionFailureAsync(
+                    "Connection to the host was lost. Please try joining again.");
+            }
         }
 
         private void SpawnPlayerForClient(ulong clientId)
@@ -272,19 +316,25 @@ namespace Splime.Network
         /// </summary>
         public async Task StartHostWithRelayAsync()
         {
-            if (_isConnecting || _currentSession != null)
+            if (_isConnecting || _isCleaningUp || _currentSession != null)
             {
                 return;
             }
 
+            int operationVersion = ++_sessionOperationVersion;
             _isConnecting = true;
+            _sessionRole = SessionRole.Host;
+            _sessionFlowState = SessionFlowState.CreatingHost;
 
             try
             {
                 bool initialized = await InitializeServicesAsync();
                 if (!initialized)
                 {
-                    ShowLobbyError("No se pudo conectar con los servicios de Unity.");
+                    await HandleConnectionAttemptFailedAsync(
+                        operationVersion,
+                        SessionRole.Host,
+                        "Could not connect to Unity services. Please try again.");
                     return;
                 }
 
@@ -302,7 +352,6 @@ namespace Splime.Network
                  .WithNetworkOptions(new NetworkOptions { RelayProtocol = RelayProtocol.WSS });
 
                 ISession session = await MultiplayerService.Instance.CreateSessionAsync(options);
-                _isHostInitiator = true;
 
                 if (operationVersion != _sessionOperationVersion)
                 {
@@ -311,6 +360,7 @@ namespace Splime.Network
                 }
 
                 SetCurrentSession(session);
+                _sessionFlowState = SessionFlowState.HostWaiting;
 
                 Debug.Log($"[{nameof(NetworkGameManager)}] 🎉 ¡HOST CREADO EXITOSAMENTE!");
                 Debug.Log($"[{nameof(NetworkGameManager)}] 🔑 JOIN CODE: {_joinCode}");
@@ -319,17 +369,26 @@ namespace Splime.Network
             }
             catch (SessionException e)
             {
-                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error al crear la sesión: {e.Message}\nStack: {e.StackTrace}");
-                ShowLobbyError("No se pudo crear la sala. Intenta nuevamente.");
+                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error al crear la sesión: {e}", this);
+                await HandleConnectionAttemptFailedAsync(
+                    operationVersion,
+                    SessionRole.Host,
+                    "Could not create the room. Please try again.");
             }
             catch (Exception e)
             {
-                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error inesperado al iniciar Host: {e}\nStack: {e.StackTrace}");
-                ShowLobbyError("Ocurrió un error al crear la sala.");
+                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error inesperado al iniciar Host: {e}", this);
+                await HandleConnectionAttemptFailedAsync(
+                    operationVersion,
+                    SessionRole.Host,
+                    "An unexpected connection error occurred. Please try again.");
             }
             finally
             {
-                _isConnecting = false;
+                if (operationVersion == _sessionOperationVersion)
+                {
+                    _isConnecting = false;
+                }
             }
         }
 
@@ -338,7 +397,7 @@ namespace Splime.Network
         /// </summary>
         public async Task JoinSessionWithRelayAsync(string codeToJoin)
         {
-            if (_isConnecting || _currentSession != null)
+            if (_isConnecting || _isCleaningUp || _currentSession != null)
             {
                 return;
             }
@@ -350,14 +409,20 @@ namespace Splime.Network
                 return;
             }
 
+            int operationVersion = ++_sessionOperationVersion;
             _isConnecting = true;
+            _sessionRole = SessionRole.Guest;
+            _sessionFlowState = SessionFlowState.JoiningGuest;
 
             try
             {
                 bool initialized = await InitializeServicesAsync();
                 if (!initialized)
                 {
-                    ShowLobbyError("No se pudo conectar con los servicios de Unity.");
+                    await HandleConnectionAttemptFailedAsync(
+                        operationVersion,
+                        SessionRole.Guest,
+                        "Could not connect to Unity services. Please try again.");
                     return;
                 }
 
@@ -374,31 +439,51 @@ namespace Splime.Network
                 ISession session = await MultiplayerService.Instance.JoinSessionByCodeAsync(formattedCode, joinOptions);
                 if (session == null)
                 {
-                    Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ JoinSessionByCodeAsync retornó null para el código: {formattedCode}");
-                    ShowLobbyError("No se pudo conectar a la sala (sesión nula).");
+                    Debug.LogError(
+                        $"[{nameof(NetworkGameManager)}] ❌ JoinSessionByCodeAsync retornó null " +
+                        $"para el código: {formattedCode}",
+                        this);
+                    await HandleConnectionAttemptFailedAsync(
+                        operationVersion,
+                        SessionRole.Guest,
+                        "Could not join the room. Please try again.");
                     return;
                 }
 
-                _isHostInitiator = false;
+                if (operationVersion != _sessionOperationVersion)
+                {
+                    await CloseSessionSafelyAsync(session);
+                    return;
+                }
+
                 SetCurrentSession(session);
+                _sessionFlowState = SessionFlowState.Synchronizing;
 
                 Debug.Log($"[{nameof(NetworkGameManager)}] 🎉 ¡CONEXIÓN COMO CLIENTE EXITOSA!");
-                _lobbyUIController?.ShowSharedLobbyAsGuest();
                 RefreshLobbyUI();
             }
             catch (SessionException e)
             {
-                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error al unirse a la sesión: {e.Message}\nStack: {e.StackTrace}");
-                ShowLobbyError("No se pudo entrar a la sala. Revisa el código.");
+                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error al unirse a la sesión: {e}", this);
+                await HandleConnectionAttemptFailedAsync(
+                    operationVersion,
+                    SessionRole.Guest,
+                    "Could not join the room. Check the code and try again.");
             }
             catch (Exception e)
             {
-                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error inesperado al unirse como Cliente: {e}\nStack: {e.StackTrace}");
-                ShowLobbyError("Ocurrió un error al entrar a la sala.");
+                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error inesperado al unirse como Cliente: {e}", this);
+                await HandleConnectionAttemptFailedAsync(
+                    operationVersion,
+                    SessionRole.Guest,
+                    "An unexpected connection error occurred. Please try again.");
             }
             finally
             {
-                _isConnecting = false;
+                if (operationVersion == _sessionOperationVersion)
+                {
+                    _isConnecting = false;
+                }
             }
         }
 
@@ -407,12 +492,40 @@ namespace Splime.Network
         /// </summary>
         public async Task DisconnectAsync()
         {
-            if (_isConnecting)
+            if (_cleanupTask != null)
+            {
+                await _cleanupTask;
+                return;
+            }
+
+            NetworkManager networkManager = NetworkManager.Singleton;
+            bool networkIsListening = networkManager != null && networkManager.IsListening;
+
+            if (_currentSession == null &&
+                _sessionRole == SessionRole.None &&
+                !networkIsListening)
             {
                 return;
             }
 
-            _isConnecting = true;
+            _cleanupTask = DisconnectInternalAsync();
+
+            try
+            {
+                await _cleanupTask;
+            }
+            finally
+            {
+                _cleanupTask = null;
+            }
+        }
+
+        private async Task DisconnectInternalAsync()
+        {
+            _isCleaningUp = true;
+            _isConnecting = false;
+            _sessionFlowState = SessionFlowState.Leaving;
+            ++_sessionOperationVersion;
             Debug.Log($"[{nameof(NetworkGameManager)}] 🚪 Iniciando proceso de desconexión...");
 
             ISession session = _currentSession;
@@ -420,30 +533,130 @@ namespace Splime.Network
             UnsubscribeFromSessionEvents(session);
             UnsubscribeFromNetworkSceneEvents();
 
-            if (session != null)
+            try
             {
-                try
+                await CloseSessionSafelyAsync(session);
+            }
+            finally
+            {
+                ShutdownNetwork();
+                ResetSessionRuntimeState();
+                _lobbyUIController?.NotifySessionLeft();
+                _isCleaningUp = false;
+            }
+        }
+
+        private async Task HandleConnectionAttemptFailedAsync(
+            int operationVersion,
+            SessionRole attemptedRole,
+            string message)
+        {
+            if (operationVersion != _sessionOperationVersion)
+            {
+                return;
+            }
+
+            _isCleaningUp = true;
+            _isConnecting = false;
+            _sessionFlowState = SessionFlowState.Recovering;
+            ++_sessionOperationVersion;
+
+            ISession session = _currentSession;
+            _currentSession = null;
+            UnsubscribeFromSessionEvents(session);
+            UnsubscribeFromNetworkSceneEvents();
+
+            try
+            {
+                await CloseSessionSafelyAsync(session);
+            }
+            finally
+            {
+                ShutdownNetwork();
+                ResetSessionRuntimeState();
+
+                if (attemptedRole == SessionRole.Guest)
+                {
+                    _lobbyUIController?.ShowGuestWaitingRoomWithWarning(message);
+                }
+                else
+                {
+                    _lobbyUIController?.ShowLobbyWithWarning(message);
+                }
+
+                _isCleaningUp = false;
+            }
+        }
+
+        private async Task RecoverFromConnectionFailureAsync(string message)
+        {
+            if (_isCleaningUp)
+            {
+                return;
+            }
+
+            SessionRole disconnectedRole = _sessionRole;
+            _sessionFlowState = SessionFlowState.Recovering;
+            await DisconnectAsync();
+
+            if (_lobbyUIController == null)
+            {
+                return;
+            }
+
+            if (disconnectedRole == SessionRole.Guest)
+            {
+                _lobbyUIController.ShowGuestWaitingRoomWithWarning(message);
+            }
+            else
+            {
+                _lobbyUIController.ShowLobbyWithWarning(message);
+            }
+        }
+
+        private static async Task CloseSessionSafelyAsync(ISession session)
+        {
+            if (session == null ||
+                session.State == SessionState.None ||
+                session.State == SessionState.Disconnected ||
+                session.State == SessionState.Deleted)
+            {
+                return;
+            }
+
+            try
+            {
+                if (session.IsHost)
+                {
+                    await session.AsHost().DeleteAsync();
+                }
+                else
                 {
                     await session.LeaveAsync();
-                    Debug.Log($"[{nameof(NetworkGameManager)}] ✅ Sesión de UGS abandonada correctamente.");
-                }
-                catch (Exception e)
-                {
-                    Debug.LogWarning($"[{nameof(NetworkGameManager)}] ⚠️ No se pudo abandonar la sesión de UGS: {e.Message}");
                 }
             }
-
-            if (NetworkManager.Singleton != null && (NetworkManager.Singleton.IsClient || NetworkManager.Singleton.IsServer))
+            catch (Exception e)
             {
-                NetworkManager.Singleton.Shutdown();
+                Debug.LogWarning(
+                    $"[{nameof(NetworkGameManager)}] ⚠️ No se pudo cerrar la sesión de UGS: {e.Message}");
+            }
+        }
+
+        private static void ShutdownNetwork()
+        {
+            NetworkManager networkManager = NetworkManager.Singleton;
+
+            if (networkManager != null && networkManager.IsListening)
+            {
+                networkManager.Shutdown();
                 Debug.Log($"[{nameof(NetworkGameManager)}] ✅ Netcode for GameObjects apagado.");
             }
+        }
 
+        private void ResetSessionRuntimeState()
+        {
             _joinCode = string.Empty;
             _spawnedPlayers.Clear();
-            _isHostInitiator = false;
-            _isConnecting = false;
-            _lobbyUIController?.NotifySessionLeft();
             _sessionRole = SessionRole.None;
             _sessionFlowState = SessionFlowState.Idle;
         }
@@ -571,7 +784,7 @@ namespace Splime.Network
 
         private void HandleStartGameRequested()
         {
-            if (_currentSession == null || !_isHostInitiator || !ArePlayersReady())
+            if (_currentSession == null || !_currentSession.IsHost || !ArePlayersReady())
             {
                 ShowLobbyError("Ambos jugadores deben estar listos.");
                 return;
@@ -588,12 +801,15 @@ namespace Splime.Network
             _ = DisconnectAsync();
         }
 
-        private void HandleBackToMainRequested()
+        private async void HandleBackToMainRequested()
         {
-            if (!string.IsNullOrWhiteSpace(_mainMenuSceneName))
+            if (string.IsNullOrWhiteSpace(_mainMenuSceneName))
             {
-                SceneManager.LoadScene(_mainMenuSceneName);
+                return;
             }
+
+            await DisconnectAsync();
+            SceneManager.LoadScene(_mainMenuSceneName);
         }
 
         private void SetCurrentSession(ISession session)
@@ -608,11 +824,15 @@ namespace Splime.Network
             }
 
             _currentSession.Changed += OnSessionChanged;
-            _currentSession.PlayerJoined += OnSessionPlayerChanged;
-            _currentSession.PlayerHasLeft += OnSessionPlayerChanged;
+            _currentSession.StateChanged += OnSessionStateChanged;
+            _currentSession.PlayerJoined += OnSessionPlayerJoined;
+            _currentSession.PlayerHasLeft += OnSessionPlayerHasLeft;
             _currentSession.PlayerPropertiesChanged += OnSessionChanged;
+            _currentSession.SessionHostChanged += OnSessionHostChanged;
             _currentSession.RemovedFromSession += OnSessionEnded;
             _currentSession.Deleted += OnSessionEnded;
+            _currentSession.Network.StateChanged += OnNetworkStateChanged;
+            _currentSession.Network.StartFailed += OnNetworkStartFailed;
             SubscribeToNetworkSceneEvents();
         }
 
@@ -624,11 +844,15 @@ namespace Splime.Network
             }
 
             session.Changed -= OnSessionChanged;
-            session.PlayerJoined -= OnSessionPlayerChanged;
-            session.PlayerHasLeft -= OnSessionPlayerChanged;
+            session.StateChanged -= OnSessionStateChanged;
+            session.PlayerJoined -= OnSessionPlayerJoined;
+            session.PlayerHasLeft -= OnSessionPlayerHasLeft;
             session.PlayerPropertiesChanged -= OnSessionChanged;
+            session.SessionHostChanged -= OnSessionHostChanged;
             session.RemovedFromSession -= OnSessionEnded;
             session.Deleted -= OnSessionEnded;
+            session.Network.StateChanged -= OnNetworkStateChanged;
+            session.Network.StartFailed -= OnNetworkStartFailed;
         }
 
         private void OnSessionChanged()
@@ -637,34 +861,106 @@ namespace Splime.Network
             RefreshLobbyUI();
         }
 
-        private void OnSessionPlayerChanged(string playerId)
+        private void OnSessionStateChanged(SessionState state)
         {
-            Debug.Log($"[{nameof(NetworkGameManager)}] 👤 OnSessionPlayerChanged recibido para PlayerId: {playerId}. PlayerCount: {_currentSession?.PlayerCount}");
+            if (_isCleaningUp)
+            {
+                return;
+            }
+
+            if (state == SessionState.Connected)
+            {
+                RefreshLobbyUI();
+                return;
+            }
+
+            _ = RecoverFromConnectionFailureAsync(
+                "The online session ended. Please try again.");
+        }
+
+        private void OnSessionPlayerJoined(string playerId)
+        {
+            Debug.Log($"[{nameof(NetworkGameManager)}] 👤 OnSessionPlayerJoined recibido para PlayerId: {playerId}. PlayerCount: {_currentSession?.PlayerCount}");
             RefreshLobbyUI();
+        }
+
+        private void OnSessionPlayerHasLeft(string playerId)
+        {
+            if (_isCleaningUp)
+            {
+                return;
+            }
+
+            if (_sessionRole == SessionRole.Guest)
+            {
+                _ = RecoverFromConnectionFailureAsync(
+                    "The host left the room. Please try joining another room.");
+                return;
+            }
+
+            RefreshLobbyUI();
+
+            if (_sessionRole == SessionRole.Host && _currentSession != null)
+            {
+                _lobbyUIController?.ShowHostWaitingRoomWithWarning(
+                    _joinCode,
+                    "The guest left the room. You can wait for them to join again.");
+            }
+        }
+
+        private void OnSessionHostChanged(string newHostId)
+        {
+            if (!_isCleaningUp && _sessionRole == SessionRole.Guest)
+            {
+                _ = RecoverFromConnectionFailureAsync(
+                    "The host left the room. Please try joining another room.");
+            }
+        }
+
+        private void OnNetworkStateChanged(NetworkState state)
+        {
+            if (_isCleaningUp)
+            {
+                return;
+            }
+
+            if (state == NetworkState.Started)
+            {
+                RefreshLobbyUI();
+            }
+            else if (state == NetworkState.Stopped && _currentSession != null)
+            {
+                _ = RecoverFromConnectionFailureAsync(
+                    "The network connection was interrupted. Please try again.");
+            }
+        }
+
+        private void OnNetworkStartFailed(SessionError error)
+        {
+            if (!_isCleaningUp)
+            {
+                _ = RecoverFromConnectionFailureAsync(
+                    $"Could not establish the network connection ({error}). Please try again.");
+            }
         }
 
         private void OnSessionEnded()
         {
-            ISession endedSession = _currentSession;
-            _currentSession = null;
-            UnsubscribeFromSessionEvents(endedSession);
-            UnsubscribeFromNetworkSceneEvents();
-            _joinCode = string.Empty;
-            _lobbyUIController?.NotifySessionLeft();
+            if (!_isCleaningUp)
+            {
+                _ = RecoverFromConnectionFailureAsync(
+                    "The online session ended. Please try again.");
+            }
         }
 
         private void RefreshLobbyUI()
         {
-            if (_lobbyUIController == null || _currentSession == null)
+            if (_lobbyUIController == null || _currentSession == null || _isCleaningUp)
             {
                 return;
             }
 
             int playerCount = _currentSession.PlayerCount;
-            bool isLocalHost = _isHostInitiator;
-
-            if (isLocalHost && playerCount < 2)
-            {
             bool networkReady = IsSharedLobbyNetworkReady();
 
             if (networkReady)
@@ -678,17 +974,19 @@ namespace Splime.Network
                     ? SessionFlowState.Synchronizing
                     : SessionFlowState.HostWaiting;
                 _lobbyUIController.ShowHostWaitingRoom(_joinCode);
+
+                if (playerCount >= 2)
+                {
+                    _lobbyUIController.ShowConnectionProgress("Synchronizing player...");
+                }
             }
-            else
+            else if (_sessionRole == SessionRole.Guest)
             {
-                _lobbyUIController.ShowSharedLobby(isLocalHost);
                 _sessionFlowState = SessionFlowState.Synchronizing;
                 _lobbyUIController.ShowConnectionProgress("Synchronizing lobby...");
             }
 
             GetReadyStates(out bool hostReady, out bool guestReady);
-            Debug.Log($"[{nameof(NetworkGameManager)}] 📊 RefreshLobbyUI | PlayerCount: {playerCount} | HostReady: {hostReady} | GuestReady: {guestReady} | IsLocalHost: {isLocalHost}");
-            _lobbyUIController.SetConnectedPlayerCount(playerCount);
             Debug.Log(
                 $"[{nameof(NetworkGameManager)}] 📊 RefreshLobbyUI | " +
                 $"PlayerCount: {playerCount} | NetworkReady: {networkReady} | " +
@@ -696,6 +994,29 @@ namespace Splime.Network
                 $"Role: {_sessionRole}");
             _lobbyUIController.SetConnectedPlayerCount(networkReady ? playerCount : 0);
             _lobbyUIController.SetReadyStates(hostReady, guestReady);
+        }
+
+        private bool IsSharedLobbyNetworkReady()
+        {
+            NetworkManager networkManager = NetworkManager.Singleton;
+
+            if (_currentSession == null ||
+                _currentSession.Network.State != NetworkState.Started ||
+                networkManager == null ||
+                !networkManager.IsListening ||
+                _currentSession.PlayerCount < 2)
+            {
+                return false;
+            }
+
+            if (_sessionRole == SessionRole.Host)
+            {
+                return networkManager.IsServer && networkManager.ConnectedClientsIds.Count >= 2;
+            }
+
+            return _sessionRole == SessionRole.Guest &&
+                   networkManager.IsClient &&
+                   networkManager.IsConnectedClient;
         }
 
         private bool ArePlayersReady()
@@ -752,7 +1073,7 @@ namespace Splime.Network
         {
             UnsubscribeFromNetworkSceneEvents();
 
-            if (NetworkManager.Singleton != null && NetworkManager.Singleton.SceneManager != null)
+            if (NetworkManager.Singleton != null)
             {
                 NetworkManager.Singleton.SceneManager.OnLoadEventCompleted += OnNetworkSceneLoadCompleted;
             }
