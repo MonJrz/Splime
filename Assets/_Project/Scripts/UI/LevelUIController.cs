@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using TMPro;
+using UnityEngine.UI;
 using UnityEngine;
 
 namespace Splime.UI
@@ -13,7 +15,8 @@ namespace Splime.UI
         Dialogue,
         Tutorial,
         LevelComplete,
-        LevelFailed
+        LevelFailed,
+        ConnectionLost
     }
 
     [DisallowMultipleComponent]
@@ -26,6 +29,11 @@ namespace Splime.UI
         [SerializeField] private GameObject _leaveConfirmationPanel;
         [SerializeField] private GameObject _levelCompletePanel;
         [SerializeField] private GameObject _levelFailedPanel;
+
+        [Header("Connection Feedback")]
+        [SerializeField] private GameObject _connectionLostPanel;
+        [SerializeField] private TMP_Text _connectionLostText;
+        [SerializeField] private Button _connectionLostReturnButton;
 
         [Header("Reusable Views")]
         [SerializeField] private PagedContentUIController _dialogueController;
@@ -43,7 +51,10 @@ namespace Splime.UI
         private CursorLockMode _initialCursorLockMode;
 
         public event Action RestartRequested;
+        public event Action PauseRequested;
+        public event Action ResumeRequested;
         public event Action LeaveSessionRequested;
+        public event Action ConnectionLostAcknowledged;
         public event Action NextLevelRequested;
         public event Action LevelSelectionRequested;
         public event Action<LevelUIView> ViewChanged;
@@ -65,6 +76,16 @@ namespace Splime.UI
             if (_dialogueController != null)
             {
                 _dialogueController.Completed += HandleDialogueCompleted;
+            }
+
+            if (_connectionLostReturnButton == null && _connectionLostPanel != null)
+            {
+                _connectionLostReturnButton = _connectionLostPanel.GetComponentInChildren<Button>(true);
+            }
+
+            if (_connectionLostReturnButton != null)
+            {
+                _connectionLostReturnButton.onClick.AddListener(HandleConnectionLostReturnButtonPressed);
             }
 
             if (_tutorialController != null)
@@ -90,6 +111,11 @@ namespace Splime.UI
                 StopCoroutine(_checkpointRoutine);
                 _checkpointRoutine = null;
             }
+
+            if (_connectionLostReturnButton != null)
+            {
+                _connectionLostReturnButton.onClick.RemoveListener(HandleConnectionLostReturnButtonPressed);
+            }
         }
 
         private void OnDestroy()
@@ -105,7 +131,7 @@ namespace Splime.UI
         {
             if (_currentView == LevelUIView.Gameplay)
             {
-                SetView(LevelUIView.Paused);
+                PauseRequested?.Invoke();
             }
         }
 
@@ -113,7 +139,7 @@ namespace Splime.UI
         {
             if (_currentView == LevelUIView.Paused)
             {
-                ShowGameplay();
+                ResumeRequested?.Invoke();
             }
         }
 
@@ -170,6 +196,11 @@ namespace Splime.UI
             RestartRequested?.Invoke();
         }
 
+        public void HandleConnectionLostReturnButtonPressed()
+        {
+            ConnectionLostAcknowledged?.Invoke();
+        }
+
         public void HandleReplayButtonPressed()
         {
             RestartRequested?.Invoke();
@@ -196,6 +227,11 @@ namespace Splime.UI
             SetView(LevelUIView.Gameplay);
         }
 
+        public void ShowPause()
+        {
+            SetView(LevelUIView.Paused);
+        }
+
         public void ShowLevelComplete()
         {
             SetView(LevelUIView.LevelComplete);
@@ -204,6 +240,16 @@ namespace Splime.UI
         public void ShowLevelFailed()
         {
             SetView(LevelUIView.LevelFailed);
+        }
+
+        public void ShowConnectionLost(string message)
+        {
+            if (_connectionLostText != null)
+            {
+                _connectionLostText.text = message ?? string.Empty;
+            }
+
+            SetView(LevelUIView.ConnectionLost);
         }
 
         public void ShowDialogue(UIMessageSequence sequence)
@@ -302,6 +348,7 @@ namespace Splime.UI
             SetPanelActive(_leaveConfirmationPanel, view == LevelUIView.LeaveConfirmation);
             SetPanelActive(_levelCompletePanel, view == LevelUIView.LevelComplete);
             SetPanelActive(_levelFailedPanel, view == LevelUIView.LevelFailed);
+            SetPanelActive(_connectionLostPanel, view == LevelUIView.ConnectionLost);
 
             if (view != LevelUIView.Dialogue)
             {

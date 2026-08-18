@@ -53,6 +53,11 @@ namespace Splime.Network
         private bool _isInitialized;
         private bool _isConnecting;
         private bool _isHostInitiator;
+        private bool _isCleaningUp;
+        private int _sessionOperationVersion;
+        private Task _cleanupTask;
+        private SessionRole _sessionRole;
+        private SessionFlowState _sessionFlowState;
 
         private void Awake()
         {
@@ -298,6 +303,13 @@ namespace Splime.Network
 
                 ISession session = await MultiplayerService.Instance.CreateSessionAsync(options);
                 _isHostInitiator = true;
+
+                if (operationVersion != _sessionOperationVersion)
+                {
+                    await CloseSessionSafelyAsync(session);
+                    return;
+                }
+
                 SetCurrentSession(session);
 
                 Debug.Log($"[{nameof(NetworkGameManager)}] 🎉 ¡HOST CREADO EXITOSAMENTE!");
@@ -432,6 +444,8 @@ namespace Splime.Network
             _isHostInitiator = false;
             _isConnecting = false;
             _lobbyUIController?.NotifySessionLeft();
+            _sessionRole = SessionRole.None;
+            _sessionFlowState = SessionFlowState.Idle;
         }
 
         public bool TryLoadLevelScene(string sceneName)
@@ -651,16 +665,36 @@ namespace Splime.Network
 
             if (isLocalHost && playerCount < 2)
             {
+            bool networkReady = IsSharedLobbyNetworkReady();
+
+            if (networkReady)
+            {
+                _sessionFlowState = SessionFlowState.SharedLobby;
+                _lobbyUIController.ShowSharedLobby(_sessionRole == SessionRole.Host);
+            }
+            else if (_sessionRole == SessionRole.Host)
+            {
+                _sessionFlowState = playerCount >= 2
+                    ? SessionFlowState.Synchronizing
+                    : SessionFlowState.HostWaiting;
                 _lobbyUIController.ShowHostWaitingRoom(_joinCode);
             }
             else
             {
                 _lobbyUIController.ShowSharedLobby(isLocalHost);
+                _sessionFlowState = SessionFlowState.Synchronizing;
+                _lobbyUIController.ShowConnectionProgress("Synchronizing lobby...");
             }
 
             GetReadyStates(out bool hostReady, out bool guestReady);
             Debug.Log($"[{nameof(NetworkGameManager)}] 📊 RefreshLobbyUI | PlayerCount: {playerCount} | HostReady: {hostReady} | GuestReady: {guestReady} | IsLocalHost: {isLocalHost}");
             _lobbyUIController.SetConnectedPlayerCount(playerCount);
+            Debug.Log(
+                $"[{nameof(NetworkGameManager)}] 📊 RefreshLobbyUI | " +
+                $"PlayerCount: {playerCount} | NetworkReady: {networkReady} | " +
+                $"HostReady: {hostReady} | GuestReady: {guestReady} | " +
+                $"Role: {_sessionRole}");
+            _lobbyUIController.SetConnectedPlayerCount(networkReady ? playerCount : 0);
             _lobbyUIController.SetReadyStates(hostReady, guestReady);
         }
 
