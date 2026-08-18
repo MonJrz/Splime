@@ -5,7 +5,7 @@ namespace Splime.Core
     /// <summary>
     /// Fuente de verdad de stats en runtime para un Slime.
     /// Combina los valores base del SlimeData con multiplicadores temporales
-    /// aplicados por las habilidades activas (AgileAbility, TransformAbility, etc.)
+    /// aplicados por las habilidades activas (PlayerSqueezeAbility, PlayerMetalFormAbility, etc.)
     /// 
     /// Arquitectura de dos capas:
     ///   Capa 1 (Stats):      SlimeData (base inmutable) × Multiplicadores → Stats finales
@@ -28,19 +28,25 @@ namespace Splime.Core
         /// <summary>Multiplicador de fuerza de salto. 1.0 = normal. 2.0 = doble salto.</summary>
         public float JumpMultiplier { get; set; } = 1f;
 
+        public float? JumpForceOverride { get; set; } = null;
+
+        public float? MoveSpeedOverride { get; set; } = null;
+
+        public float PushStrength { get; set; } = 0f;
+
         /// <summary>Multiplicador de gravedad. 1.0 = normal. Valores > 1 = más pesado.</summary>
         public float GravityMultiplier { get; set; } = 1f;
 
         // ── Stats Finales (base × multiplicador) ────────────────────────────
 
         /// <summary>Velocidad de movimiento final en runtime.</summary>
-        public float MoveSpeed => _baseData != null ? _baseData.MoveSpeed * SpeedMultiplier : 6f * SpeedMultiplier;
+        public float MoveSpeed => MoveSpeedOverride ?? (_baseData != null ? _baseData.MoveSpeed * SpeedMultiplier : 6f * SpeedMultiplier);
 
         /// <summary>Velocidad de rotación (no modificable por habilidades aún).</summary>
         public float RotationSpeed => _baseData != null ? _baseData.RotationSpeed : 12f;
 
         /// <summary>Fuerza de salto final en runtime (puede ser multiplicada por habilidades).</summary>
-        public float JumpForce => _baseData != null ? _baseData.JumpForce * JumpMultiplier : 8f * JumpMultiplier;
+        public float JumpForce => JumpForceOverride ?? (_baseData != null ? _baseData.JumpForce * JumpMultiplier : 8f * JumpMultiplier);
 
         /// <summary>Gravedad final en runtime.</summary>
         public float Gravity => _baseData != null ? _baseData.Gravity * GravityMultiplier : -20f * GravityMultiplier;
@@ -66,11 +72,14 @@ namespace Splime.Core
         /// Resetea todos los multiplicadores a sus valores neutros (1.0).
         /// Útil al desactivar una habilidad para volver al estado normal.
         /// </summary>
-        public void ResetMultipliers()
+public void ResetMultipliers()
         {
             SpeedMultiplier   = 1f;
             JumpMultiplier    = 1f;
             GravityMultiplier = 1f;
+            JumpForceOverride = null;
+            MoveSpeedOverride = null;
+            PushStrength      = 0f;
         }
     }
 }

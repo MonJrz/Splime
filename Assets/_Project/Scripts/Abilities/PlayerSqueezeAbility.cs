@@ -10,17 +10,23 @@ namespace Splime.Abilities
     /// conductos estrechos y zonas donde el Slime Transformador no puede pasar.
     /// Sincronizado en red mediante NetworkVariable.
     /// </summary>
-    public class AgileAbility : NetworkBehaviour, ISlimeAbility
+    public class PlayerSqueezeAbility : NetworkBehaviour, ISlimeAbility
     {
         [Header("Agile Mode Scale Settings")]
         [SerializeField] private Vector3 _normalScale = new Vector3(1.0f, 1.0f, 1.0f);
         [SerializeField] private Vector3 _squeezedScale = new Vector3(0.5f, 0.5f, 0.5f);
 
         [Header("Character Controller Settings")]
-        [SerializeField] private float _normalHeight = 2.0f;
-        [SerializeField] private float _normalRadius = 0.5f;
-        [SerializeField] private float _squeezedHeight = 0.6f;
-        [SerializeField] private float _squeezedRadius = 0.25f;
+        [SerializeField] private float _squeezeHeightFactor = 0.3f;
+        [SerializeField] private float _squeezeRadiusFactor = 0.5f;
+
+        [Header("Jump Settings")]
+        [SerializeField] private float _normalJumpForce = 10.5f;
+        [SerializeField] private float _squeezeJumpForce = 21f;
+
+        private float _normalHeight;
+        private float _normalRadius;
+        private Vector3 _normalCenter;
 
         // Componentes
         private CharacterController _characterController;
@@ -35,10 +41,22 @@ namespace Splime.Abilities
 
         public bool IsAbilityActive => _isAgileModeActive.Value;
 
-        private void Awake()
+private void Update()
+        {
+            if (_statsModifier != null)
+            {
+                _statsModifier.JumpForceOverride = IsAbilityActive ? _squeezeJumpForce : _normalJumpForce;
+            }
+        }
+
+private void Awake()
         {
             _characterController = GetComponent<CharacterController>();
             _statsModifier = GetComponent<SlimeStatsModifier>();
+
+            _normalHeight = _characterController.height;
+            _normalRadius = _characterController.radius;
+            _normalCenter = _characterController.center;
         }
 
         public override void OnNetworkSpawn()
@@ -84,14 +102,9 @@ namespace Splime.Abilities
                 _isAgileModeActive.Value = active;
             }
 
-            // Aplicar multiplicadores de stats según el estado
-            // Slime Líquido activo: doble de fuerza de salto
-            // Slime Líquido normal: stats base
             if (_statsModifier != null)
             {
-                _statsModifier.JumpMultiplier = active ? 2f : 1f;
-                Debug.Log($"[{nameof(AgileAbility)}] 📊 JumpMultiplier = {_statsModifier.JumpMultiplier} " +
-                          $"(JumpForce efectivo: {_statsModifier.JumpForce})");
+                Debug.Log($"[{nameof(PlayerSqueezeAbility)}] 📊 JumpForce efectivo = {_statsModifier.JumpForce}");
             }
         }
 
@@ -100,18 +113,18 @@ namespace Splime.Abilities
             ApplyAgileVisuals(newValue);
         }
 
-        private void ApplyAgileVisuals(bool active)
+private void ApplyAgileVisuals(bool active)
         {
             if (active)
             {
                 transform.localScale = _squeezedScale;
                 if (_characterController != null)
                 {
-                    _characterController.height = _squeezedHeight;
-                    _characterController.radius = _squeezedRadius;
-                    _characterController.center = new Vector3(0f, _squeezedHeight / 2.0f, 0f);
+                    _characterController.height = _normalHeight * _squeezeHeightFactor;
+                    _characterController.radius = _normalRadius * _squeezeRadiusFactor;
+                    _characterController.center = _normalCenter * _squeezeHeightFactor;
                 }
-                Debug.Log($"[{nameof(AgileAbility)}] 🔵 Slime Ágil activó MODO ESCURRIRSE (Compacto para tuberías) en {gameObject.name}.", this);
+                Debug.Log($"[{nameof(PlayerSqueezeAbility)}] 🔵 Slime Ágil activó MODO ESCURRIRSE (Compacto para tuberías) en {gameObject.name}.", this);
             }
             else
             {
@@ -120,9 +133,9 @@ namespace Splime.Abilities
                 {
                     _characterController.height = _normalHeight;
                     _characterController.radius = _normalRadius;
-                    _characterController.center = new Vector3(0f, _normalHeight / 2.0f - 1, 0f);
+                    _characterController.center = _normalCenter;
                 }
-                Debug.Log($"[{nameof(AgileAbility)}] 🟢 Slime Ágil volvió a MODO NORMAL en {gameObject.name}.", this);
+                Debug.Log($"[{nameof(PlayerSqueezeAbility)}] 🟢 Slime Ágil volvió a MODO NORMAL en {gameObject.name}.", this);
             }
         }
     }

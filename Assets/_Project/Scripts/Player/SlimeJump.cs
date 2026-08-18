@@ -108,7 +108,15 @@ namespace Splime.Player
             // Lo combinamos con AND del raycast para evitar falsos positivos sobre otros Slimes.
             bool ccGrounded = _characterController.isGrounded && rayGrounded;
 
-            _isGrounded = ccGrounded || rayGrounded;
+            // No considerar "grounded" mientras estamos ascendiendo activamente (recién saltamos).
+            // Sin esto, el raycast de este mismo frame en que se dispara el salto todavía ve el
+            // suelo (porque CharacterController.Move() todavía no aplicó el impulso hacia arriba
+            // este frame, eso pasa en SlimeMovement), lo que resetea el coyote timer a full y deja
+            // una ventana de ~_coyoteTime segundos donde un segundo input de salto vuelve a sumar
+            // impulso a mitad de vuelo.
+            bool isAscending = _verticalVelocity > 0.01f;
+
+            _isGrounded = (ccGrounded || rayGrounded) && !isAscending;
 
             if (_isGrounded)
             {
