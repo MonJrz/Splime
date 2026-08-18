@@ -25,14 +25,27 @@ namespace Splime.Core
         /// <summary>Multiplicador de velocidad de movimiento. 1.0 = normal.</summary>
         public float SpeedMultiplier { get; set; } = 1f;
 
+        public float? MoveSpeedOverride { get; set; } = null;
+
         /// <summary>Multiplicador de fuerza de salto. 1.0 = normal. 2.0 = doble salto.</summary>
         public float JumpMultiplier { get; set; } = 1f;
 
         public float? JumpForceOverride { get; set; } = null;
 
-        public float? MoveSpeedOverride { get; set; } = null;
+        /// <summary>
+        /// Cantidad máxima de saltos antes de tocar suelo.
+        /// Normal = 1 / Ágil transformado = 2.
+        /// </summary>
+        public int MaxJumpCount { get; set; } = 1;
 
-        public float PushStrength { get; set; } = 0f;
+        /// <summary>Multiplicador de fuerza. 1.0 = normal. Valores > 1 = más fuerte.</summary>
+        public float StrengthMultiplier { get; set; } = 1f;
+        public float WeightMultiplier { get; set; } = 1f;
+
+        public float? StrengthOverride { get; set; }
+        public float? WeightOverride { get; set; }
+        
+        // public float PushStrength { get; set; } = 0f;
 
         /// <summary>Multiplicador de gravedad. 1.0 = normal. Valores > 1 = más pesado.</summary>
         public float GravityMultiplier { get; set; } = 1f;
@@ -51,10 +64,22 @@ namespace Splime.Core
         /// <summary>Gravedad final en runtime.</summary>
         public float Gravity => _baseData != null ? _baseData.Gravity * GravityMultiplier : -20f * GravityMultiplier;
 
-        /// <summary>Indica si el SlimeStatsModifier fue inicializado con datos base.</summary>
-        public bool IsInitialized => _baseData != null;
+        public float PushStrength =>
+            StrengthOverride ??
+            (_baseData != null
+                ? _baseData.BaseStrength * StrengthMultiplier
+                : 0f);
+
+        public float Weight =>
+            WeightOverride ??
+            (_baseData != null
+                ? _baseData.BaseWeight * WeightMultiplier
+                : 1f);
 
         // ── Inicialización ──────────────────────────────────────────────────
+
+        /// <summary>Indica si el SlimeStatsModifier fue inicializado con datos base.</summary>
+        public bool IsInitialized => _baseData != null;
 
         /// <summary>
         /// Inicializa el modificador con los stats base del SlimeData.
@@ -75,11 +100,17 @@ namespace Splime.Core
 public void ResetMultipliers()
         {
             SpeedMultiplier   = 1f;
-            JumpMultiplier    = 1f;
-            GravityMultiplier = 1f;
-            JumpForceOverride = null;
             MoveSpeedOverride = null;
-            PushStrength      = 0f;
+
+            JumpMultiplier    = 1f;
+            JumpForceOverride = null;
+            MaxJumpCount = 1;
+            GravityMultiplier = 1f;
+
+            WeightMultiplier = 1f;
+            WeightOverride = null;
+            StrengthOverride = null;
+
         }
     }
 }
