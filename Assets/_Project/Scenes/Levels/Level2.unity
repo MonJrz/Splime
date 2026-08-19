@@ -33362,10 +33362,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7127969660343803864, guid: 163907bdb5f425f47b42e8ab16bf2952, type: 3}
-      propertyPath: _visualScaleFactor
-      value: 0.6
-      objectReference: {fileID: 0}
     - target: {fileID: 7538095413511950189, guid: 163907bdb5f425f47b42e8ab16bf2952, type: 3}
       propertyPath: m_Name
       value: Slime_Agile
