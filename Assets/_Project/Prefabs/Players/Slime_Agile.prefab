@@ -19,6 +19,7 @@ GameObject:
   - component: {fileID: 7127969660343803864}
   - component: {fileID: -291485108057008616}
   - component: {fileID: 1764720574858211467}
+  - component: {fileID: 8230044633073065153}
   m_Layer: 6
   m_Name: Slime_Agile
   m_TagString: Untagged
@@ -79,7 +80,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 2190804859
+  GlobalObjectIdHash: 2142266998
   InScenePlacedSourceGlobalObjectIdHash: 2190804859
   DeferredDespawnTick: 0
   Ownership: 1
@@ -210,12 +211,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Abilities.AgileAbility
   ShowTopMostFoldoutHeaderGroup: 1
-  _normalScale: {x: 1, y: 1, z: 1}
-  _squeezedScale: {x: 0.5, y: 0.5, z: 0.5}
-  _normalHeight: 2
-  _normalRadius: 0.5
-  _squeezedHeight: 0.6
-  _squeezedRadius: 0.25
+  _visualRoot: {fileID: 0}
+  _visualScaleFactor: 0.5
+  _squeezeHeightFactor: 0.3
+  _squeezeRadiusFactor: 0.5
+  _squeezeWeightMultiplier: 0.5
 --- !u!114 &-291485108057008616
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -241,6 +241,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Player.SlimeAnimatorController
   _animator: {fileID: 0}
+  _referenceWalkSpeed: 2
+  _minWalkSpeedMultiplier: 0.5
+  _maxWalkSpeedMultiplier: 3
+--- !u!114 &8230044633073065153
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7538095413511950189}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd9c2c7c41755cc4ba3ff5e9b3cd861c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.CameraControl.SlimeCameraTargetBinder
+  ShowTopMostFoldoutHeaderGroup: 1
+  _targetOverride: {fileID: 0}
 --- !u!1001 &3066405353172483026
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -19,6 +19,7 @@ GameObject:
   - component: {fileID: -6240373175445343251}
   - component: {fileID: 6285129304420660674}
   - component: {fileID: 3687013874986412429}
+  - component: {fileID: 7139532561585907818}
   m_Layer: 6
   m_Name: Slime_Transformer
   m_TagString: Untagged
@@ -214,7 +215,11 @@ MonoBehaviour:
   _metalMaterial: {fileID: 2100000, guid: b6e91ed2dda7c41bab21147cb749ce41, type: 2}
   _normalMoveSpeed: 6
   _metalMoveSpeed: 3
-  _pushStrength: 10
+  _metalSpeedMultiplier: 0.6
+  _metalJumpMultiplier: 0.5
+  _metalGravityMultiplier: 1.35
+  _metalWeightMultiplier: 5
+  _metalPushStrength: 10
 --- !u!114 &6285129304420660674
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -243,6 +248,20 @@ MonoBehaviour:
   _referenceWalkSpeed: 2
   _minWalkSpeedMultiplier: 0.5
   _maxWalkSpeedMultiplier: 3
+--- !u!114 &7139532561585907818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7538095413511950189}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd9c2c7c41755cc4ba3ff5e9b3cd861c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.CameraControl.SlimeCameraTargetBinder
+  ShowTopMostFoldoutHeaderGroup: 1
+  _targetOverride: {fileID: 0}
 --- !u!1001 &2171705724094507071
 PrefabInstance:
   m_ObjectHideFlags: 0
