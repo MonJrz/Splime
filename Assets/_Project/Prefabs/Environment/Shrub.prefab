@@ -9,32 +9,40 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: a2cd951579581a64cbd3abb0190716e9, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.5000001
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a2cd951579581a64cbd3abb0190716e9, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.3
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a2cd951579581a64cbd3abb0190716e9, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1.5000001
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a2cd951579581a64cbd3abb0190716e9, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -25.22
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a2cd951579581a64cbd3abb0190716e9, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1
+      value: 4.066
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a2cd951579581a64cbd3abb0190716e9, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -11.4
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a2cd951579581a64cbd3abb0190716e9, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a2cd951579581a64cbd3abb0190716e9, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a2cd951579581a64cbd3abb0190716e9, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: -0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a2cd951579581a64cbd3abb0190716e9, type: 3}
       propertyPath: m_LocalRotation.z
@@ -55,7 +63,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: a2cd951579581a64cbd3abb0190716e9, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: c13109fe62b15234b80984cde199e9cd, type: 2}
+      objectReference: {fileID: 2100000, guid: ec08eee56cee5784498a69678202a899, type: 2}
     - target: {fileID: 919132149155446097, guid: a2cd951579581a64cbd3abb0190716e9, type: 3}
       propertyPath: m_Name
       value: Shrub
@@ -66,15 +74,18 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a2cd951579581a64cbd3abb0190716e9, type: 3}
       insertIndex: -1
-      addedObject: {fileID: -8167059811384506654}
+      addedObject: {fileID: 5835148480383022034}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a2cd951579581a64cbd3abb0190716e9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1776807441357255269}
   m_SourcePrefab: {fileID: 100100000, guid: a2cd951579581a64cbd3abb0190716e9, type: 3}
 --- !u!1 &7009498961394235742 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: a2cd951579581a64cbd3abb0190716e9, type: 3}
   m_PrefabInstance: {fileID: 7892514346022093839}
   m_PrefabAsset: {fileID: 0}
---- !u!135 &-8167059811384506654
-SphereCollider:
+--- !u!136 &5835148480383022034
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -91,6 +102,25 @@ SphereCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 2
   m_Radius: 0.5
-  m_Center: {x: -0.009759486, y: 0.42265198, z: -0.010868415}
+  m_Height: 1
+  m_Direction: 1
+  m_Center: {x: -0.009759669, y: 0.42265198, z: -0.01086556}
+--- !u!114 &1776807441357255269
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7009498961394235742}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96f880048e535ae4d9d43f57205f6a67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.Puzzles.ModularMover
+  _moveDirection: {x: 0, y: 0, z: 1}
+  _moduleSize: 1
+  _modules: 1
+  _moveSpeed: 2
+  _arrivalThreshold: 0.001

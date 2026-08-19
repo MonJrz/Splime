@@ -43,6 +43,16 @@ namespace Splime.Player
             _statsModifier = GetComponent<SlimeStatsModifier>();
         }
 
+        private void Start()
+        {
+            if (_statsModifier != null &&
+                !_statsModifier.IsInitialized &&
+                _slimeData != null)
+            {
+                _statsModifier.Initialize(_slimeData);
+            }
+        }
+
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
@@ -61,7 +71,14 @@ namespace Splime.Player
         public void InitializeData(SlimeData data)
         {
             _slimeData = data;
-        }
+
+            if (_statsModifier != null &&
+                !_statsModifier.IsInitialized &&
+                data != null)
+            {
+                _statsModifier.Initialize(data);
+            }
+                }
 
         private void Update()
         {
