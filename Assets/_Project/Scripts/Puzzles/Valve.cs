@@ -1,9 +1,11 @@
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
 
 namespace Splime.Puzzles
 {
-    public class Valve : MonoBehaviour
+    [RequireComponent(typeof(NetworkObject))]
+    public class Valve : NetworkBehaviour
     {
         [Header("Optional Lock")]
         [SerializeField] private PuzzleMechanismLock _mechanismLock;
@@ -12,29 +14,127 @@ namespace Splime.Puzzles
         [SerializeField] private UnityEvent _onOpened = new UnityEvent();
         [SerializeField] private UnityEvent _onClosed = new UnityEvent();
 
-        private bool _isOpen;
+        // Para pruebas offline.
+        private bool _localIsOpen;
 
-        public bool IsOpen => _isOpen;
+        // Fuente de verdad online.
+        private readonly NetworkVariable<bool> _networkIsOpen =
+            new NetworkVariable<bool>(
+                false,
+                NetworkVariableReadPermission.Everyone,
+                NetworkVariableWritePermission.Server
+            );
+
+        public bool IsOpen =>
+            IsSpawned
+                ? _networkIsOpen.Value
+                : _localIsOpen;
+
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+
+            _networkIsOpen.OnValueChanged += OnOpenStateChanged;
+
+            // Aplica el estado actual también al conectarse/spawnear.
+            ApplyState(_networkIsOpen.Value);
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            _networkIsOpen.OnValueChanged -= OnOpenStateChanged;
+
+            base.OnNetworkDespawn();
+        }
 
         public void Toggle()
+        {
+            // ─────────────────────────────
+            // PRUEBA LOCAL / SIN NETWORK
+            // ─────────────────────────────
+            if (!IsSpawned)
+            {
+                if (IsBlocked())
+                    return;
+
+                _localIsOpen = !_localIsOpen;
+                ApplyState(_localIsOpen);
+                return;
+            }
+
+            // ─────────────────────────────
+            // ONLINE
+            // ─────────────────────────────
+
+            if (IsServer)
+            {
+                ToggleServer();
+            }
+            else
+            {
+                RequestToggleRpc();
+            }
+        }
+
+        [Rpc(SendTo.Server, RequireOwnership = false)]
+        private void RequestToggleRpc()
+        {
+            ToggleServer();
+        }
+
+        private void ToggleServer()
+        {
+            if (!IsServer)
+                return;
+
+            if (IsBlocked())
+                return;
+
+            _networkIsOpen.Value =
+                !_networkIsOpen.Value;
+        }
+
+        private bool IsBlocked()
         {
             if (_mechanismLock != null &&
                 _mechanismLock.IsLocked)
             {
-                return;
+                Debug.Log(
+                    $"[{nameof(Valve)}] {gameObject.name} bloqueada.",
+                    this
+                );
+
+                return true;
             }
 
-            _isOpen = !_isOpen;
+            return false;
+        }
 
-            if (_isOpen)
+        private void OnOpenStateChanged(
+            bool previousValue,
+            bool newValue)
+        {
+            ApplyState(newValue);
+        }
+
+        private void ApplyState(bool open)
+        {
+            _localIsOpen = open;
+
+            if (open)
+            {
                 _onOpened.Invoke();
+            }
             else
+            {
                 _onClosed.Invoke();
+            }
 
             Debug.Log(
                 $"[{nameof(Valve)}] {gameObject.name} -> " +
-                $"{(_isOpen ? "OPEN" : "CLOSED")}",
-                this);
+                $"{(open ? "OPEN" : "CLOSED")}",
+                this
+            );
         }
     }
 }
