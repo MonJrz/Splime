@@ -20,6 +20,7 @@ GameObject:
   - component: {fileID: -291485108057008616}
   - component: {fileID: 1764720574858211467}
   - component: {fileID: 8339330585928932540}
+  - component: {fileID: 733812937456281012}
   m_Layer: 6
   m_Name: Slime_Agile
   m_TagString: Untagged
@@ -259,6 +260,20 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   _groundCheckDistance: 0.15
   _sphereRadiusFactor: 0.1
+--- !u!114 &733812937456281012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7538095413511950189}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c93f0f845114b26a4d3e72a5c8b910f, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.Player.PlayerLevelNetworkController
+  ShowTopMostFoldoutHeaderGroup: 1
+  _spawnRole: 1
 --- !u!1001 &3066405353172483026
 PrefabInstance:
   m_ObjectHideFlags: 0
