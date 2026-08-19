@@ -1,9 +1,11 @@
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
 
 namespace Splime.Puzzles
 {
-    public class PuzzleMechanismLock : MonoBehaviour
+    [RequireComponent(typeof(NetworkObject))]
+    public class PuzzleMechanismLock : NetworkBehaviour
     {
         [Header("State")]
         [SerializeField] private bool _startLocked;
@@ -12,42 +14,128 @@ namespace Splime.Puzzles
         [SerializeField] private UnityEvent _onLocked = new UnityEvent();
         [SerializeField] private UnityEvent _onUnlocked = new UnityEvent();
 
-        private bool _isLocked;
+        // Estado para pruebas locales sin Netcode.
+        private bool _localIsLocked;
 
-        public bool IsLocked => _isLocked;
+        // Estado autoritativo online.
+        private readonly NetworkVariable<bool> _networkIsLocked =
+            new NetworkVariable<bool>(
+                false,
+                NetworkVariableReadPermission.Everyone,
+                NetworkVariableWritePermission.Server
+            );
+
+        public bool IsLocked =>
+            IsSpawned
+                ? _networkIsLocked.Value
+                : _localIsLocked;
 
         private void Awake()
         {
-            _isLocked = _startLocked;
+            _localIsLocked = _startLocked;
+        }
+
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+
+            _networkIsLocked.OnValueChanged += OnLockStateChanged;
+
+            // El servidor establece el estado inicial.
+            if (IsServer)
+            {
+                _networkIsLocked.Value = _startLocked;
+            }
+
+            // Aplicar el estado actual también al spawnear.
+            ApplyState(_networkIsLocked.Value);
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            _networkIsLocked.OnValueChanged -= OnLockStateChanged;
+
+            base.OnNetworkDespawn();
         }
 
         public void ToggleLock()
         {
-            SetLocked(!_isLocked);
+            // Offline/local
+            if (!IsSpawned)
+            {
+                SetLocalState(!_localIsLocked);
+                return;
+            }
+
+            // Online: solo el servidor cambia el estado.
+            if (!IsServer)
+                return;
+
+            SetNetworkState(!_networkIsLocked.Value);
         }
 
         public void Lock()
         {
-            SetLocked(true);
+            if (!IsSpawned)
+            {
+                SetLocalState(true);
+                return;
+            }
+
+            if (!IsServer)
+                return;
+
+            SetNetworkState(true);
         }
 
         public void Unlock()
         {
-            SetLocked(false);
-        }
+            if (!IsSpawned)
+            {
+                SetLocalState(false);
+                return;
+            }
 
-        private void SetLocked(bool locked)
-        {
-            if (_isLocked == locked)
+            if (!IsServer)
                 return;
 
-            _isLocked = locked;
+            SetNetworkState(false);
+        }
+
+        private void SetNetworkState(bool locked)
+        {
+            if (_networkIsLocked.Value == locked)
+                return;
+
+            _networkIsLocked.Value = locked;
+        }
+
+        private void SetLocalState(bool locked)
+        {
+            if (_localIsLocked == locked)
+                return;
+
+            _localIsLocked = locked;
+            ApplyState(locked);
+        }
+
+        private void OnLockStateChanged(
+            bool previousValue,
+            bool newValue)
+        {
+            ApplyState(newValue);
+        }
+
+        private void ApplyState(bool locked)
+        {
+            _localIsLocked = locked;
 
             Debug.Log(
                 $"[{nameof(PuzzleMechanismLock)}] " +
                 $"{gameObject.name} -> " +
                 $"{(locked ? "LOCKED" : "UNLOCKED")}",
-                this);
+                this
+            );
 
             if (locked)
                 _onLocked.Invoke();
