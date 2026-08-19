@@ -212,7 +212,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Abilities.AgileAbility
   ShowTopMostFoldoutHeaderGroup: 1
   _visualRoot: {fileID: 3243917817548823609}
-  _visualScaleFactor: 0.7
+  _visualScaleFactor: 0.6
   _squeezeHeightFactor: 0.6
   _squeezeRadiusFactor: 0.6
   _squeezeWeightMultiplier: 0.5
