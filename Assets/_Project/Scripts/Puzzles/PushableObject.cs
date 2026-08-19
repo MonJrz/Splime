@@ -13,8 +13,8 @@ namespace Splime.Puzzles
         private void Awake()
         {
             _rigidbody = GetComponent<Rigidbody>();
-            _rigidbody.isKinematic = true;
-            _rigidbody.useGravity = false;
+            _rigidbody.isKinematic = false;
+            _rigidbody.useGravity = true;
         }
 
         public bool CanBePushedBy(float strength)
@@ -26,8 +26,23 @@ namespace Splime.Puzzles
         {
             if (!CanBePushedBy(pusherStrength)) return;
 
-            Vector3 move = direction * _pushSpeed * deltaTime;
-            _rigidbody.MovePosition(_rigidbody.position + move);
+            direction.y = 0f;
+
+            if (direction.sqrMagnitude <= 0.001f)
+                return;
+
+            direction.Normalize();
+
+            Vector3 currentVelocity = _rigidbody.linearVelocity;
+
+            Vector3 horizontalVelocity =
+                direction * _pushSpeed;
+
+            _rigidbody.linearVelocity =
+                new Vector3(
+                    horizontalVelocity.x,
+                    currentVelocity.y,
+                    horizontalVelocity.z);
         }
     }
 }

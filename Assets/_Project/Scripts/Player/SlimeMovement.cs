@@ -43,6 +43,16 @@ namespace Splime.Player
             _statsModifier = GetComponent<SlimeStatsModifier>();
         }
 
+        private void Start()
+        {
+            if (_statsModifier != null &&
+                !_statsModifier.IsInitialized &&
+                _slimeData != null)
+            {
+                _statsModifier.Initialize(_slimeData);
+            }
+        }
+
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
@@ -61,7 +71,14 @@ namespace Splime.Player
         public void InitializeData(SlimeData data)
         {
             _slimeData = data;
-        }
+
+            if (_statsModifier != null &&
+                !_statsModifier.IsInitialized &&
+                data != null)
+            {
+                _statsModifier.Initialize(data);
+            }
+                }
 
         private void Update()
         {
@@ -117,7 +134,14 @@ namespace Splime.Player
             float verticalVel = _slimeJump != null ? _slimeJump.VerticalVelocity : 0f;
 
             Vector3 totalVelocity = _currentVelocity + new Vector3(0f, verticalVel, 0f);
-            _characterController.Move(totalVelocity * Time.deltaTime);
+
+            CollisionFlags collisionFlags =
+                _characterController.Move(totalVelocity * Time.deltaTime);
+
+            if (_slimeJump != null)
+            {
+                _slimeJump.HandleCollisionFlags(collisionFlags);
+            }
         }
 
         private void ApplyRotation()

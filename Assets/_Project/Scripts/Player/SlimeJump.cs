@@ -29,6 +29,7 @@ namespace Splime.Player
         private float _verticalVelocity;
         private bool _isGrounded;
         private float _coyoteTimer;
+        private int _jumpsUsed;
 
         // Public Properties
         public bool IsGrounded => _isGrounded || _coyoteTimer > 0f;
@@ -60,6 +61,16 @@ namespace Splime.Player
             }
         }
 
+        private void Start()
+        {
+            if (_statsModifier != null &&
+                !_statsModifier.IsInitialized &&
+                _slimeData != null)
+            {
+                _statsModifier.Initialize(_slimeData);
+            }
+        }
+
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
@@ -73,6 +84,13 @@ namespace Splime.Player
         public void InitializeData(SlimeData data)
         {
             _slimeData = data;
+
+            if (_statsModifier != null &&
+                !_statsModifier.IsInitialized &&
+                data != null)
+            {
+                _statsModifier.Initialize(data);
+            }
         }
 
         private void Update()
@@ -120,6 +138,7 @@ namespace Splime.Player
 
             if (_isGrounded)
             {
+                _jumpsUsed = 0;
                 _coyoteTimer = _coyoteTime;
                 if (_verticalVelocity < 0f)
                 {
@@ -132,17 +151,83 @@ namespace Splime.Player
             }
         }
 
+        // private void HandleJump()
+        // {
+        //     if (!ShouldProcessInput) return;
+
+        //     if (_coyoteTimer > 0f)
+        //     {
+        //         // Leer fuerza de salto del modifier (puede ser 2x si Agile está activo, 0.1x si Solid activo)
+        //         float jumpForce = _statsModifier != null ? _statsModifier.JumpForce
+        //                         : (_slimeData != null ? _slimeData.JumpForce : 8.0f);
+        //         _verticalVelocity = jumpForce;
+        //         _coyoteTimer = 0f;
+        //     }
+        // }
         private void HandleJump()
         {
-            if (!ShouldProcessInput) return;
+            if (!ShouldProcessInput)
+                return;
 
-            if (_coyoteTimer > 0f)
+            int maxJumpCount =
+                _statsModifier != null
+                    ? _statsModifier.MaxJumpCount
+                    : 1;
+
+            float jumpForce =
+                _statsModifier != null
+                    ? _statsModifier.JumpForce
+                    : (_slimeData != null
+                        ? _slimeData.JumpForce
+                        : 8f);
+
+            Debug.Log(
+                $"[SlimeJump] Jump input | " +
+                $"Grounded={_isGrounded} | " +
+                $"Coyote={_coyoteTimer:F2} | " +
+                $"JumpsUsed={_jumpsUsed} | " +
+                $"MaxJumps={maxJumpCount} | " +
+                $"JumpForce={jumpForce:F2}",
+                this
+            );
+
+            bool canGroundJump =
+                _coyoteTimer > 0f;
+
+            bool canAirJump =
+                !_isGrounded &&
+                _coyoteTimer <= 0f &&
+                _jumpsUsed < maxJumpCount;
+
+            if (!canGroundJump && !canAirJump)
+                return;
+
+            _verticalVelocity = jumpForce;
+
+            if (canGroundJump)
             {
-                // Leer fuerza de salto del modifier (puede ser 2x si Agile está activo, 0.1x si Solid activo)
-                float jumpForce = _statsModifier != null ? _statsModifier.JumpForce
-                                : (_slimeData != null ? _slimeData.JumpForce : 8.0f);
-                _verticalVelocity = jumpForce;
-                _coyoteTimer = 0f;
+                _jumpsUsed = 1;
+            }
+            else
+            {
+                _jumpsUsed++;
+            }
+
+            _coyoteTimer = 0f;
+        }
+
+        public void HandleCollisionFlags(CollisionFlags collisionFlags)
+        {
+            if ((collisionFlags & CollisionFlags.Above) != 0 &&
+                _verticalVelocity > 0f)
+            {
+                _verticalVelocity = 0f;
+            }
+
+            if ((collisionFlags & CollisionFlags.Below) != 0 &&
+                _verticalVelocity < 0f)
+            {
+                _verticalVelocity = -2f;
             }
         }
 

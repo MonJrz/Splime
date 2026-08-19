@@ -13,6 +13,8 @@ namespace Splime.Puzzles
         private PlayerMetalFormAbility _currentMetalAbility;
         private bool _isActive;
 
+        public bool IsActive => _isActive;
+
         private void OnTriggerEnter(Collider other)
         {
             var metalAbility = other.GetComponentInParent<PlayerMetalFormAbility>();
@@ -39,7 +41,7 @@ namespace Splime.Puzzles
             }
         }
 
-private void SetActive(bool active)
+        private void SetActive(bool active)
         {
             _isActive = active;
 

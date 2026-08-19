@@ -14,11 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Core.SlimeData
   _slimeName: Slime
   _slimeColor: {r: 0, g: 0.5888634, b: 1, a: 1}
-  _moveSpeed: 6.5
-  _rotationSpeed: 14
-  _jumpForce: 10.5
+  _moveSpeed: 6
+  _rotationSpeed: 12
+  _jumpForce: 6.5
   _gravity: -20
   _groundCheckDistance: 0.2
   _groundLayer:
     serializedVersion: 2
     m_Bits: 1
+  _baseWeight: 1
+  _baseStrength: 0

@@ -41,7 +41,7 @@ namespace Splime.UI
             _levelUIController?.HideInteractionPrompt();
         }
 
-private void OnTriggerEnter(Collider other)
+        private void OnTriggerEnter(Collider other)
         {
             SlimeInput slimeInput = other.GetComponentInParent<SlimeInput>();
             Debug.Log($"[{nameof(InteractionPromptTrigger)}] OnTriggerEnter con '{other.name}'. slimeInput={(slimeInput != null ? slimeInput.name : "null")} IsLocalInputSource={(slimeInput != null ? slimeInput.IsLocalInputSource.ToString() : "n/a")}", this);
@@ -71,7 +71,7 @@ private void OnTriggerEnter(Collider other)
             _levelUIController?.HideInteractionPrompt();
         }
 
-private void HandleInteractionRequested()
+        private void HandleInteractionRequested()
         {
             Debug.Log($"[{nameof(InteractionPromptTrigger)}] Interact recibido en '{name}'. localAnimatorController={(_localAnimatorController != null ? _localAnimatorController.name : "NULL")}", this);
             _localAnimatorController?.TriggerAction();
@@ -83,7 +83,7 @@ private void HandleInteractionRequested()
             }
         }
 
-private void UnbindLocalInput()
+        private void UnbindLocalInput()
         {
             if (_localInput != null)
             {
