@@ -32,6 +32,7 @@ namespace Splime.Abilities
         // Componentes
         private CharacterController _characterController;
         private SlimeStatsModifier _statsModifier;
+        private CharacterSFX _characterSFX;
 
         // Variable de Red Sincronizada
         private bool _localAgileModeActive;
@@ -50,6 +51,7 @@ namespace Splime.Abilities
         {
             _characterController = GetComponent<CharacterController>();
             _statsModifier = GetComponent<SlimeStatsModifier>();
+            _characterSFX = GetComponentInChildren<CharacterSFX>();
 
             _normalHeight = _characterController.height;
             _normalRadius = _characterController.radius;
@@ -112,6 +114,12 @@ namespace Splime.Abilities
             ApplyAgileVisuals(active);
             ApplyAgileStats(active);
 
+            if (_characterSFX != null)
+            {
+                if (active) _characterSFX.PlaySqueezeOn();
+                else _characterSFX.PlaySqueezeOff();
+            }
+
             Debug.Log(
                 $"[{nameof(PlayerSqueezeAbility)}] " +
                 $"Local Agile={active} | " +
@@ -125,6 +133,12 @@ namespace Splime.Abilities
         {
             ApplyAgileVisuals(newValue);
             ApplyAgileStats(newValue);
+
+            if (_characterSFX != null)
+            {
+                if (newValue) _characterSFX.PlaySqueezeOn();
+                else _characterSFX.PlaySqueezeOff();
+            }
         }
 
         private void ApplyAgileVisuals(bool active)
