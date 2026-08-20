@@ -22,6 +22,7 @@ namespace Splime.UI
 
         [Header("Scene Flow")]
         [SerializeField] private string _nextLevelSceneName;
+        [SerializeField] private string _campaignStartSceneName = "Level1";
         [SerializeField] private string _levelSelectionSceneName = "Main";
         [SerializeField] private string _leaveDestinationSceneName = "Main";
 
@@ -83,6 +84,8 @@ namespace Splime.UI
             _levelUIController.ConnectionLostAcknowledged += HandleConnectionLostAcknowledged;
             _levelUIController.NextLevelRequested += HandleNextLevelRequested;
             _levelUIController.LevelSelectionRequested += HandleLevelSelectionRequested;
+            _levelUIController.ReplayAllRequested += HandleReplayAllRequested;
+            _levelUIController.MainMenuRequested += HandleMainMenuRequested;
             _levelUIController.InputBlockChanged += HandleInputBlockChanged;
             SlimeInput.LocalInputReady += HandleLocalInputReady;
             SlimeInput.PauseStateReceived += HandlePauseStateReceived;
@@ -113,6 +116,8 @@ namespace Splime.UI
                 _levelUIController.ConnectionLostAcknowledged -= HandleConnectionLostAcknowledged;
                 _levelUIController.NextLevelRequested -= HandleNextLevelRequested;
                 _levelUIController.LevelSelectionRequested -= HandleLevelSelectionRequested;
+                _levelUIController.ReplayAllRequested -= HandleReplayAllRequested;
+                _levelUIController.MainMenuRequested -= HandleMainMenuRequested;
                 _levelUIController.InputBlockChanged -= HandleInputBlockChanged;
             }
 
@@ -141,6 +146,7 @@ namespace Splime.UI
                 _failureRequested ||
                 _isChangingScene ||
                 _isTimerPaused ||
+                _levelUIController.IsLevelTimerPaused ||
                 _isWaitingForIntro ||
                 !HasTimerAuthority)
             {
@@ -215,7 +221,7 @@ namespace Splime.UI
             {
                 _levelUIController.ShowPause();
             }
-            else
+            else if (!_levelUIController.IsBlockingOverlayVisible)
             {
                 _levelUIController.ShowGameplay();
             }
@@ -356,6 +362,16 @@ namespace Splime.UI
         }
 
         private void HandleLevelSelectionRequested()
+        {
+            LeaveSessionAndLoad(_levelSelectionSceneName);
+        }
+
+        private void HandleReplayAllRequested()
+        {
+            RequestLevelLoad(_campaignStartSceneName);
+        }
+
+        private void HandleMainMenuRequested()
         {
             LeaveSessionAndLoad(_levelSelectionSceneName);
         }
