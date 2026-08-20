@@ -16,7 +16,8 @@ namespace Splime.UI
         Tutorial,
         LevelComplete,
         LevelFailed,
-        ConnectionLost
+        ConnectionLost,
+        BlockingOverlay
     }
 
     [DisallowMultipleComponent]
@@ -35,6 +36,10 @@ namespace Splime.UI
 
         [Header("Level Complete")]
         [SerializeField] private TMP_Text _completionTimeText;
+
+        [Header("Blocking Overlay")]
+        [SerializeField] private GameObject _blockingOverlayPanel;
+        [SerializeField] private bool _showBlockingOverlayOnStart;
 
         [Header("Connection Feedback")]
         [SerializeField] private GameObject _connectionLostPanel;
@@ -63,18 +68,31 @@ namespace Splime.UI
         public event Action ConnectionLostAcknowledged;
         public event Action NextLevelRequested;
         public event Action LevelSelectionRequested;
+        public event Action ReplayAllRequested;
+        public event Action MainMenuRequested;
         public event Action<LevelUIView> ViewChanged;
         public event Action<bool> InputBlockChanged;
 
         public LevelUIView CurrentView => _currentView;
         public bool IsInputBlocked => _currentView != LevelUIView.Gameplay;
+        public bool IsBlockingOverlayVisible => _currentView == LevelUIView.BlockingOverlay;
+        public bool IsLevelTimerPaused =>
+            _currentView == LevelUIView.Paused || IsBlockingOverlayVisible;
 
         private void Awake()
         {
             _initialCursorVisible = Cursor.visible;
             _initialCursorLockMode = Cursor.lockState;
             SetCheckpointVisible(false);
-            ShowGameplay();
+
+            if (_showBlockingOverlayOnStart && _blockingOverlayPanel != null)
+            {
+                ShowBlockingOverlay();
+            }
+            else
+            {
+                ShowGameplay();
+            }
         }
 
         private void OnEnable()
@@ -228,6 +246,16 @@ namespace Splime.UI
             }
         }
 
+        public void HandleReplayAllButtonPressed()
+        {
+            ReplayAllRequested?.Invoke();
+        }
+
+        public void HandleMainMenuButtonPressed()
+        {
+            MainMenuRequested?.Invoke();
+        }
+
         public void ShowGameplay()
         {
             SetView(LevelUIView.Gameplay);
@@ -236,6 +264,11 @@ namespace Splime.UI
         public void ShowPause()
         {
             SetView(LevelUIView.Paused);
+        }
+
+        public void ShowBlockingOverlay()
+        {
+            SetView(LevelUIView.BlockingOverlay);
         }
 
         public void ShowLevelComplete(int elapsedSeconds)
@@ -372,6 +405,7 @@ namespace Splime.UI
             SetPanelActive(_levelCompletePanel, view == LevelUIView.LevelComplete);
             SetPanelActive(_levelFailedPanel, view == LevelUIView.LevelFailed);
             SetPanelActive(_connectionLostPanel, view == LevelUIView.ConnectionLost);
+            SetPanelActive(_blockingOverlayPanel, view == LevelUIView.BlockingOverlay);
 
             if (view != LevelUIView.Dialogue)
             {

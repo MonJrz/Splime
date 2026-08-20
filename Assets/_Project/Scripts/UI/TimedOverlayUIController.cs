@@ -14,6 +14,9 @@ namespace Splime.UI
         [SerializeField, Range(0.1f, MaxDisplayDuration)] private float _displayDuration = 3f;
         [SerializeField] private bool _showOnEnable = true;
 
+        [Header("Level Start Sound")]   
+        [SerializeField] private float _levelStartSoundDelay = 1.5f;
+
         [Header("Intro Sequence")]
         [SerializeField] private RectTransform _graphics;
         [SerializeField] private RectTransform _circlesImage;
@@ -81,10 +84,20 @@ namespace Splime.UI
 
             if (AudioManager.Instance != null)
             {
-                AudioManager.Instance.PlayLevelStart();
+                StartCoroutine(PlayLevelStartSoundDelayed(_levelStartSoundDelay));
             }
 
             _sequenceRoutine = StartCoroutine(PlaySequence());
+        }
+
+        private IEnumerator PlayLevelStartSoundDelayed(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayLevelStart();
+            }
         }
 
         public void Hide()
