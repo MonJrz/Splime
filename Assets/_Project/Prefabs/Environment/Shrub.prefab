@@ -71,56 +71,5 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a2cd951579581a64cbd3abb0190716e9, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 5835148480383022034}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a2cd951579581a64cbd3abb0190716e9, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1776807441357255269}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a2cd951579581a64cbd3abb0190716e9, type: 3}
---- !u!1 &7009498961394235742 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: a2cd951579581a64cbd3abb0190716e9, type: 3}
-  m_PrefabInstance: {fileID: 7892514346022093839}
-  m_PrefabAsset: {fileID: 0}
---- !u!136 &5835148480383022034
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7009498961394235742}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5
-  m_Height: 1
-  m_Direction: 1
-  m_Center: {x: -0.009759669, y: 0.42265198, z: -0.01086556}
---- !u!114 &1776807441357255269
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7009498961394235742}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 96f880048e535ae4d9d43f57205f6a67, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Splime.Puzzles.ModularMover
-  _moveDirection: {x: 0, y: 0, z: 1}
-  _moduleSize: 1
-  _modules: 1
-  _moveSpeed: 2
-  _arrivalThreshold: 0.001

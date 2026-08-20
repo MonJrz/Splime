@@ -10095,7 +10095,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7641885665695572964, guid: 56d8bccedbd812d4187f0cd4e85a605c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -25.39
+      value: -25.5
       objectReference: {fileID: 0}
     - target: {fileID: 7641885665695572964, guid: 56d8bccedbd812d4187f0cd4e85a605c, type: 3}
       propertyPath: m_LocalPosition.y
@@ -10103,7 +10103,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7641885665695572964, guid: 56d8bccedbd812d4187f0cd4e85a605c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -11.48
+      value: -11.5
       objectReference: {fileID: 0}
     - target: {fileID: 7641885665695572964, guid: 56d8bccedbd812d4187f0cd4e85a605c, type: 3}
       propertyPath: m_LocalRotation.w
@@ -23874,7 +23874,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Puzzles.PushableObject
   _pushSpeed: 1.5
-  _requiredStrength: 1
+  _requiredStrength: 3
 --- !u!1001 &1219187766
 PrefabInstance:
   m_ObjectHideFlags: 0
