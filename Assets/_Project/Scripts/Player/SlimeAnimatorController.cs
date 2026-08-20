@@ -35,16 +35,11 @@ namespace Splime.Player
 
         private SlimeMovement _slimeMovement;
         private SlimeJump _slimeJump;
-        private CharacterController _characterController;
-
-        private Vector3 _lastPosition;
-        private float _smoothedRemoteSpeed;
 
         private void Awake()
         {
             _slimeMovement = GetComponent<SlimeMovement>();
             _slimeJump = GetComponent<SlimeJump>();
-            _characterController = GetComponent<CharacterController>();
 
             if (_animator == null)
             {
@@ -57,47 +52,24 @@ namespace Splime.Player
             }
         }
 
-        private void Start()
-        {
-            _lastPosition = transform.position;
-        }
-
+        // LateUpdate en vez de Update: garantiza que SlimeMovement y SlimeJump ya hayan
+        // calculado su estado de este frame antes de que lo leamos, evitando un frame de retraso.
+// IMPORTANTE: Update, no LateUpdate. Unity evalúa el Animator (transiciones, estados)
+        // entre Update() y LateUpdate() de todos los scripts. Si seteamos los parámetros en
+        // LateUpdate, el Animator los ve recién en el frame SIGUIENTE -> vamos un frame atrás,
+        // y en el primer frame de Play usa los valores por defecto (IsGrounded=false), lo que
+        // causaba el salto fantasma al arrancar.
+// IMPORTANTE: Update, no LateUpdate. Unity evalúa el Animator (transiciones, estados)
+        // entre Update() y LateUpdate() de todos los scripts. Si seteamos los parámetros en
+        // LateUpdate, el Animator los ve recién en el frame SIGUIENTE -> vamos un frame atrás,
+        // y en el primer frame de Play usa los valores por defecto (IsGrounded=false), lo que
+        // causaba el salto fantasma al arrancar.
         private void Update()
         {
             if (_animator == null) return;
 
-            float speed;
-            bool isGrounded;
-
-            bool isLocalOwner = _slimeMovement != null && _slimeMovement.IsSpawned && _slimeMovement.IsOwner;
-
-            if (isLocalOwner || (_slimeMovement != null && !_slimeMovement.IsSpawned))
-            {
-                // Jugador local: respuesta instantánea desde la velocidad calculada por input/físicas
-                speed = _slimeMovement != null ? _slimeMovement.CurrentVelocity.magnitude : 0f;
-                isGrounded = _slimeJump != null ? _slimeJump.IsGrounded : true;
-            }
-            else
-            {
-                // Jugador remoto: calcular la velocidad real horizontal desde la interpolación del NetworkTransform
-                float dt = Time.deltaTime;
-                if (dt > 0.0001f)
-                {
-                    Vector3 displacement = transform.position - _lastPosition;
-                    displacement.y = 0f;
-                    float rawSpeed = displacement.magnitude / dt;
-                    _smoothedRemoteSpeed = Mathf.Lerp(_smoothedRemoteSpeed, rawSpeed, dt * 15f);
-                    speed = _smoothedRemoteSpeed > 0.05f ? _smoothedRemoteSpeed : 0f;
-                }
-                else
-                {
-                    speed = _smoothedRemoteSpeed;
-                }
-
-                isGrounded = CheckRemoteGrounded();
-            }
-
-            _lastPosition = transform.position;
+            float speed = _slimeMovement != null ? _slimeMovement.CurrentVelocity.magnitude : 0f;
+            bool isGrounded = _slimeJump != null ? _slimeJump.IsGrounded : true;
 
             _animator.SetFloat(SpeedParam, speed);
             _animator.SetBool(IsGroundedParam, isGrounded);
@@ -111,17 +83,6 @@ namespace Splime.Player
                 ? Mathf.Clamp(speed / referenceSpeed, _minWalkSpeedMultiplier, _maxWalkSpeedMultiplier)
                 : 1f;
             _animator.SetFloat(WalkSpeedMultiplierParam, walkSpeedMultiplier);
-        }
-
-        private bool CheckRemoteGrounded()
-        {
-            if (_characterController != null && _characterController.isGrounded)
-            {
-                return true;
-            }
-
-            Vector3 origin = transform.position + Vector3.up * 0.2f;
-            return Physics.Raycast(origin, Vector3.down, 0.45f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
         }
 
         /// <summary>

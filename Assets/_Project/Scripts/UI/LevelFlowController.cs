@@ -14,11 +14,7 @@ namespace Splime.UI
     {
         [Header("References")]
         [SerializeField] private LevelUIController _levelUIController;
-        [SerializeField] private TimedOverlayUIController _introController;
         [SerializeField] private Button[] _hostOnlyButtons;
-
-        [Header("Level Timer")]
-        [SerializeField, Min(1f)] private float _levelDurationSeconds = 300f;
 
         [Header("Scene Flow")]
         [SerializeField] private string _nextLevelSceneName;
@@ -33,14 +29,7 @@ namespace Splime.UI
 
         private SlimeInput _localInput;
         private NetworkManager _networkManager;
-        private PlayerLevelNetworkController _levelNetworkBridge;
         private bool _isChangingScene;
-        private bool _isTimerPaused;
-        private bool _isWaitingForIntro;
-        private bool _levelEnded;
-        private bool _failureRequested;
-        private float _remainingTime;
-        private int _lastPublishedTime = -1;
         private Coroutine _connectionFailureCoroutine;
 
         public bool IsChangingScene => _isChangingScene;
@@ -51,20 +40,10 @@ namespace Splime.UI
 
         private void Awake()
         {
-            PlayerLevelNetworkController.ResetLevelState();
-
             if (_levelUIController == null)
             {
                 _levelUIController = GetComponent<LevelUIController>();
             }
-
-            if (_introController == null)
-            {
-                _introController = GetComponent<TimedOverlayUIController>();
-            }
-
-            _remainingTime = Mathf.Max(1f, _levelDurationSeconds);
-            _levelUIController?.SetRemainingTime(Mathf.CeilToInt(_remainingTime));
         }
 
         private void OnEnable()
@@ -86,15 +65,6 @@ namespace Splime.UI
             _levelUIController.InputBlockChanged += HandleInputBlockChanged;
             SlimeInput.LocalInputReady += HandleLocalInputReady;
             SlimeInput.PauseStateReceived += HandlePauseStateReceived;
-            PlayerLevelNetworkController.LevelCompletedReceived += HandleLevelCompletedReceived;
-            PlayerLevelNetworkController.LevelFailedReceived += HandleLevelFailedReceived;
-            PlayerLevelNetworkController.LevelTimerUpdatedReceived += HandleLevelTimerUpdatedReceived;
-
-            if (_introController != null)
-            {
-                _isWaitingForIntro = _introController.WillShowOnEnable;
-                _introController.Completed += HandleIntroCompleted;
-            }
 
             BindNetworkEvents();
             FindLocalInput();
@@ -118,57 +88,12 @@ namespace Splime.UI
 
             SlimeInput.LocalInputReady -= HandleLocalInputReady;
             SlimeInput.PauseStateReceived -= HandlePauseStateReceived;
-            PlayerLevelNetworkController.LevelCompletedReceived -= HandleLevelCompletedReceived;
-            PlayerLevelNetworkController.LevelFailedReceived -= HandleLevelFailedReceived;
-            PlayerLevelNetworkController.LevelTimerUpdatedReceived -= HandleLevelTimerUpdatedReceived;
-
-            if (_introController != null)
-            {
-                _introController.Completed -= HandleIntroCompleted;
-            }
-
             UnbindNetworkEvents();
 
             if (_localInput != null)
             {
                 _localInput.SetInputBlocked(false);
             }
-        }
-
-        private void Update()
-        {
-            if (_levelEnded ||
-                _failureRequested ||
-                _isChangingScene ||
-                _isTimerPaused ||
-                _isWaitingForIntro ||
-                !HasTimerAuthority)
-            {
-                return;
-            }
-
-            if (IsNetworkSessionActive && !TryGetLevelNetworkBridge(out _))
-            {
-                return;
-            }
-
-            _remainingTime = Mathf.Max(0f, _remainingTime - Time.unscaledDeltaTime);
-            int displayedSeconds = Mathf.CeilToInt(_remainingTime);
-
-            if (displayedSeconds != _lastPublishedTime)
-            {
-                PublishRemainingTime(displayedSeconds);
-            }
-
-            if (_remainingTime <= 0f)
-            {
-                RequestLevelFailure();
-            }
-        }
-
-        private void HandleIntroCompleted()
-        {
-            _isWaitingForIntro = false;
         }
 
         private void HandleRestartRequested()
@@ -209,8 +134,6 @@ namespace Splime.UI
                 return;
             }
 
-            _isTimerPaused = isPaused;
-
             if (isPaused)
             {
                 _levelUIController.ShowPause();
@@ -220,117 +143,6 @@ namespace Splime.UI
                 _levelUIController.ShowGameplay();
             }
         }
-
-        private void HandleLevelCompletedReceived()
-        {
-            if (!_isChangingScene)
-            {
-                _levelEnded = true;
-                _levelUIController.ShowLevelComplete();
-            }
-        }
-
-        private void HandleLevelFailedReceived()
-        {
-            if (_isChangingScene)
-            {
-                return;
-            }
-
-            _levelEnded = true;
-            _remainingTime = 0f;
-            _levelUIController.SetRemainingTime(0);
-            _levelUIController.ShowLevelFailed();
-        }
-
-        private void HandleLevelTimerUpdatedReceived(int remainingSeconds)
-        {
-            if (_levelEnded || _isChangingScene)
-            {
-                return;
-            }
-
-            int clampedSeconds = Mathf.Max(0, remainingSeconds);
-            if (!HasTimerAuthority)
-            {
-                _remainingTime = clampedSeconds;
-            }
-
-            _levelUIController.SetRemainingTime(clampedSeconds);
-        }
-
-        private void PublishRemainingTime(int remainingSeconds)
-        {
-            _lastPublishedTime = remainingSeconds;
-
-            if (TryGetLevelNetworkBridge(out PlayerLevelNetworkController bridge))
-            {
-                bridge.SyncLevelTimerForAllPlayers(remainingSeconds);
-                return;
-            }
-
-            HandleLevelTimerUpdatedReceived(remainingSeconds);
-        }
-
-        private void RequestLevelFailure()
-        {
-            _failureRequested = true;
-
-            if (TryGetLevelNetworkBridge(out PlayerLevelNetworkController bridge))
-            {
-                bridge.FailLevelForAllPlayers();
-                return;
-            }
-
-            HandleLevelFailedReceived();
-        }
-
-        private bool TryGetLevelNetworkBridge(out PlayerLevelNetworkController bridge)
-        {
-            if (_levelNetworkBridge != null &&
-                (!IsNetworkSessionActive ||
-                 (_levelNetworkBridge.IsSpawned && _levelNetworkBridge.IsServer)))
-            {
-                bridge = _levelNetworkBridge;
-                return true;
-            }
-
-            _levelNetworkBridge = null;
-            PlayerLevelNetworkController[] players =
-                FindObjectsByType<PlayerLevelNetworkController>(
-                    FindObjectsInactive.Exclude,
-                    FindObjectsSortMode.None);
-
-            foreach (PlayerLevelNetworkController player in players)
-            {
-                if (player == null ||
-                    (IsNetworkSessionActive && (!player.IsSpawned || !player.IsServer)))
-                {
-                    continue;
-                }
-
-                _levelNetworkBridge = player;
-                bridge = player;
-                return true;
-            }
-
-            bridge = null;
-            return false;
-        }
-
-        private bool HasTimerAuthority
-        {
-            get
-            {
-                NetworkManager networkManager = NetworkManager.Singleton;
-                return networkManager == null ||
-                       !networkManager.IsListening ||
-                       networkManager.IsServer;
-            }
-        }
-
-        private bool IsNetworkSessionActive =>
-            NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;
 
         private void HandleNextLevelRequested()
         {

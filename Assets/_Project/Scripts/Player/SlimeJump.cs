@@ -231,14 +231,6 @@ namespace Splime.Player
             }
         }
 
-        public void ResetMotion()
-        {
-            _verticalVelocity = 0f;
-            _isGrounded = false;
-            _coyoteTimer = 0f;
-            _jumpsUsed = 0;
-        }
-
         private void ApplyGravity()
         {
             // Leer gravedad del modifier (Slime Sólido en forma pesada tendrá más gravedad)

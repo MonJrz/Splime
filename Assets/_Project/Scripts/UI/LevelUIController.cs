@@ -30,9 +30,6 @@ namespace Splime.UI
         [SerializeField] private GameObject _levelCompletePanel;
         [SerializeField] private GameObject _levelFailedPanel;
 
-        [Header("Gameplay HUD")]
-        [SerializeField] private TMP_Text _timerText;
-
         [Header("Connection Feedback")]
         [SerializeField] private GameObject _connectionLostPanel;
         [SerializeField] private TMP_Text _connectionLostText;
@@ -243,19 +240,6 @@ namespace Splime.UI
         public void ShowLevelFailed()
         {
             SetView(LevelUIView.LevelFailed);
-        }
-
-        public void SetRemainingTime(int totalSeconds)
-        {
-            if (_timerText == null)
-            {
-                return;
-            }
-
-            int clampedSeconds = Mathf.Max(0, totalSeconds);
-            int minutes = clampedSeconds / 60;
-            int seconds = clampedSeconds % 60;
-            _timerText.text = $"{minutes:00}:{seconds:00}";
         }
 
         public void ShowConnectionLost(string message)

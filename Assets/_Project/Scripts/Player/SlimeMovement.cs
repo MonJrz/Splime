@@ -80,12 +80,6 @@ namespace Splime.Player
             }
                 }
 
-        public void ResetMotion()
-        {
-            _currentVelocity = Vector3.zero;
-            _targetDirection = Vector3.zero;
-        }
-
         private void Update()
         {
             if (!ShouldProcessInput) return;
