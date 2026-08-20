@@ -15,7 +15,17 @@ namespace Splime.Player
     [RequireComponent(typeof(CharacterController))]
     public sealed class PlayerLevelNetworkController : NetworkBehaviour
     {
+        private enum LevelOutcome
+        {
+            None,
+            Completed,
+            Failed
+        }
+
         [SerializeField] private SpawnPlayerRole _spawnRole = SpawnPlayerRole.Player1;
+
+        private static LevelOutcome _levelOutcome;
+        private static bool _outcomeEventRaised;
 
         private CharacterController _characterController;
         private NetworkTransform _networkTransform;
@@ -23,6 +33,8 @@ namespace Splime.Player
         private SlimeJump _jump;
 
         public static event Action LevelCompletedReceived;
+        public static event Action LevelFailedReceived;
+        public static event Action<int> LevelTimerUpdatedReceived;
 
         public SpawnPlayerRole SpawnRole => _spawnRole;
 
@@ -35,6 +47,12 @@ namespace Splime.Player
             _networkTransform = GetComponent<NetworkTransform>();
             _movement = GetComponent<SlimeMovement>();
             _jump = GetComponent<SlimeJump>();
+        }
+
+        public static void ResetLevelState()
+        {
+            _levelOutcome = LevelOutcome.None;
+            _outcomeEventRaised = false;
         }
 
         public void RespawnAtAssignedSpawn()
@@ -64,18 +82,51 @@ namespace Splime.Player
 
         public void CompleteLevelForAllPlayers()
         {
-            if (!IsNetworkSessionActive)
+            if (!CanBroadcastLevelState() || !TryClaimOutcome(LevelOutcome.Completed))
             {
-                LevelCompletedReceived?.Invoke();
                 return;
             }
 
-            if (!IsSpawned || !IsServer)
+            if (!IsNetworkSessionActive)
             {
+                PublishOutcome(LevelOutcome.Completed);
                 return;
             }
 
             CompleteLevelRpc();
+        }
+
+        public void FailLevelForAllPlayers()
+        {
+            if (!CanBroadcastLevelState() || !TryClaimOutcome(LevelOutcome.Failed))
+            {
+                return;
+            }
+
+            if (!IsNetworkSessionActive)
+            {
+                PublishOutcome(LevelOutcome.Failed);
+                return;
+            }
+
+            FailLevelRpc();
+        }
+
+        public void SyncLevelTimerForAllPlayers(int remainingSeconds)
+        {
+            if (!CanBroadcastLevelState() || _levelOutcome != LevelOutcome.None)
+            {
+                return;
+            }
+
+            int clampedSeconds = Mathf.Max(0, remainingSeconds);
+            if (!IsNetworkSessionActive)
+            {
+                LevelTimerUpdatedReceived?.Invoke(clampedSeconds);
+                return;
+            }
+
+            SyncLevelTimerRpc(clampedSeconds);
         }
 
         [Rpc(SendTo.Owner)]
@@ -87,7 +138,58 @@ namespace Splime.Player
         [Rpc(SendTo.ClientsAndHost)]
         private void CompleteLevelRpc()
         {
-            LevelCompletedReceived?.Invoke();
+            PublishOutcome(LevelOutcome.Completed);
+        }
+
+        [Rpc(SendTo.ClientsAndHost)]
+        private void FailLevelRpc()
+        {
+            PublishOutcome(LevelOutcome.Failed);
+        }
+
+        [Rpc(SendTo.ClientsAndHost)]
+        private void SyncLevelTimerRpc(int remainingSeconds)
+        {
+            if (_levelOutcome == LevelOutcome.None)
+            {
+                LevelTimerUpdatedReceived?.Invoke(Mathf.Max(0, remainingSeconds));
+            }
+        }
+
+        private bool CanBroadcastLevelState()
+        {
+            return !IsNetworkSessionActive || (IsSpawned && IsServer);
+        }
+
+        private static bool TryClaimOutcome(LevelOutcome outcome)
+        {
+            if (_levelOutcome != LevelOutcome.None)
+            {
+                return false;
+            }
+
+            _levelOutcome = outcome;
+            return true;
+        }
+
+        private static void PublishOutcome(LevelOutcome outcome)
+        {
+            if ((_levelOutcome != LevelOutcome.None && _levelOutcome != outcome) || _outcomeEventRaised)
+            {
+                return;
+            }
+
+            _levelOutcome = outcome;
+            _outcomeEventRaised = true;
+
+            if (outcome == LevelOutcome.Completed)
+            {
+                LevelCompletedReceived?.Invoke();
+            }
+            else
+            {
+                LevelFailedReceived?.Invoke();
+            }
         }
 
         private void ApplyRespawn(Vector3 position, Quaternion rotation)
