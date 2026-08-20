@@ -33,7 +33,6 @@ namespace Splime.Player
 
         // Public Properties
         public bool IsGrounded => _isGrounded || _coyoteTimer > 0f;
-        public bool IsGroundedRaw => _isGrounded;
         public float VerticalVelocity => _verticalVelocity;
         public bool ShouldProcessInput => !IsSpawned || IsOwner;
 
