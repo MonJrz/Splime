@@ -21,6 +21,7 @@ GameObject:
   - component: {fileID: 3687013874986412429}
   - component: {fileID: 6247944667201960635}
   - component: {fileID: 733812937456281011}
+  - component: {fileID: 1191437286012105971}
   m_Layer: 6
   m_Name: Slime_Transformer
   m_TagString: Untagged
@@ -274,10 +275,24 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2c93f0f845114b26a4d3e72a5c8b910f, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Player.PlayerLevelNetworkController
   ShowTopMostFoldoutHeaderGroup: 1
   _spawnRole: 0
+--- !u!114 &1191437286012105971
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7538095413511950189}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd9c2c7c41755cc4ba3ff5e9b3cd861c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.CameraControl.SlimeCameraTargetBinder
+  ShowTopMostFoldoutHeaderGroup: 1
+  _targetOverride: {fileID: 0}
 --- !u!1001 &2171705724094507071
 PrefabInstance:
   m_ObjectHideFlags: 0

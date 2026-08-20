@@ -5483,6 +5483,7 @@ Transform:
   - {fileID: 1813040917}
   - {fileID: 192064828}
   - {fileID: 1338130340}
+  - {fileID: 1863244226}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!1001 &233401864
@@ -25224,6 +25225,7 @@ GameObject:
   - component: {fileID: 1231062033}
   - component: {fileID: 1231062032}
   - component: {fileID: 1231062031}
+  - component: {fileID: 1231062037}
   m_Layer: 0
   m_Name: FreeLook Camera
   m_TagString: Untagged
@@ -25418,9 +25420,9 @@ MonoBehaviour:
   m_StreamingVersion: 20241001
   m_LegacyPriority: 0
   Target:
-    TrackingTarget: {fileID: 0}
-    LookAtTarget: {fileID: 0}
-    CustomLookAtTarget: 0
+    TrackingTarget: {fileID: 1686315889}
+    LookAtTarget: {fileID: 1686315889}
+    CustomLookAtTarget: 1
   Lens:
     FieldOfView: 60.000004
     OrthographicSize: 5
@@ -25450,12 +25452,24 @@ Transform:
   m_GameObject: {fileID: 1231062030}
   serializedVersion: 2
   m_LocalRotation: {x: 0.20898329, y: 0.000000014572134, z: -0.0000000031140939, w: 0.9779192}
-  m_LocalPosition: {x: 1.5390891, y: 2.9394805, z: -4.8956814}
+  m_LocalPosition: {x: 1, y: 2.9394808, z: -4.0305805}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1231062037
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1231062030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4fb63fa8d0b4704fa3776926cb271b8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.CameraControl.CinemachineAutoTargetPlayer
 --- !u!1001 &1232084854
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -42523,3 +42537,5 @@ SceneRoots:
   - {fileID: 541541402}
   - {fileID: 549537568}
   - {fileID: 1587971275}
+  - {fileID: 1231062036}
+  - {fileID: 1887444840}
