@@ -8,11 +8,24 @@ namespace Splime.UI
     {
         [SerializeField] private GameObject _panel;
         [SerializeField] private TMP_Text _messageText;
+        [SerializeField] private float _fontSize = 24f;
 
         public bool IsVisible => _panel != null && _panel.activeSelf;
+        public TMP_Text MessageText => _messageText;
+
+        public float FontSize
+        {
+            get => _fontSize;
+            set
+            {
+                _fontSize = value;
+                ApplyFontSize();
+            }
+        }
 
         private void Awake()
         {
+            ApplyFontSize();
             Hide();
         }
 
@@ -21,6 +34,7 @@ namespace Splime.UI
             if (_messageText != null)
             {
                 _messageText.text = message ?? string.Empty;
+                ApplyFontSize();
             }
 
             if (_panel != null)
@@ -36,5 +50,14 @@ namespace Splime.UI
                 _panel.SetActive(false);
             }
         }
+
+        private void ApplyFontSize()
+        {
+            if (_messageText != null && _fontSize > 0f)
+            {
+                _messageText.fontSize = _fontSize;
+            }
+        }
     }
 }
+
