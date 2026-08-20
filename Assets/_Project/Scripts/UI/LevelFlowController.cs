@@ -226,7 +226,14 @@ namespace Splime.UI
             if (!_isChangingScene)
             {
                 _levelEnded = true;
-                _levelUIController.ShowLevelComplete();
+                int totalSeconds = Mathf.CeilToInt(Mathf.Max(1f, _levelDurationSeconds));
+                int remainingSeconds = _lastPublishedTime >= 0
+                    ? _lastPublishedTime
+                    : Mathf.CeilToInt(_remainingTime);
+                int elapsedSeconds = totalSeconds -
+                                     Mathf.Clamp(remainingSeconds, 0, totalSeconds);
+
+                _levelUIController.ShowLevelComplete(elapsedSeconds);
             }
         }
 
