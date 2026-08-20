@@ -69,7 +69,7 @@ namespace Splime.Player
             if (_animator == null) return;
 
             float speed = _slimeMovement != null ? _slimeMovement.CurrentVelocity.magnitude : 0f;
-            bool isGrounded = _slimeJump != null ? _slimeJump.IsGrounded : true;
+            bool isGrounded = _slimeJump != null ? _slimeJump.IsGroundedRaw : true;
 
             _animator.SetFloat(SpeedParam, speed);
             _animator.SetBool(IsGroundedParam, isGrounded);
