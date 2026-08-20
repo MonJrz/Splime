@@ -157,7 +157,7 @@ namespace Splime.Abilities
         {
             if (!IsAbilityActive) return;
 
-            var pushable = hit.collider.GetComponent<PushableObject>();
+            PushableObject pushable = hit.collider.GetComponentInParent<PushableObject>();
             if (pushable == null) return;
 
             Vector3 direction = hit.moveDirection;
