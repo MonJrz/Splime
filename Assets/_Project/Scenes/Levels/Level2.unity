@@ -2457,6 +2457,7 @@ GameObject:
   - component: {fileID: 119459489}
   - component: {fileID: 119459488}
   - component: {fileID: 119459491}
+  - component: {fileID: 119459492}
   m_Layer: 0
   m_Name: SwitchInteract
   m_TagString: Untagged
@@ -2630,6 +2631,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+      - m_Target: {fileID: 2030392473}
+        m_TargetAssemblyTypeName: Splime.Puzzles.PuzzleInteractableFeedback, Assembly-CSharp
+        m_MethodName: SetLocked
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
   _onUnlocked:
     m_PersistentCalls:
       m_Calls:
@@ -2729,6 +2742,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 2030392473}
+        m_TargetAssemblyTypeName: Splime.Puzzles.PuzzleInteractableFeedback, Assembly-CSharp
+        m_MethodName: SetLocked
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &119459490
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2747,9 +2772,9 @@ MonoBehaviour:
   _interactionRequested:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 119459489}
-        m_TargetAssemblyTypeName: Splime.Puzzles.PuzzleMechanismLock, Assembly-CSharp
-        m_MethodName: ToggleLock
+      - m_Target: {fileID: 119459492}
+        m_TargetAssemblyTypeName: Splime.Puzzles.PuzzleSwitch, Assembly-CSharp
+        m_MethodName: Interact
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2785,6 +2810,28 @@ MonoBehaviour:
   AutoObjectParentSync: 1
   SyncOwnerTransformWhenParented: 1
   AllowOwnerToParent: 0
+--- !u!114 &119459492
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 119459485}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95e957d6c360183419a4f94285ac6984, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.Puzzles.PuzzleSwitch
+  ShowTopMostFoldoutHeaderGroup: 1
+  _mode: 1
+  _targetMover: {fileID: 0}
+  _mechanismLock: {fileID: 119459489}
+  _onStateA:
+    m_PersistentCalls:
+      m_Calls: []
+  _onStateB:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1001 &123170943
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -17724,7 +17771,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Puzzles.Valve
   ShowTopMostFoldoutHeaderGroup: 1
-  _mechanismLock: {fileID: 0}
+  _mechanismLock: {fileID: 119459489}
   _onOpened:
     m_PersistentCalls:
       m_Calls:
@@ -31765,6 +31812,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: b361985d6870f8c4baaa0199c0bba1f5, type: 3}
   m_PrefabInstance: {fileID: 1543467795}
   m_PrefabAsset: {fileID: 0}
+--- !u!23 &1543467797 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: b361985d6870f8c4baaa0199c0bba1f5, type: 3}
+  m_PrefabInstance: {fileID: 1543467795}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1545701512
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -32544,6 +32596,11 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.5, y: 0.6, z: 0.5}
   m_Center: {x: 0, y: 0.32, z: 0}
+--- !u!23 &1581742137 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: 325271814b003e342937f1f7ce3b8016, type: 3}
+  m_PrefabInstance: {fileID: 1581742133}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1583346593
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -51884,6 +51941,7 @@ GameObject:
   - component: {fileID: 2030392467}
   - component: {fileID: 2030392471}
   - component: {fileID: 2030392472}
+  - component: {fileID: 2030392473}
   m_Layer: 0
   m_Name: SwitchMoverInteract
   m_TagString: Untagged
@@ -51988,7 +52046,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Puzzles.PuzzleSwitch
   ShowTopMostFoldoutHeaderGroup: 1
   _mode: 0
-  _targetMover: {fileID: 1214098951}
+  _targetMover: {fileID: 2121952138}
   _mechanismLock: {fileID: 119459489}
   _onStateA:
     m_PersistentCalls:
@@ -52046,6 +52104,28 @@ MonoBehaviour:
   AutoObjectParentSync: 1
   SyncOwnerTransformWhenParented: 1
   AllowOwnerToParent: 0
+--- !u!114 &2030392473
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2030392465}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 525a0c8ae688e584c9f0c314b9fb150d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.Puzzles.PuzzleInteractableFeedback
+  _arrow: {fileID: 0}
+  _spotLight: {fileID: 1505936212}
+  _desaturationRenderers:
+  - {fileID: 1543467797}
+  - {fileID: 1581742137}
+  _normalSaturation: 1
+  _lockedSaturation: 0
+  _saturationTransitionSpeed: 3
+  _normalLightIntensity: 50
+  _lockedLightIntensity: 15
 --- !u!1001 &2033666748
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -53663,13 +53743,38 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3491206939858827807, guid: 26e576c449698794e9d62ae1b1e7d5c9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2121952138}
   m_SourcePrefab: {fileID: 100100000, guid: 26e576c449698794e9d62ae1b1e7d5c9, type: 3}
 --- !u!4 &2121952136 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4267321839020777637, guid: 26e576c449698794e9d62ae1b1e7d5c9, type: 3}
   m_PrefabInstance: {fileID: 2121952135}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &2121952137 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3491206939858827807, guid: 26e576c449698794e9d62ae1b1e7d5c9, type: 3}
+  m_PrefabInstance: {fileID: 2121952135}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2121952138
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2121952137}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96f880048e535ae4d9d43f57205f6a67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.Puzzles.ModularMover
+  _moveDirection: {x: -1, y: 0, z: 0}
+  _moduleSize: 1
+  _modules: 1
+  _moveSpeed: 2
+  _arrivalThreshold: 0.001
 --- !u!1 &2125133374
 GameObject:
   m_ObjectHideFlags: 0
