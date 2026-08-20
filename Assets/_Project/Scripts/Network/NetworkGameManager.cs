@@ -87,6 +87,7 @@ namespace Splime.Network
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            Application.runInBackground = true;
             SceneManager.sceneLoaded += OnSceneLoaded;
             LobbyUIController configuredLobbyUI = _lobbyUIController;
             _lobbyUIController = null;
@@ -1195,15 +1196,15 @@ namespace Splime.Network
                 transport.MaxPacketQueueSize = 512;
             }
 
-            // Aumentar los timeouts para que la conexión a través de Relay/WSS no se caiga por latencia
+            // Aumentar los timeouts para que la conexión a través de Relay/WSS no se caiga por latencia o inactividad (5 minutos = 300000 ms)
             if (transport.HeartbeatTimeoutMS < 1000)
             {
                 transport.HeartbeatTimeoutMS = 1000;
             }
 
-            if (transport.DisconnectTimeoutMS < 30000)
+            if (transport.DisconnectTimeoutMS < 300000)
             {
-                transport.DisconnectTimeoutMS = 30000;
+                transport.DisconnectTimeoutMS = 300000;
             }
         }
     }
