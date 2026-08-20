@@ -33,6 +33,9 @@ namespace Splime.UI
         [Header("Gameplay HUD")]
         [SerializeField] private TMP_Text _timerText;
 
+        [Header("Level Complete")]
+        [SerializeField] private TMP_Text _completionTimeText;
+
         [Header("Connection Feedback")]
         [SerializeField] private GameObject _connectionLostPanel;
         [SerializeField] private TMP_Text _connectionLostText;
@@ -235,8 +238,10 @@ namespace Splime.UI
             SetView(LevelUIView.Paused);
         }
 
-        public void ShowLevelComplete()
+        public void ShowLevelComplete(int elapsedSeconds)
         {
+            SetFormattedTime(_completionTimeText, elapsedSeconds);
+
             if (AudioManager.Instance != null)
             {
                 AudioManager.Instance.PlayVictory();
@@ -257,15 +262,7 @@ namespace Splime.UI
 
         public void SetRemainingTime(int totalSeconds)
         {
-            if (_timerText == null)
-            {
-                return;
-            }
-
-            int clampedSeconds = Mathf.Max(0, totalSeconds);
-            int minutes = clampedSeconds / 60;
-            int seconds = clampedSeconds % 60;
-            _timerText.text = $"{minutes:00}:{seconds:00}";
+            SetFormattedTime(_timerText, totalSeconds);
         }
 
         public void ShowConnectionLost(string message)
@@ -431,6 +428,19 @@ namespace Splime.UI
             {
                 panel.SetActive(isActive);
             }
+        }
+
+        private static void SetFormattedTime(TMP_Text target, int totalSeconds)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            int clampedSeconds = Mathf.Max(0, totalSeconds);
+            int minutes = clampedSeconds / 60;
+            int seconds = clampedSeconds % 60;
+            target.text = $"{minutes:00}:{seconds:00}";
         }
     }
 }

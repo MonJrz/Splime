@@ -51198,6 +51198,7 @@ MonoBehaviour:
   _levelCompletePanel: {fileID: 1999999675}
   _levelFailedPanel: {fileID: 1999999951}
   _timerText: {fileID: 2147002003}
+  _completionTimeText: {fileID: 1999999864}
   _connectionLostPanel: {fileID: 1999999887}
   _connectionLostText: {fileID: 1999999998}
   _connectionLostReturnButton: {fileID: 1999999700}
