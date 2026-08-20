@@ -6,9 +6,8 @@ using Splime.Player;
 namespace Splime.CameraControl
 {
     /// <summary>
-    /// Vincula automáticamente la CinemachineCamera activa en la escena al Slime local.
-    /// En partidas multijugador con Netcode, solo el cliente dueño (IsOwner) toma el control de la cámara local.
-    /// En pruebas locales offline (!IsSpawned), se vincula si es la fuente de entrada local.
+    /// Component attached to Slime player prefabs.
+    /// Informs the scene CinemachineCamera to follow this Slime if it is the local player (IsOwner or offline).
     /// </summary>
     [DisallowMultipleComponent]
     public class SlimeCameraTargetBinder : NetworkBehaviour
@@ -26,7 +25,7 @@ namespace Splime.CameraControl
 
         private void Start()
         {
-            // Soporte para pruebas en local (sin iniciar sesión de red / offline)
+            // Pruebas offline / unijugador
             if (!IsSpawned)
             {
                 bool isLocalInput = _slimeInput == null || _slimeInput.IsLocalInputSource;
@@ -60,10 +59,6 @@ namespace Splime.CameraControl
                 cinemachineCam.Follow = targetTransform;
                 cinemachineCam.LookAt = targetTransform;
                 Debug.Log($"[{nameof(SlimeCameraTargetBinder)}] 🎥 CinemachineCamera '{cinemachineCam.gameObject.name}' vinculada a '{gameObject.name}' (IsOwner: {IsOwner}).", this);
-            }
-            else
-            {
-                Debug.LogWarning($"[{nameof(SlimeCameraTargetBinder)}] ⚠️ No se encontró ninguna CinemachineCamera activa en la escena para vincular a '{gameObject.name}'.", this);
             }
         }
     }
