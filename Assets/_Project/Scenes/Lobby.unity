@@ -1976,6 +1976,10 @@ MonoBehaviour:
   sfxSource: {fileID: 1375393417}
   hoverClip: {fileID: 8300000, guid: 32d4b1811dda14a6cb9e059ee8ad17d2, type: 3}
   clickClip: {fileID: 8300000, guid: 29bde6326b4c34ad8a12da475f79b50a, type: 3}
+  levelStartClip: {fileID: 0}
+  victoryClip: {fileID: 0}
+  defeatClip: {fileID: 0}
+  levelMusicVolume: 0.7
 --- !u!4 &568985547
 Transform:
   m_ObjectHideFlags: 0
