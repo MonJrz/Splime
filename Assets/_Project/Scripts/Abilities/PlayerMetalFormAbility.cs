@@ -22,6 +22,8 @@ namespace Splime.Abilities
         [SerializeField] private float _metalWeightMultiplier = 5f;
         [SerializeField] private float _metalPushStrength = 10f;
 
+        private CharacterSFX _characterSFX;
+
         private Material _normalMaterial;
         private SlimeStatsModifier _statsModifier;
 
@@ -41,6 +43,7 @@ namespace Splime.Abilities
         private void Awake()
         {
             _statsModifier = GetComponent<SlimeStatsModifier>();
+            _characterSFX = GetComponentInChildren<CharacterSFX>();
 
             if (_bodyRenderer == null)
             {
@@ -102,12 +105,24 @@ namespace Splime.Abilities
 
             ApplyMetalFormVisuals(active);
             ApplyMetalStats(active);
+
+            if (_characterSFX != null)
+            {
+                if (active) _characterSFX.PlayMetalFormOn();
+                else _characterSFX.PlayMetalFormOff();
+            }
         }
 
         private void OnMetalFormStateChanged(bool previousValue, bool newValue)
         {
             ApplyMetalFormVisuals(newValue);
             ApplyMetalStats(newValue);
+
+            if (_characterSFX != null)
+            {
+                if (newValue) _characterSFX.PlayMetalFormOn();
+                else _characterSFX.PlayMetalFormOff();
+            }
         }
 
         private void ApplyMetalFormVisuals(bool active)
