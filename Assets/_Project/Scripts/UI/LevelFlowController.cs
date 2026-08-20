@@ -65,6 +65,7 @@ namespace Splime.UI
             _levelUIController.InputBlockChanged += HandleInputBlockChanged;
             SlimeInput.LocalInputReady += HandleLocalInputReady;
             SlimeInput.PauseStateReceived += HandlePauseStateReceived;
+            PlayerLevelNetworkController.LevelCompletedReceived += HandleLevelCompletedReceived;
 
             BindNetworkEvents();
             FindLocalInput();
@@ -88,6 +89,7 @@ namespace Splime.UI
 
             SlimeInput.LocalInputReady -= HandleLocalInputReady;
             SlimeInput.PauseStateReceived -= HandlePauseStateReceived;
+            PlayerLevelNetworkController.LevelCompletedReceived -= HandleLevelCompletedReceived;
             UnbindNetworkEvents();
 
             if (_localInput != null)
@@ -141,6 +143,14 @@ namespace Splime.UI
             else
             {
                 _levelUIController.ShowGameplay();
+            }
+        }
+
+        private void HandleLevelCompletedReceived()
+        {
+            if (!_isChangingScene)
+            {
+                _levelUIController.ShowLevelComplete();
             }
         }
 

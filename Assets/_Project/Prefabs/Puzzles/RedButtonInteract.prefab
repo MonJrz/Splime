@@ -278,6 +278,30 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 5431915290939556549}
+        m_TargetAssemblyTypeName: Splime.Puzzles.ButtonVisualFeedback, Assembly-CSharp
+        m_MethodName: Press
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 169615304789526831}
+        m_TargetAssemblyTypeName: Splime.Puzzles.PuzzleInteractableFeedback, Assembly-CSharp
+        m_MethodName: MarkUsed
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &169615304789526831
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -292,6 +316,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Puzzles.PuzzleInteractableFeedback
   _arrow: {fileID: 0}
   _spotLight: {fileID: 5620017872465811191}
+  _desaturationRenderers:
+  - {fileID: 1917094476702949994}
+  - {fileID: 872787415383557870}
+  _normalSaturation: 1
+  _lockedSaturation: 0
+  _saturationTransitionSpeed: 3
   _normalLightIntensity: 100
   _lockedLightIntensity: 15
 --- !u!114 &5431915290939556549
@@ -371,6 +401,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 8a9773e3a4008054b96a4c8cd9af09d3, type: 3}
   m_PrefabInstance: {fileID: 962493671932739310}
   m_PrefabAsset: {fileID: 0}
+--- !u!23 &1917094476702949994 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: 8a9773e3a4008054b96a4c8cd9af09d3, type: 3}
+  m_PrefabInstance: {fileID: 962493671932739310}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2007855731713038954
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -431,6 +466,11 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 4296322541567232827}
   m_SourcePrefab: {fileID: 100100000, guid: 41580160b0e7cb4439fb5be13bb2c142, type: 3}
+--- !u!23 &872787415383557870 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: 41580160b0e7cb4439fb5be13bb2c142, type: 3}
+  m_PrefabInstance: {fileID: 2007855731713038954}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1665276294540158779 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 41580160b0e7cb4439fb5be13bb2c142, type: 3}
