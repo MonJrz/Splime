@@ -14,6 +14,7 @@ namespace Splime.UI
     {
         [Header("References")]
         [SerializeField] private LevelUIController _levelUIController;
+        [SerializeField] private TimedOverlayUIController _introController;
         [SerializeField] private Button[] _hostOnlyButtons;
 
         [Header("Level Timer")]
@@ -35,6 +36,7 @@ namespace Splime.UI
         private PlayerLevelNetworkController _levelNetworkBridge;
         private bool _isChangingScene;
         private bool _isTimerPaused;
+        private bool _isWaitingForIntro;
         private bool _levelEnded;
         private bool _failureRequested;
         private float _remainingTime;
@@ -54,6 +56,11 @@ namespace Splime.UI
             if (_levelUIController == null)
             {
                 _levelUIController = GetComponent<LevelUIController>();
+            }
+
+            if (_introController == null)
+            {
+                _introController = GetComponent<TimedOverlayUIController>();
             }
 
             _remainingTime = Mathf.Max(1f, _levelDurationSeconds);
@@ -83,6 +90,12 @@ namespace Splime.UI
             PlayerLevelNetworkController.LevelFailedReceived += HandleLevelFailedReceived;
             PlayerLevelNetworkController.LevelTimerUpdatedReceived += HandleLevelTimerUpdatedReceived;
 
+            if (_introController != null)
+            {
+                _isWaitingForIntro = _introController.WillShowOnEnable;
+                _introController.Completed += HandleIntroCompleted;
+            }
+
             BindNetworkEvents();
             FindLocalInput();
             ApplyCurrentInputState();
@@ -108,6 +121,12 @@ namespace Splime.UI
             PlayerLevelNetworkController.LevelCompletedReceived -= HandleLevelCompletedReceived;
             PlayerLevelNetworkController.LevelFailedReceived -= HandleLevelFailedReceived;
             PlayerLevelNetworkController.LevelTimerUpdatedReceived -= HandleLevelTimerUpdatedReceived;
+
+            if (_introController != null)
+            {
+                _introController.Completed -= HandleIntroCompleted;
+            }
+
             UnbindNetworkEvents();
 
             if (_localInput != null)
@@ -122,6 +141,7 @@ namespace Splime.UI
                 _failureRequested ||
                 _isChangingScene ||
                 _isTimerPaused ||
+                _isWaitingForIntro ||
                 !HasTimerAuthority)
             {
                 return;
@@ -144,6 +164,11 @@ namespace Splime.UI
             {
                 RequestLevelFailure();
             }
+        }
+
+        private void HandleIntroCompleted()
+        {
+            _isWaitingForIntro = false;
         }
 
         private void HandleRestartRequested()
