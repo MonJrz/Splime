@@ -237,11 +237,21 @@ namespace Splime.UI
 
         public void ShowLevelComplete()
         {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayVictory();
+            }
+
             SetView(LevelUIView.LevelComplete);
         }
 
         public void ShowLevelFailed()
         {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayDefeat();
+            }
+
             SetView(LevelUIView.LevelFailed);
         }
 

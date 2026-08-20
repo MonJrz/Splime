@@ -16,8 +16,8 @@ public class ButtonSFX : MonoBehaviour, IPointerEnterHandler
     {
         button.onClick.AddListener(() =>
         {
-            if (MenuAudioManager.Instance != null)
-                MenuAudioManager.Instance.PlayClick();
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.PlayClick();
         });
     }
 
@@ -25,7 +25,7 @@ public class ButtonSFX : MonoBehaviour, IPointerEnterHandler
     {
         if (!button.interactable) return;
 
-        if (MenuAudioManager.Instance != null)
-            MenuAudioManager.Instance.PlayHover();
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayHover();
     }
 }

@@ -79,6 +79,11 @@ namespace Splime.UI
             SetVisible(true);
             PrepareInitialPose();
 
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayLevelStart();
+            }
+
             _sequenceRoutine = StartCoroutine(PlaySequence());
         }
 
