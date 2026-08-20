@@ -2456,6 +2456,8 @@ GameObject:
   - component: {fileID: 119459490}
   - component: {fileID: 119459489}
   - component: {fileID: 119459488}
+  - component: {fileID: 119459491}
+  - component: {fileID: 119459492}
   m_Layer: 0
   m_Name: SwitchInteract
   m_TagString: Untagged
@@ -2528,6 +2530,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 56c31d1edf3fccf4c92e82f056b5c6a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Puzzles.PuzzleMechanismLock
+  ShowTopMostFoldoutHeaderGroup: 1
   _startLocked: 0
   _onLocked:
     m_PersistentCalls:
@@ -2757,6 +2760,55 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &119459491
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 119459485}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 103449957
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  m_InScenePlaced: 0
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 1
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
+--- !u!114 &119459492
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 119459485}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95e957d6c360183419a4f94285ac6984, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.Puzzles.PuzzleSwitch
+  ShowTopMostFoldoutHeaderGroup: 1
+  _mode: 1
+  _targetMover: {fileID: 0}
+  _mechanismLock: {fileID: 119459489}
+  _blockingMechanismLock: {fileID: 0}
+  _onStateA:
+    m_PersistentCalls:
+      m_Calls: []
+  _onStateB:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1001 &123170943
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -12732,7 +12784,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2797809417035245370, guid: 86d5225e36a36b64eaeea98c57f2b0b1, type: 3}
       propertyPath: GlobalObjectIdHash
-      value: 769648618
+      value: 3149442237
       objectReference: {fileID: 0}
     - target: {fileID: 4551487688154248597, guid: 86d5225e36a36b64eaeea98c57f2b0b1, type: 3}
       propertyPath: m_LocalPosition.x
@@ -17586,6 +17638,7 @@ GameObject:
   - component: {fileID: 854078726}
   - component: {fileID: 854078725}
   - component: {fileID: 854078724}
+  - component: {fileID: 854078730}
   m_Layer: 0
   m_Name: ValveInteract
   m_TagString: Untagged
@@ -17642,6 +17695,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f54e47aee29b75640a222d26cf56c763, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Puzzles.Valve
+  ShowTopMostFoldoutHeaderGroup: 1
   _mechanismLock: {fileID: 119459489}
   _onOpened:
     m_PersistentCalls:
@@ -17765,6 +17819,32 @@ Transform:
   - {fileID: 540515398}
   m_Father: {fileID: 231913740}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &854078730
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 854078723}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 2452938108
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  m_InScenePlaced: 0
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 1
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
 --- !u!1 &857189184
 GameObject:
   m_ObjectHideFlags: 0
@@ -34328,7 +34408,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2797809417035245370, guid: 163907bdb5f425f47b42e8ab16bf2952, type: 3}
       propertyPath: GlobalObjectIdHash
-      value: 3758334337
+      value: 3944816142
       objectReference: {fileID: 0}
     - target: {fileID: 4551487688154248597, guid: 163907bdb5f425f47b42e8ab16bf2952, type: 3}
       propertyPath: m_LocalPosition.x
@@ -40292,6 +40372,7 @@ GameObject:
   - component: {fileID: 2030392469}
   - component: {fileID: 2030392467}
   - component: {fileID: 2030392471}
+  - component: {fileID: 2030392472}
   m_Layer: 0
   m_Name: SwitchMoverInteract
   m_TagString: Untagged
@@ -40394,9 +40475,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 95e957d6c360183419a4f94285ac6984, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Puzzles.PuzzleSwitch
+  ShowTopMostFoldoutHeaderGroup: 1
   _mode: 0
   _targetMover: {fileID: 1214098951}
-  _mechanismLock: {fileID: 119459489}
+  _mechanismLock: {fileID: 0}
+  _blockingMechanismLock: {fileID: 119459489}
   _onStateA:
     m_PersistentCalls:
       m_Calls:
@@ -40427,6 +40510,32 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &2030392472
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2030392465}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 1454988470
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  m_InScenePlaced: 0
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 1
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
 --- !u!1001 &2033666748
 PrefabInstance:
   m_ObjectHideFlags: 0
