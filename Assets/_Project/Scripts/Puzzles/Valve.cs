@@ -76,7 +76,10 @@ namespace Splime.Puzzles
             }
         }
 
-        [Rpc(SendTo.Server, RequireOwnership = false)]
+        [Rpc(
+            SendTo.Server,
+            InvokePermission = RpcInvokePermission.Everyone
+        )]
         private void RequestToggleRpc()
         {
             ToggleServer();

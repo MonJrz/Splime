@@ -22,6 +22,10 @@ namespace Splime.Puzzles
         [Header("Mechanism Lock Mode")]
         [SerializeField] private PuzzleMechanismLock _mechanismLock;
 
+        [Header("Optional External Lock")]
+        [Tooltip("If assigned, this switch cannot be used while that mechanism lock is active.")]
+        [SerializeField] private PuzzleMechanismLock _blockingMechanismLock;
+
         [Header("Feedback Events")]
         [SerializeField] private UnityEvent _onStateA = new UnityEvent();
         [SerializeField] private UnityEvent _onStateB = new UnityEvent();
@@ -58,21 +62,36 @@ namespace Splime.Puzzles
             base.OnNetworkDespawn();
         }
 
+        private bool IsInteractionBlocked()
+        {
+            if (_blockingMechanismLock != null &&
+                _blockingMechanismLock.IsLocked)
+            {
+                Debug.Log(
+                    $"[{nameof(PuzzleSwitch)}] " +
+                    $"{gameObject.name} bloqueado por Mechanism Lock.",
+                    this
+                );
+
+                return true;
+            }
+
+            return false;
+        }
+
         public void Interact()
         {
-            // ─────────────────────────────
-            // OFFLINE / PRUEBA LOCAL
-            // ─────────────────────────────
+            if (IsInteractionBlocked())
+                return;
+
+            // Offline / prueba local
             if (!IsSpawned)
             {
                 ExecuteLocalInteraction();
                 return;
             }
 
-            // ─────────────────────────────
-            // ONLINE
-            // ─────────────────────────────
-
+            // Online
             if (IsServer)
             {
                 ExecuteServerInteraction();
@@ -83,9 +102,15 @@ namespace Splime.Puzzles
             }
         }
 
-        [Rpc(SendTo.Server, RequireOwnership = false)]
+        [Rpc(
+            SendTo.Server,
+            InvokePermission = RpcInvokePermission.Everyone
+        )]
         private void RequestInteractRpc()
         {
+            if (IsInteractionBlocked())
+                return;
+
             ExecuteServerInteraction();
         }
 
@@ -106,6 +131,9 @@ namespace Splime.Puzzles
         private void ExecuteServerInteraction()
         {
             if (!IsServer)
+                return;
+
+            if (IsInteractionBlocked())
                 return;
 
             switch (_mode)
