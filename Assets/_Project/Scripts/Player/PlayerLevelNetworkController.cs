@@ -35,6 +35,7 @@ namespace Splime.Player
         public static event Action LevelCompletedReceived;
         public static event Action LevelFailedReceived;
         public static event Action<int> LevelTimerUpdatedReceived;
+        public static event Action AvailableContentEndedReceived;
 
         public SpawnPlayerRole SpawnRole => _spawnRole;
 
@@ -129,6 +130,22 @@ namespace Splime.Player
             SyncLevelTimerRpc(clampedSeconds);
         }
 
+        public void ShowAvailableContentEndForAllPlayers()
+        {
+            if (!CanBroadcastLevelState())
+            {
+                return;
+            }
+
+            if (!IsNetworkSessionActive)
+            {
+                AvailableContentEndedReceived?.Invoke();
+                return;
+            }
+
+            ShowAvailableContentEndRpc();
+        }
+
         [Rpc(SendTo.Owner)]
         private void RespawnOwnerRpc(Vector3 position, Quaternion rotation)
         {
@@ -154,6 +171,12 @@ namespace Splime.Player
             {
                 LevelTimerUpdatedReceived?.Invoke(Mathf.Max(0, remainingSeconds));
             }
+        }
+
+        [Rpc(SendTo.ClientsAndHost)]
+        private void ShowAvailableContentEndRpc()
+        {
+            AvailableContentEndedReceived?.Invoke();
         }
 
         private bool CanBroadcastLevelState()

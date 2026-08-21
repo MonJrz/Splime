@@ -22,6 +22,7 @@ namespace Splime.UI
 
         [Header("Scene Flow")]
         [SerializeField] private string _nextLevelSceneName;
+        [SerializeField] private bool _showBlockingOverlayInsteadOfNextLevel;
         [SerializeField] private string _campaignStartSceneName = "Level1";
         [SerializeField] private string _levelSelectionSceneName = "Main";
         [SerializeField] private string _leaveDestinationSceneName = "Main";
@@ -92,6 +93,8 @@ namespace Splime.UI
             PlayerLevelNetworkController.LevelCompletedReceived += HandleLevelCompletedReceived;
             PlayerLevelNetworkController.LevelFailedReceived += HandleLevelFailedReceived;
             PlayerLevelNetworkController.LevelTimerUpdatedReceived += HandleLevelTimerUpdatedReceived;
+            PlayerLevelNetworkController.AvailableContentEndedReceived +=
+                HandleAvailableContentEndedReceived;
 
             if (_introController != null)
             {
@@ -126,6 +129,8 @@ namespace Splime.UI
             PlayerLevelNetworkController.LevelCompletedReceived -= HandleLevelCompletedReceived;
             PlayerLevelNetworkController.LevelFailedReceived -= HandleLevelFailedReceived;
             PlayerLevelNetworkController.LevelTimerUpdatedReceived -= HandleLevelTimerUpdatedReceived;
+            PlayerLevelNetworkController.AvailableContentEndedReceived -=
+                HandleAvailableContentEndedReceived;
 
             if (_introController != null)
             {
@@ -347,6 +352,12 @@ namespace Splime.UI
 
         private void HandleNextLevelRequested()
         {
+            if (_showBlockingOverlayInsteadOfNextLevel)
+            {
+                RequestAvailableContentEnd();
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(_nextLevelSceneName))
             {
                 Debug.LogWarning($"[{nameof(LevelFlowController)}] Next level scene is not configured.", this);
@@ -354,6 +365,50 @@ namespace Splime.UI
             }
 
             RequestLevelLoad(_nextLevelSceneName);
+        }
+
+        private void RequestAvailableContentEnd()
+        {
+            if (!_levelUIController.HasBlockingOverlay)
+            {
+                Debug.LogError(
+                    $"[{nameof(LevelFlowController)}] Blocking overlay is not configured.",
+                    this);
+                return;
+            }
+
+            if (!CanControlLevel)
+            {
+                Debug.LogWarning(
+                    $"[{nameof(LevelFlowController)}] Only the host can finish the available content.",
+                    this);
+                return;
+            }
+
+            if (TryGetLevelNetworkBridge(out PlayerLevelNetworkController bridge))
+            {
+                bridge.ShowAvailableContentEndForAllPlayers();
+                return;
+            }
+
+            if (!IsNetworkSessionActive)
+            {
+                HandleAvailableContentEndedReceived();
+                return;
+            }
+
+            Debug.LogWarning(
+                $"[{nameof(LevelFlowController)}] No server player is available to synchronize the blocking overlay.",
+                this);
+        }
+
+        private void HandleAvailableContentEndedReceived()
+        {
+            if (!_isChangingScene)
+            {
+                _levelEnded = true;
+                _levelUIController.ShowBlockingOverlay();
+            }
         }
 
         private void HandleLeaveRequested()
