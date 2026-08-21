@@ -75,6 +75,7 @@ namespace Splime.UI
 
         public LevelUIView CurrentView => _currentView;
         public bool IsInputBlocked => _currentView != LevelUIView.Gameplay;
+        public bool HasBlockingOverlay => _blockingOverlayPanel != null;
         public bool IsBlockingOverlayVisible => _currentView == LevelUIView.BlockingOverlay;
         public bool IsLevelTimerPaused =>
             _currentView == LevelUIView.Paused || IsBlockingOverlayVisible;
@@ -268,6 +269,14 @@ namespace Splime.UI
 
         public void ShowBlockingOverlay()
         {
+            if (_blockingOverlayPanel == null)
+            {
+                Debug.LogWarning(
+                    $"[{nameof(LevelUIController)}] Blocking overlay panel reference is missing.",
+                    this);
+                return;
+            }
+
             SetView(LevelUIView.BlockingOverlay);
         }
 

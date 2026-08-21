@@ -34473,6 +34473,7 @@ MonoBehaviour:
   - {fileID: 1529452337}
   _levelDurationSeconds: 300
   _nextLevelSceneName: 
+  _showBlockingOverlayInsteadOfNextLevel: 1
   _campaignStartSceneName: Level1
   _levelSelectionSceneName: Main
   _leaveDestinationSceneName: Main
@@ -34517,7 +34518,7 @@ MonoBehaviour:
   _timerText: {fileID: 2147002003}
   _completionTimeText: {fileID: 0}
   _blockingOverlayPanel: {fileID: 1866001788}
-  _showBlockingOverlayOnStart: 1
+  _showBlockingOverlayOnStart: 0
   _connectionLostPanel: {fileID: 1999999887}
   _connectionLostText: {fileID: 1999999998}
   _connectionLostReturnButton: {fileID: 1999999700}

@@ -10555,6 +10555,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Levels.CooperativeVictoryZone
   _requiredPlayers: 2
+  _levelUIController: {fileID: 0}
+  _promptMessage: Both players must be in the victory zone to complete the level
 --- !u!65 &537453870
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -41415,7 +41417,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_Color: {r: 0.9490197, g: 0.9490197, b: 0.9490197, a: 0.392}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -41524,7 +41526,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.63529414, g: 0.27450982, b: 1, a: 1}
+  m_Color: {r: 0.9490197, g: 0.9490197, b: 0.9490197, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -42943,6 +42945,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Splime.UI.InteractionPromptUIController
   _panel: {fileID: 1999999594}
   _messageText: {fileID: 1999999840}
+  _fontSize: 24
 --- !u!1 &1999999671
 GameObject:
   m_ObjectHideFlags: 0
@@ -42981,7 +42984,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0.7490196, b: 1, a: 1}
+  m_Color: {r: 0.9490197, g: 0.9490197, b: 0.9490197, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -45972,7 +45975,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.63529414, g: 0.27450982, b: 1, a: 1}
+  m_Color: {r: 0.9490197, g: 0.9490197, b: 0.9490197, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -46290,7 +46293,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.63529414, g: 0.27450982, b: 1, a: 1}
+  m_Color: {r: 0.9490197, g: 0.9490197, b: 0.9490197, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -50318,7 +50321,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.9803922, g: 0.14509805, b: 0.8313726, a: 1}
+  m_Color: {r: 0.9490197, g: 0.9490197, b: 0.9490197, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -51258,6 +51261,7 @@ MonoBehaviour:
   _panel: {fileID: 1999999564}
   _displayDuration: 3
   _showOnEnable: 1
+  _levelStartSoundDelay: 1.5
   _graphics: {fileID: 188766031}
   _circlesImage: {fileID: 1770078877}
   _levelText: {fileID: 1403153180}
@@ -51333,6 +51337,8 @@ MonoBehaviour:
   _levelFailedPanel: {fileID: 1999999951}
   _timerText: {fileID: 2147002003}
   _completionTimeText: {fileID: 1999999864}
+  _blockingOverlayPanel: {fileID: 0}
+  _showBlockingOverlayOnStart: 0
   _connectionLostPanel: {fileID: 1999999887}
   _connectionLostText: {fileID: 1999999998}
   _connectionLostReturnButton: {fileID: 1999999700}
