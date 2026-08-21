@@ -4,6 +4,7 @@ using Splime.Network;
 using Splime.Player;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -44,6 +45,7 @@ namespace Splime.UI
         private float _remainingTime;
         private int _lastPublishedTime = -1;
         private Coroutine _connectionFailureCoroutine;
+        private InputAction _togglePauseAction;
 
         public bool IsChangingScene => _isChangingScene;
         public bool CanControlLevel =>
@@ -67,6 +69,11 @@ namespace Splime.UI
 
             _remainingTime = Mathf.Max(1f, _levelDurationSeconds);
             _levelUIController?.SetRemainingTime(Mathf.CeilToInt(_remainingTime));
+
+            _togglePauseAction = new InputAction(
+                "Toggle Pause",
+                InputActionType.Button,
+                "<Keyboard>/escape");
         }
 
         private void OnEnable()
@@ -88,6 +95,8 @@ namespace Splime.UI
             _levelUIController.ReplayAllRequested += HandleReplayAllRequested;
             _levelUIController.MainMenuRequested += HandleMainMenuRequested;
             _levelUIController.InputBlockChanged += HandleInputBlockChanged;
+            _togglePauseAction.performed += HandleTogglePausePerformed;
+            _togglePauseAction.Enable();
             SlimeInput.LocalInputReady += HandleLocalInputReady;
             SlimeInput.PauseStateReceived += HandlePauseStateReceived;
             PlayerLevelNetworkController.LevelCompletedReceived += HandleLevelCompletedReceived;
@@ -110,6 +119,9 @@ namespace Splime.UI
 
         private void OnDisable()
         {
+            _togglePauseAction.Disable();
+            _togglePauseAction.performed -= HandleTogglePausePerformed;
+
             if (_levelUIController != null)
             {
                 _levelUIController.RestartRequested -= HandleRestartRequested;
@@ -143,6 +155,11 @@ namespace Splime.UI
             {
                 _localInput.SetInputBlocked(false);
             }
+        }
+
+        private void OnDestroy()
+        {
+            _togglePauseAction?.Dispose();
         }
 
         private void Update()
@@ -195,6 +212,19 @@ namespace Splime.UI
         private void HandleResumeRequested()
         {
             RequestPauseState(false);
+        }
+
+        private void HandleTogglePausePerformed(InputAction.CallbackContext context)
+        {
+            switch (_levelUIController.CurrentView)
+            {
+                case LevelUIView.Gameplay:
+                    RequestPauseState(true);
+                    break;
+                case LevelUIView.Paused:
+                    RequestPauseState(false);
+                    break;
+            }
         }
 
         private void RequestPauseState(bool isPaused)
