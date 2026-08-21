@@ -19,6 +19,7 @@ public class AudioManager : MonoBehaviour
 
     [Header("Level Music Settings")]
     [SerializeField, Range(0f, 1f)] private float levelMusicVolume = 0.7f;
+    public float LevelMusicVolume => levelMusicVolume;
 
    private void Awake()
     {
@@ -42,14 +43,14 @@ public class AudioManager : MonoBehaviour
         sfxSource.PlayOneShot(clickClip);
     }
 
-    public void PlayMusic(AudioClip clip, float volume = 1f)
+    public void PlayMusic(AudioClip clip, float volume = -1f)
     {
         if (clip == null || musicSource == null) return;
 
         if (musicSource.clip == clip && musicSource.isPlaying) return; // ya está sonando, no reiniciar
 
         musicSource.clip = clip;
-        musicSource.volume = volume;
+        musicSource.volume = volume >= 0f ? volume : levelMusicVolume;
         musicSource.loop = true;
         musicSource.Play();
     }

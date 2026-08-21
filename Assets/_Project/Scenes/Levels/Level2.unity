@@ -2758,7 +2758,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 284808183622889831, guid: 9b257ba652dd19b46b7459ae546c3a34, type: 3}
       propertyPath: m_LocalScale.z
-      value: -1
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 284808183622889831, guid: 9b257ba652dd19b46b7459ae546c3a34, type: 3}
       propertyPath: m_LocalPosition.x
@@ -18741,6 +18741,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 823778177}
     m_Modifications:
+    - target: {fileID: 4882217903376162901, guid: 83a2b7a269bf8fc49b132597b1d88dd5, type: 3}
+      propertyPath: m_Size.x
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6416755444272240933, guid: 83a2b7a269bf8fc49b132597b1d88dd5, type: 3}
       propertyPath: m_Size.y
       value: 6
@@ -20030,6 +20034,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 823778177}
     m_Modifications:
+    - target: {fileID: 4882217903376162901, guid: 83a2b7a269bf8fc49b132597b1d88dd5, type: 3}
+      propertyPath: m_Size.x
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8302330914614996373, guid: 83a2b7a269bf8fc49b132597b1d88dd5, type: 3}
       propertyPath: m_Name
       value: Tree2 (1)
@@ -20048,7 +20056,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8681846437806257967, guid: 83a2b7a269bf8fc49b132597b1d88dd5, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -8.69
+      value: -8.041
       objectReference: {fileID: 0}
     - target: {fileID: 8681846437806257967, guid: 83a2b7a269bf8fc49b132597b1d88dd5, type: 3}
       propertyPath: m_LocalPosition.y
@@ -21047,6 +21055,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 823778177}
     m_Modifications:
+    - target: {fileID: 4882217903376162901, guid: 83a2b7a269bf8fc49b132597b1d88dd5, type: 3}
+      propertyPath: m_Size.x
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8302330914614996373, guid: 83a2b7a269bf8fc49b132597b1d88dd5, type: 3}
       propertyPath: m_Name
       value: Tree2 (2)
@@ -27863,6 +27875,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 823778177}
     m_Modifications:
+    - target: {fileID: 4882217903376162901, guid: 83a2b7a269bf8fc49b132597b1d88dd5, type: 3}
+      propertyPath: m_Size.x
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8302330914614996373, guid: 83a2b7a269bf8fc49b132597b1d88dd5, type: 3}
       propertyPath: m_Name
       value: Tree2 (3)
@@ -53556,7 +53572,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4267321839020777637, guid: 26e576c449698794e9d62ae1b1e7d5c9, type: 3}
       propertyPath: m_LocalScale.x
-      value: -1
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4267321839020777637, guid: 26e576c449698794e9d62ae1b1e7d5c9, type: 3}
       propertyPath: m_LocalScale.z
