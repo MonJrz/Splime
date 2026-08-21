@@ -4,6 +4,7 @@ using Splime.Network;
 using Splime.Player;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -22,6 +23,7 @@ namespace Splime.UI
 
         [Header("Scene Flow")]
         [SerializeField] private string _nextLevelSceneName;
+        [SerializeField] private bool _showBlockingOverlayInsteadOfNextLevel;
         [SerializeField] private string _campaignStartSceneName = "Level1";
         [SerializeField] private string _levelSelectionSceneName = "Main";
         [SerializeField] private string _leaveDestinationSceneName = "Main";
@@ -43,6 +45,7 @@ namespace Splime.UI
         private float _remainingTime;
         private int _lastPublishedTime = -1;
         private Coroutine _connectionFailureCoroutine;
+        private InputAction _togglePauseAction;
 
         public bool IsChangingScene => _isChangingScene;
         public bool CanControlLevel =>
@@ -66,6 +69,11 @@ namespace Splime.UI
 
             _remainingTime = Mathf.Max(1f, _levelDurationSeconds);
             _levelUIController?.SetRemainingTime(Mathf.CeilToInt(_remainingTime));
+
+            _togglePauseAction = new InputAction(
+                "Toggle Pause",
+                InputActionType.Button,
+                "<Keyboard>/escape");
         }
 
         private void OnEnable()
@@ -87,11 +95,15 @@ namespace Splime.UI
             _levelUIController.ReplayAllRequested += HandleReplayAllRequested;
             _levelUIController.MainMenuRequested += HandleMainMenuRequested;
             _levelUIController.InputBlockChanged += HandleInputBlockChanged;
+            _togglePauseAction.performed += HandleTogglePausePerformed;
+            _togglePauseAction.Enable();
             SlimeInput.LocalInputReady += HandleLocalInputReady;
             SlimeInput.PauseStateReceived += HandlePauseStateReceived;
             PlayerLevelNetworkController.LevelCompletedReceived += HandleLevelCompletedReceived;
             PlayerLevelNetworkController.LevelFailedReceived += HandleLevelFailedReceived;
             PlayerLevelNetworkController.LevelTimerUpdatedReceived += HandleLevelTimerUpdatedReceived;
+            PlayerLevelNetworkController.AvailableContentEndedReceived +=
+                HandleAvailableContentEndedReceived;
 
             if (_introController != null)
             {
@@ -107,6 +119,9 @@ namespace Splime.UI
 
         private void OnDisable()
         {
+            _togglePauseAction.Disable();
+            _togglePauseAction.performed -= HandleTogglePausePerformed;
+
             if (_levelUIController != null)
             {
                 _levelUIController.RestartRequested -= HandleRestartRequested;
@@ -126,6 +141,8 @@ namespace Splime.UI
             PlayerLevelNetworkController.LevelCompletedReceived -= HandleLevelCompletedReceived;
             PlayerLevelNetworkController.LevelFailedReceived -= HandleLevelFailedReceived;
             PlayerLevelNetworkController.LevelTimerUpdatedReceived -= HandleLevelTimerUpdatedReceived;
+            PlayerLevelNetworkController.AvailableContentEndedReceived -=
+                HandleAvailableContentEndedReceived;
 
             if (_introController != null)
             {
@@ -138,6 +155,11 @@ namespace Splime.UI
             {
                 _localInput.SetInputBlocked(false);
             }
+        }
+
+        private void OnDestroy()
+        {
+            _togglePauseAction?.Dispose();
         }
 
         private void Update()
@@ -190,6 +212,19 @@ namespace Splime.UI
         private void HandleResumeRequested()
         {
             RequestPauseState(false);
+        }
+
+        private void HandleTogglePausePerformed(InputAction.CallbackContext context)
+        {
+            switch (_levelUIController.CurrentView)
+            {
+                case LevelUIView.Gameplay:
+                    RequestPauseState(true);
+                    break;
+                case LevelUIView.Paused:
+                    RequestPauseState(false);
+                    break;
+            }
         }
 
         private void RequestPauseState(bool isPaused)
@@ -347,6 +382,12 @@ namespace Splime.UI
 
         private void HandleNextLevelRequested()
         {
+            if (_showBlockingOverlayInsteadOfNextLevel)
+            {
+                RequestAvailableContentEnd();
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(_nextLevelSceneName))
             {
                 Debug.LogWarning($"[{nameof(LevelFlowController)}] Next level scene is not configured.", this);
@@ -354,6 +395,50 @@ namespace Splime.UI
             }
 
             RequestLevelLoad(_nextLevelSceneName);
+        }
+
+        private void RequestAvailableContentEnd()
+        {
+            if (!_levelUIController.HasBlockingOverlay)
+            {
+                Debug.LogError(
+                    $"[{nameof(LevelFlowController)}] Blocking overlay is not configured.",
+                    this);
+                return;
+            }
+
+            if (!CanControlLevel)
+            {
+                Debug.LogWarning(
+                    $"[{nameof(LevelFlowController)}] Only the host can finish the available content.",
+                    this);
+                return;
+            }
+
+            if (TryGetLevelNetworkBridge(out PlayerLevelNetworkController bridge))
+            {
+                bridge.ShowAvailableContentEndForAllPlayers();
+                return;
+            }
+
+            if (!IsNetworkSessionActive)
+            {
+                HandleAvailableContentEndedReceived();
+                return;
+            }
+
+            Debug.LogWarning(
+                $"[{nameof(LevelFlowController)}] No server player is available to synchronize the blocking overlay.",
+                this);
+        }
+
+        private void HandleAvailableContentEndedReceived()
+        {
+            if (!_isChangingScene)
+            {
+                _levelEnded = true;
+                _levelUIController.ShowBlockingOverlay();
+            }
         }
 
         private void HandleLeaveRequested()

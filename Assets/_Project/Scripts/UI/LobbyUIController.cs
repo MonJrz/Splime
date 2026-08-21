@@ -46,10 +46,6 @@ namespace Splime.UI
         [SerializeField] private TMP_Text _guestReadyText;
         [SerializeField] private TMP_Text _roomCodeText;
         [SerializeField] private TMP_Text _feedbackText;
-        [SerializeField] private Graphic _hostReadyIndicator;
-        [SerializeField] private Graphic _guestReadyIndicator;
-        [SerializeField] private Color _readyColor = new Color(0.35f, 0.8f, 0.45f, 1f);
-        [SerializeField] private Color _notReadyColor = new Color(0.75f, 0.75f, 0.75f, 1f);
         [SerializeField] private bool _hideStartButtonForGuest = true;
 
         [Header("Ready Text")]
@@ -547,10 +543,10 @@ namespace Splime.UI
                 _startButton.gameObject.SetActive(_isLocalHost);
             }
 
-            RefreshReadyPresentation();
+            RefreshReadyText();
         }
 
-        private void RefreshReadyPresentation()
+        private void RefreshReadyText()
         {
             if (_hostReadyText != null)
             {
@@ -560,16 +556,6 @@ namespace Splime.UI
             if (_guestReadyText != null)
             {
                 _guestReadyText.text = GetReadyText(_guestReady, _localRoleAssigned && !_isLocalHost);
-            }
-
-            if (_hostReadyIndicator != null)
-            {
-                _hostReadyIndicator.color = _hostReady ? _readyColor : _notReadyColor;
-            }
-
-            if (_guestReadyIndicator != null)
-            {
-                _guestReadyIndicator.color = _guestReady ? _readyColor : _notReadyColor;
             }
         }
 
