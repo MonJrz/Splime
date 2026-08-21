@@ -11,9 +11,6 @@ namespace Splime.Abilities
         [SerializeField] private SkinnedMeshRenderer _bodyRenderer;
         [SerializeField] private Material _metalMaterial;
 
-        [Header("Movement Settings")]
-        [SerializeField] private float _normalMoveSpeed = 6f;
-        [SerializeField] private float _metalMoveSpeed = 3f;
 
         [Header("Metal Form Stats")]
         [SerializeField] private float _metalSpeedMultiplier = 0.6f;

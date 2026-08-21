@@ -2758,7 +2758,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 284808183622889831, guid: 9b257ba652dd19b46b7459ae546c3a34, type: 3}
       propertyPath: m_LocalScale.z
-      value: -1
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 284808183622889831, guid: 9b257ba652dd19b46b7459ae546c3a34, type: 3}
       propertyPath: m_LocalPosition.x
@@ -10555,6 +10555,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Levels.CooperativeVictoryZone
   _requiredPlayers: 2
+  _levelUIController: {fileID: 0}
+  _promptMessage: Both players must be in the victory zone to complete the level
 --- !u!65 &537453870
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -18739,6 +18741,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 823778177}
     m_Modifications:
+    - target: {fileID: 4882217903376162901, guid: 83a2b7a269bf8fc49b132597b1d88dd5, type: 3}
+      propertyPath: m_Size.x
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6416755444272240933, guid: 83a2b7a269bf8fc49b132597b1d88dd5, type: 3}
       propertyPath: m_Size.y
       value: 6
@@ -20028,6 +20034,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 823778177}
     m_Modifications:
+    - target: {fileID: 4882217903376162901, guid: 83a2b7a269bf8fc49b132597b1d88dd5, type: 3}
+      propertyPath: m_Size.x
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8302330914614996373, guid: 83a2b7a269bf8fc49b132597b1d88dd5, type: 3}
       propertyPath: m_Name
       value: Tree2 (1)
@@ -20046,7 +20056,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8681846437806257967, guid: 83a2b7a269bf8fc49b132597b1d88dd5, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -8.69
+      value: -8.041
       objectReference: {fileID: 0}
     - target: {fileID: 8681846437806257967, guid: 83a2b7a269bf8fc49b132597b1d88dd5, type: 3}
       propertyPath: m_LocalPosition.y
@@ -21045,6 +21055,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 823778177}
     m_Modifications:
+    - target: {fileID: 4882217903376162901, guid: 83a2b7a269bf8fc49b132597b1d88dd5, type: 3}
+      propertyPath: m_Size.x
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8302330914614996373, guid: 83a2b7a269bf8fc49b132597b1d88dd5, type: 3}
       propertyPath: m_Name
       value: Tree2 (2)
@@ -27861,6 +27875,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 823778177}
     m_Modifications:
+    - target: {fileID: 4882217903376162901, guid: 83a2b7a269bf8fc49b132597b1d88dd5, type: 3}
+      propertyPath: m_Size.x
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8302330914614996373, guid: 83a2b7a269bf8fc49b132597b1d88dd5, type: 3}
       propertyPath: m_Name
       value: Tree2 (3)
@@ -42943,6 +42961,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Splime.UI.InteractionPromptUIController
   _panel: {fileID: 1999999594}
   _messageText: {fileID: 1999999840}
+  _fontSize: 24
 --- !u!1 &1999999671
 GameObject:
   m_ObjectHideFlags: 0
@@ -51258,6 +51277,7 @@ MonoBehaviour:
   _panel: {fileID: 1999999564}
   _displayDuration: 3
   _showOnEnable: 1
+  _levelStartSoundDelay: 1.5
   _graphics: {fileID: 188766031}
   _circlesImage: {fileID: 1770078877}
   _levelText: {fileID: 1403153180}
@@ -51333,6 +51353,8 @@ MonoBehaviour:
   _levelFailedPanel: {fileID: 1999999951}
   _timerText: {fileID: 2147002003}
   _completionTimeText: {fileID: 1999999864}
+  _blockingOverlayPanel: {fileID: 0}
+  _showBlockingOverlayOnStart: 0
   _connectionLostPanel: {fileID: 1999999887}
   _connectionLostText: {fileID: 1999999998}
   _connectionLostReturnButton: {fileID: 1999999700}
@@ -53549,7 +53571,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4267321839020777637, guid: 26e576c449698794e9d62ae1b1e7d5c9, type: 3}
       propertyPath: m_LocalScale.x
-      value: -1
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4267321839020777637, guid: 26e576c449698794e9d62ae1b1e7d5c9, type: 3}
       propertyPath: m_LocalScale.z
