@@ -98,9 +98,18 @@ namespace Splime.Network
         {
             if (NetworkManager.Singleton != null)
             {
+                NetworkManager.Singleton.LogLevel = LogLevel.Developer;
                 EnsureTransportOptimized();
+
                 NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
                 NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+                NetworkManager.Singleton.OnTransportFailure += OnTransportFailure;
+                NetworkManager.Singleton.OnClientStarted += OnClientStarted;
+                NetworkManager.Singleton.OnClientStopped += OnClientStopped;
+                NetworkManager.Singleton.OnServerStarted += OnServerStarted;
+                NetworkManager.Singleton.OnServerStopped += OnServerStopped;
+
+                Debug.Log($"[{nameof(NetworkGameManager)}] 🔌 NetworkManager callbacks registrados. LogLevel: {NetworkManager.Singleton.LogLevel}");
             }
 
             _ = InitializeServicesAsync();
@@ -122,14 +131,59 @@ namespace Splime.Network
             {
                 NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
                 NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+                NetworkManager.Singleton.OnTransportFailure -= OnTransportFailure;
+                NetworkManager.Singleton.OnClientStarted -= OnClientStarted;
+                NetworkManager.Singleton.OnClientStopped -= OnClientStopped;
+                NetworkManager.Singleton.OnServerStarted -= OnServerStarted;
+                NetworkManager.Singleton.OnServerStopped -= OnServerStopped;
             }
 
             Instance = null;
         }
 
+        private void OnClientStarted()
+        {
+            Debug.Log($"[{nameof(NetworkGameManager)}] 🚀 Netcode OnClientStarted. IsListening: {NetworkManager.Singleton?.IsListening}, IsClient: {NetworkManager.Singleton?.IsClient}, IsConnectedClient: {NetworkManager.Singleton?.IsConnectedClient}, LocalClientId: {NetworkManager.Singleton?.LocalClientId}");
+            RefreshLobbyUI();
+        }
+
+        private void OnClientStopped(bool wasHost)
+        {
+            string disconnectReason = NetworkManager.Singleton?.DisconnectReason ?? "N/A";
+            Debug.Log($"[{nameof(NetworkGameManager)}] 🛑 Netcode OnClientStopped. WasHost: {wasHost}, DisconnectReason: '{disconnectReason}'");
+
+            // Fix 2: Si el cliente se detuvo sin haber llegado a conectarse (IsConnectedClient nunca fue true)
+            // y estamos en el flujo de Join de un Guest, significa que el handshake Relay/WSS falló.
+            // Iniciamos recuperación inmediatamente en lugar de quedarnos bloqueados en "Synchronizing".
+            if (!wasHost &&
+                !_isCleaningUp &&
+                _sessionRole == SessionRole.Guest &&
+                (_sessionFlowState == SessionFlowState.Synchronizing || _sessionFlowState == SessionFlowState.JoiningGuest))
+            {
+                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Handshake Relay/NGO falló para el cliente (razón: '{disconnectReason}'). Iniciando recuperación.", this);
+                _ = RecoverFromConnectionFailureAsync("Could not connect to the host. Please try again.");
+            }
+        }
+
+        private void OnServerStarted()
+        {
+            Debug.Log($"[{nameof(NetworkGameManager)}] 🚀 Netcode OnServerStarted. IsListening: {NetworkManager.Singleton?.IsListening}, IsServer: {NetworkManager.Singleton?.IsServer}, ConnectedClients: {NetworkManager.Singleton?.ConnectedClientsIds.Count}");
+            RefreshLobbyUI();
+        }
+
+        private void OnServerStopped(bool wasHost)
+        {
+            Debug.Log($"[{nameof(NetworkGameManager)}] 🛑 Netcode OnServerStopped. WasHost: {wasHost}");
+        }
+
+        private void OnTransportFailure()
+        {
+            Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Netcode OnTransportFailure disparado! DisconnectReason: '{NetworkManager.Singleton?.DisconnectReason}'", this);
+        }
+
         private void OnClientConnected(ulong clientId)
         {
-            Debug.Log($"[{nameof(NetworkGameManager)}] 🟢 OnClientConnected disparado. ClientId: {clientId}, IsServer: {NetworkManager.Singleton?.IsServer}, IsLevelScene: {IsLevelSceneActive()}");
+            Debug.Log($"[{nameof(NetworkGameManager)}] 🟢 OnClientConnected disparado. ClientId: {clientId}, LocalClientId: {NetworkManager.Singleton?.LocalClientId}, IsServer: {NetworkManager.Singleton?.IsServer}, IsConnectedClient: {NetworkManager.Singleton?.IsConnectedClient}, TotalClients: {NetworkManager.Singleton?.ConnectedClientsIds.Count}, IsLevelScene: {IsLevelSceneActive()}");
 
             if (NetworkManager.Singleton != null &&
                 NetworkManager.Singleton.IsServer &&
@@ -144,6 +198,8 @@ namespace Splime.Network
         private void OnClientDisconnected(ulong clientId)
         {
             NetworkManager networkManager = NetworkManager.Singleton;
+            string disconnectReason = networkManager != null ? networkManager.DisconnectReason : "N/A";
+            Debug.LogWarning($"[{nameof(NetworkGameManager)}] 🔴 OnClientDisconnected. ClientId: {clientId}, LocalClientId: {networkManager?.LocalClientId}, DisconnectReason: '{disconnectReason}', IsServer: {networkManager?.IsServer}");
 
             if (networkManager != null &&
                 networkManager.IsServer &&
@@ -282,7 +338,13 @@ namespace Splime.Network
             try
             {
                 Debug.Log($"[{nameof(NetworkGameManager)}] 🔄 Inicializando Unity Gaming Services...");
-                await UnityServices.InitializeAsync();
+                
+                var initOptions = new InitializationOptions();
+                // Generar un perfil único por pestaña / instancia para evitar colisión de tokens en IndexedDB en WebGL
+                string profile = "Player_" + Guid.NewGuid().ToString("N").Substring(0, 8);
+                initOptions.SetOption("com.unity.services.core.profile", profile);
+
+                await UnityServices.InitializeAsync(initOptions);
 
                 // Si ya tiene token cacheado de una sesión anterior, no re-autenticamos
                 if (!AuthenticationService.Instance.IsSignedIn)
@@ -290,7 +352,7 @@ namespace Splime.Network
                     await AuthenticationService.Instance.SignInAnonymouslyAsync();
                 }
 
-                Debug.Log($"[{nameof(NetworkGameManager)}] ✅ Autenticado. PlayerID: {AuthenticationService.Instance.PlayerId}");
+                Debug.Log($"[{nameof(NetworkGameManager)}] ✅ Autenticado con perfil '{profile}'. PlayerID: {AuthenticationService.Instance.PlayerId}");
                 _isInitialized = true;
                 return true;
             }
@@ -341,21 +403,22 @@ namespace Splime.Network
 
                 Debug.Log($"[{nameof(NetworkGameManager)}] 🌐 Creando Sesión de Relay (MaxPlayers = 2)...");
 
-                EnsureTransportOptimized();
-
-                // Forzar protocolo WSS para compatibilidad WebGL ↔ Windows.
-                // WSS es el único protocolo soportado por navegadores (WebGL).
-                // Usar el mismo protocolo en Desktop garantiza la conexión cruzada.
+                // El SDK de Unity Multiplayer gestiona internamente el UnityTransport durante CreateSessionAsync.
+                // NO llamar a EnsureTransportOptimized() aquí — modificar el transport en este punto
+                // puede resetear la configuración interna del SDK y causar que el handshake WSS falle.
+                // UseWebSockets y UseEncryption se configuran en el Inspector del UnityTransport.
                 var options = new SessionOptions
                 {
                     MaxPlayers = 2
-                }.WithRelayNetwork()
-                 .WithNetworkOptions(new NetworkOptions { RelayProtocol = RelayProtocol.WSS });
+                }.WithRelayNetwork();
 
                 ISession session = await MultiplayerService.Instance.CreateSessionAsync(options);
 
+                Debug.Log($"[{nameof(NetworkGameManager)}] 📥 CreateSessionAsync completado. SessionId: {session?.Id}, Code: {session?.Code}, Host: {session?.Host}, CurrentPlayer: {session?.CurrentPlayer?.Id}, NetworkState: {session?.Network?.State}, SessionState: {session?.State}");
+
                 if (operationVersion != _sessionOperationVersion)
                 {
+                    Debug.LogWarning($"[{nameof(NetworkGameManager)}] ⚠️ Operación obsoleta (version {operationVersion} vs {_sessionOperationVersion}). Cerrando sesión.");
                     await CloseSessionSafelyAsync(session);
                     return;
                 }
@@ -363,14 +426,13 @@ namespace Splime.Network
                 SetCurrentSession(session);
                 _sessionFlowState = SessionFlowState.HostWaiting;
 
-                Debug.Log($"[{nameof(NetworkGameManager)}] 🎉 ¡HOST CREADO EXITOSAMENTE!");
-                Debug.Log($"[{nameof(NetworkGameManager)}] 🔑 JOIN CODE: {_joinCode}");
+                Debug.Log($"[{nameof(NetworkGameManager)}] 🎉 ¡HOST CREADO EXITOSAMENTE! 🔑 JOIN CODE: {_joinCode} | Network.State: {_currentSession?.Network?.State} | NM.IsListening: {NetworkManager.Singleton?.IsListening}");
                 _lobbyUIController?.ShowHostWaitingRoom(_joinCode);
                 RefreshLobbyUI();
             }
             catch (SessionException e)
             {
-                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error al crear la sesión: {e}", this);
+                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error al crear la sesión (SessionException): {e.Message}\n{e}", this);
                 await HandleConnectionAttemptFailedAsync(
                     operationVersion,
                     SessionRole.Host,
@@ -400,6 +462,7 @@ namespace Splime.Network
         {
             if (_isConnecting || _isCleaningUp || _currentSession != null)
             {
+                Debug.LogWarning($"[{nameof(NetworkGameManager)}] ⚠️ Ignorando Join: IsConnecting={_isConnecting}, IsCleaningUp={_isCleaningUp}, SessionExists={_currentSession != null}");
                 return;
             }
 
@@ -430,12 +493,11 @@ namespace Splime.Network
                 string formattedCode = codeToJoin.Trim().ToUpper();
                 Debug.Log($"[{nameof(NetworkGameManager)}] 🌐 Conectándose a la sesión con Join Code: {formattedCode}...");
 
-                EnsureTransportOptimized();
-
-                // Forzar protocolo WSS al unirse: necesario para que el cliente Desktop
-                // se comunique correctamente con un Host WebGL (que solo soporta WSS).
-                var joinOptions = new JoinSessionOptions()
-                    .WithNetworkOptions(new NetworkOptions { RelayProtocol = RelayProtocol.WSS });
+                // NO llamar a EnsureTransportOptimized() aquí — el SDK de Unity Multiplayer
+                // gestiona internamente el UnityTransport durante JoinSessionByCodeAsync.
+                // Modificar el transport en este punto puede corromper la configuración interna
+                // del SDK y causar que el handshake WSS falle silenciosamente.
+                var joinOptions = new JoinSessionOptions();
 
                 ISession session = await MultiplayerService.Instance.JoinSessionByCodeAsync(formattedCode, joinOptions);
                 if (session == null)
@@ -451,21 +513,39 @@ namespace Splime.Network
                     return;
                 }
 
+                Debug.Log($"[{nameof(NetworkGameManager)}] 📥 JoinSessionByCodeAsync completado. SessionId: {session.Id}, Code: {session.Code}, Host: {session.Host}, CurrentPlayer: {session.CurrentPlayer?.Id}, NetworkState: {session.Network?.State}, SessionState: {session.State}");
+
                 if (operationVersion != _sessionOperationVersion)
                 {
+                    Debug.LogWarning($"[{nameof(NetworkGameManager)}] ⚠️ Operación obsoleta (version {operationVersion} vs {_sessionOperationVersion}). Cerrando sesión.");
                     await CloseSessionSafelyAsync(session);
+                    return;
+                }
+
+                // Fix 3: Verificar que el NetworkManager esté realmente escuchando tras el Join.
+                // Si no está escuchando, el handshake WSS falló durante la Task y hay que recuperarse.
+                if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
+                {
+                    Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ NetworkManager NO está escuchando tras JoinSessionByCodeAsync. " +
+                                   $"IsListening: {NetworkManager.Singleton?.IsListening}, NetworkState: {session.Network?.State}. " +
+                                   $"El handshake WSS/Relay falló durante la Task. Iniciando recuperación.");
+                    await CloseSessionSafelyAsync(session);
+                    await HandleConnectionAttemptFailedAsync(
+                        operationVersion,
+                        SessionRole.Guest,
+                        "Could not connect to the host. Please try again.");
                     return;
                 }
 
                 SetCurrentSession(session);
                 _sessionFlowState = SessionFlowState.Synchronizing;
 
-                Debug.Log($"[{nameof(NetworkGameManager)}] 🎉 ¡CONEXIÓN COMO CLIENTE EXITOSA!");
+                Debug.Log($"[{nameof(NetworkGameManager)}] 🎉 ¡CONEXIÓN COMO CLIENTE EXITOSA! Network.State: {_currentSession?.Network?.State} | NM.IsListening: {NetworkManager.Singleton?.IsListening}, NM.IsConnectedClient: {NetworkManager.Singleton?.IsConnectedClient}");
                 RefreshLobbyUI();
             }
             catch (SessionException e)
             {
-                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error al unirse a la sesión: {e}", this);
+                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error al unirse a la sesión (SessionException): {e.Message}\n{e}", this);
                 await HandleConnectionAttemptFailedAsync(
                     operationVersion,
                     SessionRole.Guest,
@@ -920,6 +1000,9 @@ namespace Splime.Network
 
         private void OnNetworkStateChanged(NetworkState state)
         {
+            NetworkManager nm = NetworkManager.Singleton;
+            Debug.Log($"[{nameof(NetworkGameManager)}] 🌐 OnNetworkStateChanged recibido: {state}. NM.IsListening: {nm?.IsListening}, NM.IsClient: {nm?.IsClient}, NM.IsConnectedClient: {nm?.IsConnectedClient}, NM.IsServer: {nm?.IsServer}, TotalClients: {nm?.ConnectedClientsIds.Count}");
+
             if (_isCleaningUp)
             {
                 return;
@@ -938,6 +1021,8 @@ namespace Splime.Network
 
         private void OnNetworkStartFailed(SessionError error)
         {
+            Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ OnNetworkStartFailed recibido: {error}", this);
+
             if (!_isCleaningUp)
             {
                 _ = RecoverFromConnectionFailureAsync(
@@ -947,6 +1032,7 @@ namespace Splime.Network
 
         private void OnSessionEnded()
         {
+            Debug.LogWarning($"[{nameof(NetworkGameManager)}] ⚠️ OnSessionEnded recibido de UGS.");
             if (!_isCleaningUp)
             {
                 _ = RecoverFromConnectionFailureAsync(
@@ -992,7 +1078,7 @@ namespace Splime.Network
                 $"[{nameof(NetworkGameManager)}] 📊 RefreshLobbyUI | " +
                 $"PlayerCount: {playerCount} | NetworkReady: {networkReady} | " +
                 $"HostReady: {hostReady} | GuestReady: {guestReady} | " +
-                $"Role: {_sessionRole}");
+                $"Role: {_sessionRole} | FlowState: {_sessionFlowState}");
             _lobbyUIController.SetConnectedPlayerCount(networkReady ? playerCount : 0);
             _lobbyUIController.SetReadyStates(hostReady, guestReady);
         }
@@ -1001,23 +1087,33 @@ namespace Splime.Network
         {
             NetworkManager networkManager = NetworkManager.Singleton;
 
-            if (_currentSession == null ||
-                _currentSession.Network.State != NetworkState.Started ||
-                networkManager == null ||
-                !networkManager.IsListening ||
-                _currentSession.PlayerCount < 2)
+            bool sessionExists = _currentSession != null;
+            NetworkState netState = _currentSession != null ? _currentSession.Network.State : NetworkState.Stopped;
+            bool netStateStarted = netState == NetworkState.Started;
+            bool nmExists = networkManager != null;
+            bool nmListening = nmExists && networkManager.IsListening;
+            int ugsPlayerCount = _currentSession != null ? _currentSession.PlayerCount : 0;
+            bool ugsPlayersOk = ugsPlayerCount >= 2;
+
+            if (!sessionExists || !netStateStarted || !nmExists || !nmListening || !ugsPlayersOk)
             {
+                Debug.Log($"[{nameof(NetworkGameManager)}] ⏳ IsSharedLobbyNetworkReady -> FALSE. SessionExists: {sessionExists}, Network.State: {netState}, NM.IsListening: {nmListening}, UGSPlayerCount: {ugsPlayerCount}");
                 return false;
             }
 
             if (_sessionRole == SessionRole.Host)
             {
-                return networkManager.IsServer && networkManager.ConnectedClientsIds.Count >= 2;
+                int connectedCount = networkManager.ConnectedClientsIds.Count;
+                bool isServerReady = networkManager.IsServer && connectedCount >= 2;
+                Debug.Log($"[{nameof(NetworkGameManager)}] ⏳ [Host] IsSharedLobbyNetworkReady -> {isServerReady}. IsServer: {networkManager.IsServer}, ConnectedClients: {connectedCount}");
+                return isServerReady;
             }
 
-            return _sessionRole == SessionRole.Guest &&
+            bool isGuestReady = _sessionRole == SessionRole.Guest &&
                    networkManager.IsClient &&
                    networkManager.IsConnectedClient;
+            Debug.Log($"[{nameof(NetworkGameManager)}] ⏳ [Guest] IsSharedLobbyNetworkReady -> {isGuestReady}. IsClient: {networkManager.IsClient}, IsConnectedClient: {networkManager.IsConnectedClient}");
+            return isGuestReady;
         }
 
         private bool ArePlayersReady()
@@ -1190,6 +1286,12 @@ namespace Splime.Network
                 Debug.Log("[NetworkGameManager] 🔌 UseWebSockets activado en UnityTransport.");
             }
 
+            if (!transport.UseEncryption)
+            {
+                transport.UseEncryption = true;
+                Debug.Log("[NetworkGameManager] 🔒 UseEncryption activado en UnityTransport para soporte WSS.");
+            }
+
             // Aumentar la cola de paquetes de 128 a 512 para evitar 'Receive queue is full' en WebGL
             if (transport.MaxPacketQueueSize < 512)
             {
@@ -1206,6 +1308,8 @@ namespace Splime.Network
             {
                 transport.DisconnectTimeoutMS = 300000;
             }
+
+            Debug.Log($"[{nameof(NetworkGameManager)}] ⚙️ UnityTransport configurado: Protocol={transport.Protocol}, UseWebSockets={transport.UseWebSockets}, UseEncryption={transport.UseEncryption}, MaxPacketQueueSize={transport.MaxPacketQueueSize}, HeartbeatTimeoutMS={transport.HeartbeatTimeoutMS}, DisconnectTimeoutMS={transport.DisconnectTimeoutMS}");
         }
     }
 }
