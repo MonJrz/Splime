@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: AbstractBackground
+  m_Name: M_AbstractBackground_Level2
   m_Shader: {fileID: -6465566751694194690, guid: e410abda95589f441ace09bb91a49b47, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -33,7 +33,7 @@ Material:
   stringTagMap: {}
   disabledShaderPasses:
   - MOTIONVECTORS
-  m_LockedProperties: _Gradient_Color _Patch_Strength
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -51,20 +51,20 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Gradient_Amount: 0.2
-    - _Patch_Scale: 27
-    - _Patch_Softness: 0.4
-    - _Patch_Strength: 0.12
+    - _Gradient_Amount: 0.22
+    - _Patch_Scale: 45.2
+    - _Patch_Softness: 0.65
+    - _Patch_Strength: 2.08
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _Warm_Falloff: 2
-    - _Warm_Strength: 0.35
+    - _Warm_Falloff: 1.54
+    - _Warm_Strength: 3.26
     m_Colors:
-    - _Base_Color: {r: 0.13901106, g: 0.06243324, b: 0.21698111, a: 1}
-    - _Gradient_Color: {r: 0.56842715, g: 0.37254903, b: 0.5764706, a: 1}
-    - _Patch_Color_A: {r: 0.44313726, g: 0.39607838, b: 0.7843137, a: 1}
-    - _Patch_Color_B: {r: 0.45882344, g: 0.7254902, b: 0.8196079, a: 1}
-    - _Warm_Color: {r: 1, g: 0.52156866, b: 0.34901962, a: 1}
-    - _Warm_Direction: {r: -1, g: 0.25, b: 0, a: 0}
+    - _Base_Color: {r: 0.12941177, g: 0.105882354, b: 0.23137255, a: 1}
+    - _Gradient_Color: {r: 0.14901961, g: 0.21666718, b: 0.30980393, a: 1}
+    - _Patch_Color_A: {r: 0.28627452, g: 0.21176471, b: 0.37254903, a: 1}
+    - _Patch_Color_B: {r: 0.27450982, g: 0.34117648, b: 0.4745098, a: 1}
+    - _Warm_Color: {r: 0.7075472, g: 0.5723187, b: 0.51731044, a: 1}
+    - _Warm_Direction: {r: -2.5, g: 0.25, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
