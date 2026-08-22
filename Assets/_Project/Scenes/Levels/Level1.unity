@@ -1168,7 +1168,7 @@ MonoBehaviour:
   - {fileID: 429235781}
   - {fileID: 1037784489}
   - {fileID: 1187810752}
-  _levelDurationSeconds: 180
+  _levelDurationSeconds: 150
   _nextLevelSceneName: Level2
   _showBlockingOverlayInsteadOfNextLevel: 0
   _campaignStartSceneName: Level1
@@ -8275,8 +8275,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.21936284, y: -0.000000017970228, z: 0.0000000040404107, w: 0.9756434}
-  m_LocalPosition: {x: 1, y: 3.0992398, z: -4.1323195}
+  m_LocalRotation: {x: 0.20898327, y: 0.000000014572135, z: -0.000000003114094, w: 0.9779192}
+  m_LocalPosition: {x: -1, y: 1.9394808, z: -4.0305805}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8805,7 +8805,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -361, y: 242}
+  m_AnchoredPosition: {x: -386, y: 242}
   m_SizeDelta: {x: 596, y: 228}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &341310832
@@ -18749,7 +18749,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -358.5, y: 236.10002}
+  m_AnchoredPosition: {x: -383.5, y: 236.10002}
   m_SizeDelta: {x: 331, y: 116}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &785073351
@@ -24361,7 +24361,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 33, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &986713235
@@ -29226,7 +29226,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -99, y: 0}
+  m_AnchoredPosition: {x: -79, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1001 &1175355889
