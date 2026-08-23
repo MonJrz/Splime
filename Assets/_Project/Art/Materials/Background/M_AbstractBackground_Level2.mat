@@ -57,14 +57,14 @@ Material:
     - _Patch_Strength: 2.08
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _Warm_Falloff: 1.54
+    - _Warm_Falloff: 1.5
     - _Warm_Strength: 3.26
     m_Colors:
     - _Base_Color: {r: 0.12941177, g: 0.105882354, b: 0.23137255, a: 1}
     - _Gradient_Color: {r: 0.14901961, g: 0.21666718, b: 0.30980393, a: 1}
     - _Patch_Color_A: {r: 0.28627452, g: 0.21176471, b: 0.37254903, a: 1}
     - _Patch_Color_B: {r: 0.27450982, g: 0.34117648, b: 0.4745098, a: 1}
-    - _Warm_Color: {r: 0.7075472, g: 0.5723187, b: 0.51731044, a: 1}
+    - _Warm_Color: {r: 0.7058824, g: 0.54083663, b: 0.5176471, a: 1}
     - _Warm_Direction: {r: -2.5, g: 0.25, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
