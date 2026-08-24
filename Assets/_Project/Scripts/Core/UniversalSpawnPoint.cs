@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -116,8 +116,69 @@ namespace Splime.Core
         }
 
         // ==========================================
-        // MÉTODOS ESTÁTICOS DE BÚSQUEDA RÁPIDA
+        // MÉTODOS ESTÁTICOS DE BÚSQUEDA Y CHECKPOINTS
         // ==========================================
+
+        private static readonly Dictionary<SpawnPlayerRole, (Vector3 position, Quaternion rotation)> _activePlayerSpawns =
+            new Dictionary<SpawnPlayerRole, (Vector3, Quaternion)>();
+
+        private static readonly Dictionary<SpawnPlayerRole, int> _playerActiveCheckpointIndices =
+            new Dictionary<SpawnPlayerRole, int>();
+
+        private static int _currentActiveCheckpointIndex = -1;
+
+        public static int CurrentActiveCheckpointIndex
+        {
+            get => _currentActiveCheckpointIndex;
+            set => _currentActiveCheckpointIndex = value;
+        }
+
+        public static int GetPlayerActiveCheckpointIndex(SpawnPlayerRole role)
+        {
+            return _playerActiveCheckpointIndices.TryGetValue(role, out int index) ? index : -1;
+        }
+
+        public static void SetActivePlayerSpawn(SpawnPlayerRole role, Vector3 position, Quaternion rotation, int checkpointIndex = -1)
+        {
+            _activePlayerSpawns[role] = (position, rotation);
+            if (checkpointIndex >= 0)
+            {
+                _playerActiveCheckpointIndices[role] = checkpointIndex;
+                if (checkpointIndex > _currentActiveCheckpointIndex)
+                {
+                    _currentActiveCheckpointIndex = checkpointIndex;
+                }
+            }
+        }
+
+        public static void ResetPlayerSpawns()
+        {
+            _activePlayerSpawns.Clear();
+            _playerActiveCheckpointIndices.Clear();
+            _currentActiveCheckpointIndex = -1;
+        }
+
+        public static bool TryGetActiveSpawnTransform(SpawnPlayerRole role, out Vector3 position, out Quaternion rotation)
+        {
+            if (_activePlayerSpawns.TryGetValue(role, out var customTransform))
+            {
+                position = customTransform.position;
+                rotation = customTransform.rotation;
+                return true;
+            }
+
+            UniversalSpawnPoint defaultSpawn = AllSpawnPoints.Find(p => p._category == SpawnCategory.Player && p._playerRole == role);
+            if (defaultSpawn != null)
+            {
+                position = defaultSpawn.Position;
+                rotation = defaultSpawn.Rotation;
+                return true;
+            }
+
+            position = Vector3.zero;
+            rotation = Quaternion.identity;
+            return false;
+        }
 
         public static UniversalSpawnPoint GetPlayerSpawn(SpawnPlayerRole role)
         {
