@@ -36,6 +36,7 @@ namespace Splime.Player
         public static event Action LevelFailedReceived;
         public static event Action<int> LevelTimerUpdatedReceived;
         public static event Action AvailableContentEndedReceived;
+        public static event Action<int, SpawnPlayerRole> CheckpointActivatedReceived;
 
         public SpawnPlayerRole SpawnRole => _spawnRole;
 
@@ -54,22 +55,37 @@ namespace Splime.Player
         {
             _levelOutcome = LevelOutcome.None;
             _outcomeEventRaised = false;
+            UniversalSpawnPoint.ResetPlayerSpawns();
         }
 
         public void RespawnAtAssignedSpawn()
         {
-            UniversalSpawnPoint spawnPoint = UniversalSpawnPoint.GetPlayerSpawn(_spawnRole);
-            if (spawnPoint == null)
+            Vector3 spawnPos;
+            Quaternion spawnRot;
+
+            if (UniversalSpawnPoint.TryGetActiveSpawnTransform(_spawnRole, out Vector3 activePos, out Quaternion activeRot))
             {
-                Debug.LogError(
-                    $"[{nameof(PlayerLevelNetworkController)}] No spawn point is configured for {_spawnRole}.",
-                    this);
-                return;
+                spawnPos = activePos;
+                spawnRot = activeRot;
+            }
+            else
+            {
+                UniversalSpawnPoint spawnPoint = UniversalSpawnPoint.GetPlayerSpawn(_spawnRole);
+                if (spawnPoint == null)
+                {
+                    Debug.LogError(
+                        $"[{nameof(PlayerLevelNetworkController)}] No spawn point is configured for {_spawnRole}.",
+                        this);
+                    return;
+                }
+
+                spawnPos = spawnPoint.Position;
+                spawnRot = spawnPoint.Rotation;
             }
 
             if (!IsNetworkSessionActive)
             {
-                ApplyRespawn(spawnPoint.Position, spawnPoint.Rotation);
+                ApplyRespawn(spawnPos, spawnRot);
                 return;
             }
 
@@ -78,7 +94,7 @@ namespace Splime.Player
                 return;
             }
 
-            RespawnOwnerRpc(spawnPoint.Position, spawnPoint.Rotation);
+            RespawnOwnerRpc(spawnPos, spawnRot);
         }
 
         public void CompleteLevelForAllPlayers()
@@ -144,6 +160,28 @@ namespace Splime.Player
             }
 
             ShowAvailableContentEndRpc();
+        }
+
+        public void BroadcastCheckpointActivated(int checkpointIndex, SpawnPlayerRole role)
+        {
+            if (!CanBroadcastLevelState())
+            {
+                return;
+            }
+
+            if (!IsNetworkSessionActive)
+            {
+                CheckpointActivatedReceived?.Invoke(checkpointIndex, role);
+                return;
+            }
+
+            BroadcastCheckpointActivatedRpc(checkpointIndex, role);
+        }
+
+        [Rpc(SendTo.ClientsAndHost)]
+        private void BroadcastCheckpointActivatedRpc(int checkpointIndex, SpawnPlayerRole role)
+        {
+            CheckpointActivatedReceived?.Invoke(checkpointIndex, role);
         }
 
         [Rpc(SendTo.Owner)]

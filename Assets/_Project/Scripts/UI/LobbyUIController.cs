@@ -84,12 +84,17 @@ namespace Splime.UI
 
         private void Awake()
         {
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
             ConfigureJoinCodeInput();
             ResetLobbyState();
         }
 
         private void OnEnable()
         {
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+
             if (_codeInputField != null)
             {
                 _codeInputField.onValueChanged.AddListener(HandleJoinCodeChanged);

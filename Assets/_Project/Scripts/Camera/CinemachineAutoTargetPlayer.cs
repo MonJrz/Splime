@@ -2,6 +2,7 @@ using Unity.Cinemachine;
 using Unity.Netcode;
 using UnityEngine;
 using Splime.Player;
+using Splime.UI;
 
 namespace Splime.CameraControl
 {
@@ -9,21 +10,36 @@ namespace Splime.CameraControl
     /// Component attached to a CinemachineCamera (e.g. FreeLook Camera).
     /// Automatically searches for and targets the local player Slime in the scene.
     /// Works seamlessly in both Netcode multiplayer (targets IsOwner) and offline/editor testing.
+    /// Also manages enabling/disabling camera mouse input when UI / menus are open.
     /// </summary>
     [RequireComponent(typeof(CinemachineCamera))]
     [DisallowMultipleComponent]
     public class CinemachineAutoTargetPlayer : MonoBehaviour
     {
         private CinemachineCamera _cinemachineCam;
+        private CinemachineInputAxisController _axisController;
+        private LevelUIController _levelUIController;
 
         private void Awake()
         {
             _cinemachineCam = GetComponent<CinemachineCamera>();
+            _axisController = GetComponent<CinemachineInputAxisController>();
+        }
+
+        private void OnEnable()
+        {
+            BindLevelUI();
+        }
+
+        private void OnDisable()
+        {
+            UnbindLevelUI();
         }
 
         private void Start()
         {
             TryTargetLocalPlayer();
+            BindLevelUI();
         }
 
         private void Update()
@@ -32,6 +48,50 @@ namespace Splime.CameraControl
             if (_cinemachineCam != null && _cinemachineCam.Follow == null)
             {
                 TryTargetLocalPlayer();
+            }
+
+            if (_levelUIController == null)
+            {
+                BindLevelUI();
+            }
+        }
+
+        private void BindLevelUI()
+        {
+            if (_levelUIController != null) return;
+
+            _levelUIController = FindAnyObjectByType<LevelUIController>();
+            if (_levelUIController != null)
+            {
+                _levelUIController.InputBlockChanged += HandleInputBlockChanged;
+                SetCameraInputActive(!_levelUIController.IsInputBlocked);
+            }
+        }
+
+        private void UnbindLevelUI()
+        {
+            if (_levelUIController != null)
+            {
+                _levelUIController.InputBlockChanged -= HandleInputBlockChanged;
+                _levelUIController = null;
+            }
+        }
+
+        private void HandleInputBlockChanged(bool isBlocked)
+        {
+            SetCameraInputActive(!isBlocked);
+        }
+
+        public void SetCameraInputActive(bool active)
+        {
+            if (_axisController == null)
+            {
+                _axisController = GetComponent<CinemachineInputAxisController>();
+            }
+
+            if (_axisController != null)
+            {
+                _axisController.enabled = active;
             }
         }
 

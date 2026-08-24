@@ -198,17 +198,15 @@ namespace Splime.Network
             SlimeData dataToAssign = (clientId == 0) ? _transformerData : _agileData;
             SpawnPlayerRole targetRole = (clientId == 0) ? SpawnPlayerRole.Player1 : SpawnPlayerRole.Player2;
 
-            // 1. Obtener la posición y rotación desde UniversalSpawnPoint en la escena actual (si existen)
+            // 1. Obtener la posición y rotación desde UniversalSpawnPoint o Checkpoint activo en la escena
             Vector3 spawnPos = (clientId == 0) ? _player1SpawnPosition : _player2SpawnPosition;
             Quaternion spawnRot = Quaternion.identity;
 
-            UniversalSpawnPoint spawnPoint = UniversalSpawnPoint.GetPlayerSpawn(targetRole);
-
-            if (spawnPoint != null)
+            if (UniversalSpawnPoint.TryGetActiveSpawnTransform(targetRole, out Vector3 activePos, out Quaternion activeRot))
             {
-                spawnPos = spawnPoint.Position;
-                spawnRot = spawnPoint.Rotation;
-                Debug.Log($"[{nameof(NetworkGameManager)}] 📍 Usando UniversalSpawnPoint de la escena para {targetRole}: {spawnPos}, Rot: {spawnRot.eulerAngles}");
+                spawnPos = activePos;
+                spawnRot = activeRot;
+                Debug.Log($"[{nameof(NetworkGameManager)}] 📍 Usando Spawn/Checkpoint activo para {targetRole}: {spawnPos}, Rot: {spawnRot.eulerAngles}");
             }
             else
             {

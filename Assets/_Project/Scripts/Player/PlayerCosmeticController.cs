@@ -9,6 +9,8 @@ namespace Splime.Player
     [RequireComponent(typeof(NetworkObject))]
     public class PlayerCosmeticController : NetworkBehaviour
     {
+        private int _headOcclusionCount;
+
         [Header("Sockets")]
         [SerializeField] private Transform _headSocket;
         [SerializeField] private Transform _faceSocket;
@@ -169,6 +171,29 @@ namespace Splime.Player
                 (CosmeticId)newValue);
         }
 
+        public void PushHeadOcclusion()
+        {
+            _headOcclusionCount++;
+            RefreshHeadVisibility();
+        }
+
+        public void PopHeadOcclusion()
+        {
+            _headOcclusionCount =
+                Mathf.Max(0, _headOcclusionCount - 1);
+
+            RefreshHeadVisibility();
+        }
+
+        private void RefreshHeadVisibility()
+        {
+            if (_equippedHead != null)
+            {
+                _equippedHead.SetActive(
+                    _headOcclusionCount == 0);
+            }
+        }
+
         private void ApplyCosmetic(
             CosmeticSlot slot,
             CosmeticId cosmeticId)
@@ -205,6 +230,11 @@ namespace Splime.Player
                     socket, false);
 
             SetEquippedObject(slot, instance);
+
+            if (slot == CosmeticSlot.Head)
+            {
+                RefreshHeadVisibility();
+            }
         }
 
         private Transform GetSocket(CosmeticSlot slot)

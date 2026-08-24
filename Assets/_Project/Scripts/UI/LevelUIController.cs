@@ -53,13 +53,11 @@ namespace Splime.UI
         [SerializeField] private GameObject _checkpointPanel;
 
         [Header("Local Presentation")]
-        [SerializeField] private bool _manageCursor;
+        [SerializeField] private bool _manageCursor = true;
 
         private LevelUIView _currentView = (LevelUIView)(-1);
         private LevelUIView _returnView = LevelUIView.Paused;
         private Coroutine _checkpointRoutine;
-        private bool _initialCursorVisible;
-        private CursorLockMode _initialCursorLockMode;
 
         public event Action RestartRequested;
         public event Action PauseRequested;
@@ -83,11 +81,10 @@ namespace Splime.UI
             _currentView == LevelUIView.Paused ||
             _currentView == LevelUIView.Dialogue ||
             IsBlockingOverlayVisible;
+        private bool ShouldShowCursor => _currentView != LevelUIView.Gameplay;
 
         private void Awake()
         {
-            _initialCursorVisible = Cursor.visible;
-            _initialCursorLockMode = Cursor.lockState;
             SetCheckpointVisible(false);
 
             if (_showBlockingOverlayOnStart && _blockingOverlayPanel != null)
@@ -145,14 +142,40 @@ namespace Splime.UI
             {
                 _connectionLostReturnButton.onClick.RemoveListener(HandleConnectionLostReturnButtonPressed);
             }
+
+            if (_manageCursor)
+            {
+                Cursor.visible = true;
+                Cursor.lockState = CursorLockMode.None;
+            }
         }
 
         private void OnDestroy()
         {
             if (_manageCursor)
             {
-                Cursor.visible = _initialCursorVisible;
-                Cursor.lockState = _initialCursorLockMode;
+                Cursor.visible = true;
+                Cursor.lockState = CursorLockMode.None;
+            }
+        }
+
+        private void Update()
+        {
+            if (_manageCursor && !ShouldShowCursor)
+            {
+                // Re-lock cursor if player clicks back into the window during active gameplay
+                if (Cursor.lockState != CursorLockMode.Locked && (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1)))
+                {
+                    UpdateCursor();
+                }
+            }
+        }
+
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (hasFocus && _manageCursor)
+            {
+                UpdateCursor();
             }
         }
 
@@ -465,8 +488,8 @@ namespace Splime.UI
                 return;
             }
 
-            Cursor.visible = IsInputBlocked;
-            Cursor.lockState = IsInputBlocked ? CursorLockMode.None : CursorLockMode.Locked;
+            Cursor.visible = ShouldShowCursor;
+            Cursor.lockState = ShouldShowCursor ? CursorLockMode.None : CursorLockMode.Locked;
         }
 
         private static void SetPanelActive(GameObject panel, bool isActive)
