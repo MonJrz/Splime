@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Splime.Core;
 using Unity.Netcode;
 using Unity.Netcode.Components;
@@ -15,6 +16,8 @@ namespace Splime.Player
     [RequireComponent(typeof(CharacterController))]
     public sealed class PlayerLevelNetworkController : NetworkBehaviour
     {
+        private const int InactiveDialoguePage = -1;
+
         private enum LevelOutcome
         {
             None,
@@ -26,6 +29,10 @@ namespace Splime.Player
 
         private static LevelOutcome _levelOutcome;
         private static bool _outcomeEventRaised;
+        private static readonly HashSet<ulong> _sharedDialogueReadyClients = new();
+        private static int _sharedDialoguePageIndex = InactiveDialoguePage;
+        private static int _sharedDialoguePageCount;
+        private static bool _sharedDialogueCompleted;
 
         private CharacterController _characterController;
         private NetworkTransform _networkTransform;
@@ -37,6 +44,8 @@ namespace Splime.Player
         public static event Action<int> LevelTimerUpdatedReceived;
         public static event Action AvailableContentEndedReceived;
         public static event Action<int, SpawnPlayerRole> CheckpointActivatedReceived;
+        public static event Action<int> SharedDialoguePageChangedReceived;
+        public static event Action SharedDialogueCompletedReceived;
 
         public SpawnPlayerRole SpawnRole => _spawnRole;
 
@@ -55,6 +64,10 @@ namespace Splime.Player
         {
             _levelOutcome = LevelOutcome.None;
             _outcomeEventRaised = false;
+            _sharedDialogueReadyClients.Clear();
+            _sharedDialoguePageIndex = InactiveDialoguePage;
+            _sharedDialoguePageCount = 0;
+            _sharedDialogueCompleted = false;
             UniversalSpawnPoint.ResetPlayerSpawns();
         }
 
@@ -178,10 +191,125 @@ namespace Splime.Player
             BroadcastCheckpointActivatedRpc(checkpointIndex, role);
         }
 
+        public bool MarkSharedDialogueReady(int pageCount)
+        {
+            if (pageCount <= 0)
+            {
+                return false;
+            }
+
+            if (!IsNetworkSessionActive)
+            {
+                _sharedDialoguePageCount = pageCount;
+                _sharedDialoguePageIndex = 0;
+                _sharedDialogueCompleted = false;
+                SharedDialoguePageChangedReceived?.Invoke(0);
+                return true;
+            }
+
+            if (!IsSpawned || !IsOwner)
+            {
+                return false;
+            }
+
+            if (IsServer)
+            {
+                RegisterSharedDialogueReady(NetworkManager.Singleton.LocalClientId, pageCount);
+            }
+            else
+            {
+                MarkSharedDialogueReadyRpc(pageCount);
+            }
+
+            return true;
+        }
+
+        public bool RequestSharedDialogueAdvance(int expectedPageIndex)
+        {
+            if (!IsNetworkSessionActive)
+            {
+                TryAdvanceSharedDialogue(expectedPageIndex);
+                return true;
+            }
+
+            if (!IsSpawned || !IsOwner)
+            {
+                return false;
+            }
+
+            if (IsServer)
+            {
+                TryAdvanceSharedDialogue(expectedPageIndex);
+            }
+            else
+            {
+                RequestSharedDialogueAdvanceRpc(expectedPageIndex);
+            }
+
+            return true;
+        }
+
+        public bool RequestSharedDialogueSkip()
+        {
+            if (!IsNetworkSessionActive)
+            {
+                CompleteSharedDialogue();
+                return true;
+            }
+
+            if (!IsSpawned || !IsOwner)
+            {
+                return false;
+            }
+
+            if (IsServer)
+            {
+                CompleteSharedDialogue();
+            }
+            else
+            {
+                RequestSharedDialogueSkipRpc();
+            }
+
+            return true;
+        }
+
         [Rpc(SendTo.ClientsAndHost)]
         private void BroadcastCheckpointActivatedRpc(int checkpointIndex, SpawnPlayerRole role)
         {
             CheckpointActivatedReceived?.Invoke(checkpointIndex, role);
+        }
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void MarkSharedDialogueReadyRpc(
+            int pageCount,
+            RpcParams rpcParams = default)
+        {
+            RegisterSharedDialogueReady(rpcParams.Receive.SenderClientId, pageCount);
+        }
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void RequestSharedDialogueAdvanceRpc(int expectedPageIndex)
+        {
+            TryAdvanceSharedDialogue(expectedPageIndex);
+        }
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void RequestSharedDialogueSkipRpc()
+        {
+            CompleteSharedDialogue();
+        }
+
+        [Rpc(SendTo.NotServer)]
+        private void BroadcastSharedDialoguePageRpc(int pageIndex)
+        {
+            SharedDialoguePageChangedReceived?.Invoke(pageIndex);
+        }
+
+        [Rpc(SendTo.NotServer)]
+        private void BroadcastSharedDialogueCompletedRpc()
+        {
+            SharedDialogueCompletedReceived?.Invoke();
         }
 
         [Rpc(SendTo.Owner)]
@@ -215,6 +343,110 @@ namespace Splime.Player
         private void ShowAvailableContentEndRpc()
         {
             AvailableContentEndedReceived?.Invoke();
+        }
+
+        private void RegisterSharedDialogueReady(ulong clientId, int pageCount)
+        {
+            if (!IsServer ||
+                pageCount <= 0 ||
+                _sharedDialogueCompleted ||
+                _sharedDialoguePageIndex >= 0)
+            {
+                return;
+            }
+
+            if (_sharedDialoguePageCount == 0)
+            {
+                _sharedDialoguePageCount = pageCount;
+            }
+            else if (_sharedDialoguePageCount != pageCount)
+            {
+                Debug.LogWarning(
+                    $"[{nameof(PlayerLevelNetworkController)}] Clients reported different dialogue page counts.",
+                    this);
+                return;
+            }
+
+            _sharedDialogueReadyClients.Add(clientId);
+
+            if (!AreAllConnectedClientsReadyForDialogue())
+            {
+                return;
+            }
+
+            _sharedDialoguePageIndex = 0;
+            PublishSharedDialoguePage(0);
+        }
+
+        private static bool AreAllConnectedClientsReadyForDialogue()
+        {
+            NetworkManager networkManager = NetworkManager.Singleton;
+            if (networkManager == null || !networkManager.IsListening)
+            {
+                return true;
+            }
+
+            if (networkManager.ConnectedClientsIds.Count == 0)
+            {
+                return false;
+            }
+
+            foreach (ulong clientId in networkManager.ConnectedClientsIds)
+            {
+                if (!_sharedDialogueReadyClients.Contains(clientId))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private void TryAdvanceSharedDialogue(int expectedPageIndex)
+        {
+            if (_sharedDialogueCompleted ||
+                _sharedDialoguePageIndex < 0 ||
+                _sharedDialoguePageIndex != expectedPageIndex)
+            {
+                return;
+            }
+
+            int nextPageIndex = _sharedDialoguePageIndex + 1;
+            if (nextPageIndex >= _sharedDialoguePageCount)
+            {
+                CompleteSharedDialogue();
+                return;
+            }
+
+            _sharedDialoguePageIndex = nextPageIndex;
+            PublishSharedDialoguePage(nextPageIndex);
+        }
+
+        private void CompleteSharedDialogue()
+        {
+            if (_sharedDialogueCompleted || _sharedDialoguePageIndex < 0)
+            {
+                return;
+            }
+
+            _sharedDialogueCompleted = true;
+            _sharedDialoguePageIndex = InactiveDialoguePage;
+            SharedDialogueCompletedReceived?.Invoke();
+
+            if (IsNetworkSessionActive)
+            {
+                BroadcastSharedDialogueCompletedRpc();
+            }
+        }
+
+        private void PublishSharedDialoguePage(int pageIndex)
+        {
+            SharedDialoguePageChangedReceived?.Invoke(pageIndex);
+
+            if (IsNetworkSessionActive)
+            {
+                BroadcastSharedDialoguePageRpc(pageIndex);
+            }
         }
 
         private bool CanBroadcastLevelState()

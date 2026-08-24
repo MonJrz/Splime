@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using Splime.Player;
+using Splime.UI;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -17,6 +19,9 @@ namespace Splime.Collectibles
         [SerializeField] private GameObject _visual;
 
         private Collider _trigger;
+        private InteractionPromptTrigger _interactionPromptTrigger;
+        private PlayerCosmeticController _localPlayerInRange;
+        private readonly HashSet<Collider> _localCollidersInRange = new HashSet<Collider>();
 
         // Offline/local.
         private bool _localCollected;
@@ -40,6 +45,7 @@ namespace Splime.Collectibles
         private void Awake()
         {
             _trigger = GetComponent<Collider>();
+            _interactionPromptTrigger = GetComponent<InteractionPromptTrigger>();
 
             if (_visual == null &&
                 transform.childCount > 0)
@@ -70,12 +76,50 @@ namespace Splime.Collectibles
 
         private void OnTriggerEnter(Collider other)
         {
+            SlimeInput slimeInput = other.GetComponentInParent<SlimeInput>();
+            if (slimeInput == null || !slimeInput.IsLocalInputSource)
+            {
+                return;
+            }
+
             PlayerCosmeticController player =
                 other.GetComponentInParent<PlayerCosmeticController>();
 
             if (player == null ||
                 _cosmetic == null ||
                 IsCollected)
+            {
+                return;
+            }
+
+            _localCollidersInRange.Add(other);
+            _localPlayerInRange = player;
+        }
+
+        private void OnTriggerExit(Collider other)
+        {
+            PlayerCosmeticController player =
+                other.GetComponentInParent<PlayerCosmeticController>();
+
+            if (player == null || player != _localPlayerInRange)
+            {
+                return;
+            }
+
+            _localCollidersInRange.Remove(other);
+            _localCollidersInRange.RemoveWhere(collider =>
+                collider == null || !collider.gameObject.activeInHierarchy);
+
+            if (_localCollidersInRange.Count == 0)
+            {
+                _localPlayerInRange = null;
+            }
+        }
+
+        public void Collect()
+        {
+            PlayerCosmeticController player = _localPlayerInRange;
+            if (player == null || _cosmetic == null || IsCollected)
             {
                 return;
             }
@@ -220,6 +264,11 @@ namespace Splime.Collectibles
         private void ApplyCollectedState(
             bool collected)
         {
+            if (collected)
+            {
+                ClearLocalPlayerInRange();
+            }
+
             if (_visual != null)
             {
                 _visual.SetActive(!collected);
@@ -229,6 +278,14 @@ namespace Splime.Collectibles
             {
                 _trigger.enabled = !collected;
             }
+
+            _interactionPromptTrigger?.SetInteractionAvailable(!collected);
+        }
+
+        private void ClearLocalPlayerInRange()
+        {
+            _localPlayerInRange = null;
+            _localCollidersInRange.Clear();
         }
     }
 }

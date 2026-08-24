@@ -58,8 +58,6 @@ namespace Splime.UI
         private LevelUIView _currentView = (LevelUIView)(-1);
         private LevelUIView _returnView = LevelUIView.Paused;
         private Coroutine _checkpointRoutine;
-        private bool _initialCursorVisible;
-        private CursorLockMode _initialCursorLockMode;
 
         public event Action RestartRequested;
         public event Action PauseRequested;
@@ -72,18 +70,23 @@ namespace Splime.UI
         public event Action MainMenuRequested;
         public event Action<LevelUIView> ViewChanged;
         public event Action<bool> InputBlockChanged;
+        public event Action<int> DialogueAdvanceRequested;
+        public event Action DialogueSkipRequested;
 
         public LevelUIView CurrentView => _currentView;
-        public bool IsInputBlocked => _currentView != LevelUIView.Gameplay;
+        public bool IsInputBlocked =>
+            _currentView != LevelUIView.Gameplay &&
+            _currentView != LevelUIView.Tutorial;
         public bool HasBlockingOverlay => _blockingOverlayPanel != null;
         public bool IsBlockingOverlayVisible => _currentView == LevelUIView.BlockingOverlay;
         public bool IsLevelTimerPaused =>
-            _currentView == LevelUIView.Paused || IsBlockingOverlayVisible;
+            _currentView == LevelUIView.Paused ||
+            _currentView == LevelUIView.Dialogue ||
+            IsBlockingOverlayVisible;
+        private bool ShouldShowCursor => _currentView != LevelUIView.Gameplay;
 
         private void Awake()
         {
-            _initialCursorVisible = Cursor.visible;
-            _initialCursorLockMode = Cursor.lockState;
             SetCheckpointVisible(false);
 
             if (_showBlockingOverlayOnStart && _blockingOverlayPanel != null)
@@ -101,6 +104,8 @@ namespace Splime.UI
             if (_dialogueController != null)
             {
                 _dialogueController.Completed += HandleDialogueCompleted;
+                _dialogueController.AdvanceRequested += HandleDialogueAdvanceRequested;
+                _dialogueController.SkipRequested += HandleDialogueSkipRequested;
             }
 
             if (_connectionLostReturnButton == null && _connectionLostPanel != null)
@@ -124,6 +129,8 @@ namespace Splime.UI
             if (_dialogueController != null)
             {
                 _dialogueController.Completed -= HandleDialogueCompleted;
+                _dialogueController.AdvanceRequested -= HandleDialogueAdvanceRequested;
+                _dialogueController.SkipRequested -= HandleDialogueSkipRequested;
             }
 
             if (_tutorialController != null)
@@ -160,7 +167,7 @@ namespace Splime.UI
 
         private void Update()
         {
-            if (_manageCursor && !IsInputBlocked)
+            if (_manageCursor && !ShouldShowCursor)
             {
                 // Re-lock cursor if player clicks back into the window during active gameplay
                 if (Cursor.lockState != CursorLockMode.Locked && (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1)))
@@ -354,6 +361,33 @@ namespace Splime.UI
             _dialogueController.Show(sequence);
         }
 
+        public bool ShowSynchronizedDialoguePage(
+            UIMessageSequence sequence,
+            int pageIndex)
+        {
+            bool canShow =
+                (_currentView == LevelUIView.Gameplay ||
+                 _currentView == LevelUIView.Dialogue) &&
+                sequence != null &&
+                pageIndex >= 0 &&
+                pageIndex < sequence.PageCount &&
+                _dialogueController != null;
+
+            if (!canShow)
+            {
+                return false;
+            }
+
+            SetView(LevelUIView.Dialogue);
+            _dialogueController.ShowExternallyControlled(sequence, pageIndex);
+            return _dialogueController.IsOpen;
+        }
+
+        public void CompleteSynchronizedDialogue()
+        {
+            _dialogueController?.CompleteExternallyControlledSequence();
+        }
+
         public void ShowTutorial(UIMessageSequence sequence)
         {
             if (!CanOpenSequence(sequence) || _tutorialController == null)
@@ -410,6 +444,16 @@ namespace Splime.UI
             {
                 ShowGameplay();
             }
+        }
+
+        private void HandleDialogueAdvanceRequested(int pageIndex)
+        {
+            DialogueAdvanceRequested?.Invoke(pageIndex);
+        }
+
+        private void HandleDialogueSkipRequested()
+        {
+            DialogueSkipRequested?.Invoke();
         }
 
         private void HandleTutorialCompleted()
@@ -487,8 +531,8 @@ namespace Splime.UI
                 return;
             }
 
-            Cursor.visible = IsInputBlocked;
-            Cursor.lockState = IsInputBlocked ? CursorLockMode.None : CursorLockMode.Locked;
+            Cursor.visible = ShouldShowCursor;
+            Cursor.lockState = ShouldShowCursor ? CursorLockMode.None : CursorLockMode.Locked;
         }
 
         private static void SetPanelActive(GameObject panel, bool isActive)

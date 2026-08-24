@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: -8625724288535870788}
   - component: {fileID: -1154784220958531245}
   - component: {fileID: 1395868936526516913}
+  - component: {fileID: 7000000000000000044}
   m_Layer: 0
   m_Name: VikingHelmetCollectible
   m_TagString: Untagged
@@ -97,6 +98,37 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   _cosmetic: {fileID: 11400000, guid: 091a905fff20cdc4a8099f9f3af8ef6e, type: 2}
   _visual: {fileID: 2518875537478049649}
+--- !u!114 &7000000000000000044
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7727366097981897672}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5047fbfdd8545baa01d024a6c703a9e, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.UI.InteractionPromptTrigger
+  _hideAfterInteraction: 1
+  _markerPrefab: {fileID: 8318518913257714200, guid: 9ae3218f7f4f499599e5f32759099720, type: 3}
+  _markerHeight: 0.35
+  _attentionRange: 4.5
+  _interactionRequested:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1395868936526516913}
+        m_TargetAssemblyTypeName: Splime.Collectibles.CosmeticCollectible, Assembly-CSharp
+        m_MethodName: Collect
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument:
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1001 &3329776566854083104
 PrefabInstance:
   m_ObjectHideFlags: 0
