@@ -36,12 +36,8 @@ namespace Splime.Player
         public float VerticalVelocity => _verticalVelocity;
         public bool ShouldProcessInput => !IsSpawned || IsOwner;
 
-        // Jump SFX
-        private CharacterSFX _characterSFX;
-
         private void Awake()
         {
-            _characterSFX = GetComponentInChildren<CharacterSFX>();
             _characterController = GetComponent<CharacterController>();
             _slimeInput = GetComponent<SlimeInput>();
             _statsModifier = GetComponent<SlimeStatsModifier>();
@@ -218,11 +214,6 @@ namespace Splime.Player
             }
 
             _coyoteTimer = 0f;
-
-            if (_characterSFX != null)
-            {
-                _characterSFX.PlayJump();
-            }
         }
 
         public void HandleCollisionFlags(CollisionFlags collisionFlags)
