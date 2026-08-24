@@ -17038,7 +17038,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5bf0cd3e060f4b84aa5b7b14e366faaf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Levels.CheckpointZone
-  _checkpointIndex: 1
+  _checkpointIndex: 2
   _activationMode: 0
   _requiredPlayerCount: 1
   _player1SpawnPoint: {fileID: 1878654074}
@@ -21912,6 +21912,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: b361985d6870f8c4baaa0199c0bba1f5, type: 3}
   m_PrefabInstance: {fileID: 1543467795}
   m_PrefabAsset: {fileID: 0}
+--- !u!23 &1543467797 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: b361985d6870f8c4baaa0199c0bba1f5, type: 3}
+  m_PrefabInstance: {fileID: 1543467795}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1552479937
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -22559,6 +22564,11 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.5, y: 0.6, z: 0.5}
   m_Center: {x: 0, y: 0.32, z: 0}
+--- !u!23 &1581742137 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: 325271814b003e342937f1f7ce3b8016, type: 3}
+  m_PrefabInstance: {fileID: 1581742133}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1582286517
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -41849,8 +41859,8 @@ MonoBehaviour:
   _arrow: {fileID: 0}
   _spotLight: {fileID: 1505936212}
   _desaturationRenderers:
-  - {fileID: 1533024288}
-  - {fileID: 948124855}
+  - {fileID: 1581742137}
+  - {fileID: 1543467797}
   _normalSaturation: 1
   _lockedSaturation: 0
   _saturationTransitionSpeed: 3

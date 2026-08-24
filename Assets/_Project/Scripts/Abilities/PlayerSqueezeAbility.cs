@@ -15,6 +15,7 @@ namespace Splime.Abilities
         [Header("Visual Settings")]
         [SerializeField] private Transform _visualRoot;
         [SerializeField] private float _visualScaleFactor = 0.5f;
+        private int _normalFormBlockCount;
 
         private Vector3 _normalVisualScale;
 
@@ -41,6 +42,9 @@ namespace Splime.Abilities
             NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Owner
         );
+
+        public bool IsNormalFormBlocked =>
+            _normalFormBlockCount > 0;
 
         public bool IsAbilityActive =>
             IsSpawned
@@ -96,8 +100,47 @@ namespace Splime.Abilities
             SetAgileMode(!IsAbilityActive);
         }
 
+        public void PushNormalFormBlock()
+        {
+            _normalFormBlockCount++;
+
+            Debug.Log(
+                $"[{nameof(PlayerSqueezeAbility)}] " +
+                $"Normal form BLOCKED | Count={_normalFormBlockCount}",
+                this
+            );
+        }
+
+        public void PopNormalFormBlock()
+        {
+            _normalFormBlockCount =
+                Mathf.Max(0, _normalFormBlockCount - 1);
+
+            Debug.Log(
+                $"[{nameof(PlayerSqueezeAbility)}] " +
+                $"Normal form {(IsNormalFormBlocked ? "BLOCKED" : "UNLOCKED")} | " +
+                $"Count={_normalFormBlockCount}",
+                this
+            );
+        }
+
         public void SetAgileMode(bool active)
         {
+            // Si estamos actualmente en una zona estrecha,
+            // permitir seguir/entrar en Small, pero NO volver a Normal.
+            if (!active &&
+                IsAbilityActive &&
+                IsNormalFormBlocked)
+            {
+                Debug.Log(
+                    $"[{nameof(PlayerSqueezeAbility)}] " +
+                    $"No se puede volver a Normal dentro de una zona estrecha.",
+                    this
+                );
+
+                return;
+            }
+
             // Partida en red
             if (IsSpawned)
             {

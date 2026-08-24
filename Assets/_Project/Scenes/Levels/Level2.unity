@@ -583,7 +583,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 24275386}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5488fe23d37c1124c805394838756e78, type: 3}
+  m_Script: {fileID: 11500000, guid: d568a63bdd0ebb74eb0f8f51a258e91c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Collectibles.CosmeticOcclusionZone
 --- !u!65 &24275389
@@ -2514,7 +2514,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8169064397377891195, guid: 39df8dcd09f23344482328b2e6e4257a, type: 3}
       propertyPath: m_LocalScale.y
-      value: 2.3
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: 8169064397377891195, guid: 39df8dcd09f23344482328b2e6e4257a, type: 3}
       propertyPath: m_LocalScale.z
@@ -2526,11 +2526,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8169064397377891195, guid: 39df8dcd09f23344482328b2e6e4257a, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.6831
+      value: 1.75
       objectReference: {fileID: 0}
     - target: {fileID: 8169064397377891195, guid: 39df8dcd09f23344482328b2e6e4257a, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1.2550011
+      value: 1.25
       objectReference: {fileID: 0}
     - target: {fileID: 8169064397377891195, guid: 39df8dcd09f23344482328b2e6e4257a, type: 3}
       propertyPath: m_LocalRotation.w
@@ -5249,7 +5249,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 228224546}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5488fe23d37c1124c805394838756e78, type: 3}
+  m_Script: {fileID: 11500000, guid: d568a63bdd0ebb74eb0f8f51a258e91c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Collectibles.CosmeticOcclusionZone
 --- !u!65 &228224549
@@ -6940,6 +6940,10 @@ PrefabInstance:
       propertyPath: m_Center.x
       value: -0.4
       objectReference: {fileID: 0}
+    - target: {fileID: 3334676546422502534, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
+      propertyPath: m_Center.z
+      value: -0.13
+      objectReference: {fileID: 0}
     - target: {fileID: 5488846059004715951, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
       propertyPath: m_Size.x
       value: 2.5
@@ -6951,6 +6955,10 @@ PrefabInstance:
     - target: {fileID: 5488846059004715951, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
       propertyPath: m_Center.y
       value: 0.145
+      objectReference: {fileID: 0}
+    - target: {fileID: 5488846059004715951, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
+      propertyPath: m_Center.z
+      value: 0.14
       objectReference: {fileID: 0}
     - target: {fileID: 6319827926432508968, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
       propertyPath: m_LocalScale.y
@@ -9172,7 +9180,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 372572509}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5488fe23d37c1124c805394838756e78, type: 3}
+  m_Script: {fileID: 11500000, guid: d568a63bdd0ebb74eb0f8f51a258e91c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Collectibles.CosmeticOcclusionZone
 --- !u!1001 &373677428
@@ -23290,11 +23298,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3334676546422502534, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
       propertyPath: m_Center.x
-      value: 0.1
+      value: 0.075
       objectReference: {fileID: 0}
     - target: {fileID: 3334676546422502534, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
       propertyPath: m_Center.z
-      value: -0.16
+      value: -0.12
       objectReference: {fileID: 0}
     - target: {fileID: 5488846059004715951, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
       propertyPath: m_Enabled
@@ -28262,11 +28270,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3334676546422502534, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
       propertyPath: m_Size.x
-      value: 0.6
+      value: 0.7
       objectReference: {fileID: 0}
     - target: {fileID: 3334676546422502534, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
       propertyPath: m_Center.x
       value: -0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3334676546422502534, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
+      propertyPath: m_Center.z
+      value: -0.14
       objectReference: {fileID: 0}
     - target: {fileID: 5488846059004715951, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
       propertyPath: m_Size.x
@@ -28275,6 +28287,10 @@ PrefabInstance:
     - target: {fileID: 5488846059004715951, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
       propertyPath: m_Center.x
       value: -0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5488846059004715951, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
+      propertyPath: m_Center.z
+      value: 0.14
       objectReference: {fileID: 0}
     - target: {fileID: 6319827926432508968, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
       propertyPath: m_LocalScale.x
@@ -44141,7 +44157,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4551487688154248597, guid: 163907bdb5f425f47b42e8ab16bf2952, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.241
       objectReference: {fileID: 0}
     - target: {fileID: 4551487688154248597, guid: 163907bdb5f425f47b42e8ab16bf2952, type: 3}
       propertyPath: m_LocalPosition.z
@@ -47245,7 +47261,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1794247587}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5488fe23d37c1124c805394838756e78, type: 3}
+  m_Script: {fileID: 11500000, guid: d568a63bdd0ebb74eb0f8f51a258e91c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Collectibles.CosmeticOcclusionZone
 --- !u!65 &1794247590
@@ -63842,7 +63858,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3334676546422502534, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
       propertyPath: m_Center.z
-      value: -0.16
+      value: -0.13
       objectReference: {fileID: 0}
     - target: {fileID: 5488846059004715951, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
       propertyPath: m_Size.x
@@ -63854,7 +63870,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5488846059004715951, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
       propertyPath: m_Center.z
-      value: 0.16
+      value: 0.14
       objectReference: {fileID: 0}
     - target: {fileID: 6319827926432508968, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
       propertyPath: m_LocalScale.x
@@ -63862,11 +63878,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6319827926432508968, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
       propertyPath: m_LocalScale.y
-      value: 2.3
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: 6319827926432508968, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
       propertyPath: m_LocalScale.z
-      value: 2.5
+      value: 2.7
       objectReference: {fileID: 0}
     - target: {fileID: 6319827926432508968, guid: 64be0859c9eb6d44ba6ab78a255a2820, type: 3}
       propertyPath: m_LocalPosition.x
