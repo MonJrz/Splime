@@ -1,3 +1,4 @@
+using Splime.UI;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
@@ -27,10 +28,17 @@ namespace Splime.Puzzles
                 NetworkVariableWritePermission.Server
             );
 
+        private InteractionPromptTrigger _interactionPromptTrigger;
+
         public bool HasBeenPressed =>
             IsSpawned
                 ? _networkHasBeenPressed.Value
                 : _localHasBeenPressed;
+
+        private void Awake()
+        {
+            _interactionPromptTrigger = GetComponent<InteractionPromptTrigger>();
+        }
 
         public override void OnNetworkSpawn()
         {
@@ -147,6 +155,10 @@ namespace Splime.Puzzles
             {
                 ApplyPressedState();
             }
+            else
+            {
+                _interactionPromptTrigger?.SetInteractionAvailable(true);
+            }
         }
 
         private void ApplyPressedState()
@@ -157,6 +169,11 @@ namespace Splime.Puzzles
                 this
             );
 
+            if (_oneShot)
+            {
+                _interactionPromptTrigger?.SetInteractionAvailable(false);
+            }
+
             _onPressed.Invoke();
         }
 
@@ -166,6 +183,7 @@ namespace Splime.Puzzles
             if (!IsSpawned)
             {
                 _localHasBeenPressed = false;
+                _interactionPromptTrigger?.SetInteractionAvailable(true);
                 return;
             }
 
