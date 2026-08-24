@@ -12,19 +12,60 @@ namespace Splime.Collectibles
         [Header("Cosmetic")]
         [SerializeField] private CosmeticDefinition _cosmetic;
 
-        private bool _collected;
+        [Header("Presentation")]
+        [Tooltip("Raíz visual del pickup que se oculta al recogerlo.")]
+        [SerializeField] private GameObject _visual;
+
+        private Collider _trigger;
+
+        // Offline/local.
+        private bool _localCollected;
+
+        // Online.
+        private readonly NetworkVariable<bool> _networkCollected =
+            new NetworkVariable<bool>(
+                false,
+                NetworkVariableReadPermission.Everyone,
+                NetworkVariableWritePermission.Server);
+
+        private bool IsNetworkSessionActive =>
+            NetworkManager.Singleton != null &&
+            NetworkManager.Singleton.IsListening;
+
+        public bool IsCollected =>
+            IsNetworkSessionActive
+                ? _networkCollected.Value
+                : _localCollected;
 
         private void Awake()
         {
-            Collider trigger = GetComponent<Collider>();
+            _trigger = GetComponent<Collider>();
 
-            if (!trigger.isTrigger)
+            if (_visual == null &&
+                transform.childCount > 0)
             {
-                Debug.LogWarning(
-                    $"[{nameof(CosmeticCollectible)}] " +
-                    $"Collider de '{gameObject.name}' debe usar Is Trigger.",
-                    this);
+                _visual =
+                    transform.GetChild(0).gameObject;
             }
+        }
+
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+
+            _networkCollected.OnValueChanged +=
+                HandleCollectedChanged;
+
+            ApplyCollectedState(
+                _networkCollected.Value);
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            _networkCollected.OnValueChanged -=
+                HandleCollectedChanged;
+
+            base.OnNetworkDespawn();
         }
 
         private void OnTriggerEnter(Collider other)
@@ -32,42 +73,48 @@ namespace Splime.Collectibles
             PlayerCosmeticController player =
                 other.GetComponentInParent<PlayerCosmeticController>();
 
-            if (player == null)
+            if (player == null ||
+                _cosmetic == null ||
+                IsCollected)
+            {
                 return;
+            }
 
-            if (!player.IsOwner)
-                return;
-
-            if (!IsSpawned)
+            // ─────────────────────────────
+            // OFFLINE
+            // ─────────────────────────────
+            if (!IsNetworkSessionActive)
             {
                 TryCollectLocal(player);
                 return;
             }
 
-            RequestCollectRpc(
-                player.NetworkObjectId);
-        }
-
-        private void TryCollectLocal(
-            PlayerCosmeticController player)
-        {
-            if (_collected ||
-                _cosmetic == null ||
-                player == null)
+            // On a network session, the collectible is only collected by the server.
+            if (!IsSpawned)
             {
+                Debug.LogWarning(
+                    $"[{nameof(CosmeticCollectible)}] " +
+                    $"{gameObject.name} está en una sesión Netcode " +
+                    $"pero su NetworkObject no está spawneado.",
+                    this);
+
                 return;
             }
 
-            _collected = true;
+            // Only the server can collect the collectible.
+            if (!player.IsOwner)
+                return;
 
-            // Offline no tenemos Server/NetworkVariable.
-            // En esta primera versión online es el caso principal.
-            Debug.Log(
-                $"[{nameof(CosmeticCollectible)}] " +
-                $"{player.gameObject.name} recogió {_cosmetic.name}.",
-                this);
-
-            gameObject.SetActive(false);
+            if (IsServer)
+            {
+                TryCollectServer(
+                    player.NetworkObjectId);
+            }
+            else
+            {
+                RequestCollectRpc(
+                    player.NetworkObjectId);
+            }
         }
 
         [Rpc(
@@ -76,15 +123,26 @@ namespace Splime.Collectibles
         private void RequestCollectRpc(
             ulong playerNetworkObjectId)
         {
+            TryCollectServer(
+                playerNetworkObjectId);
+        }
+
+        private void TryCollectServer(
+            ulong playerNetworkObjectId)
+        {
             if (!IsServer ||
-                _collected ||
+                _networkCollected.Value ||
                 _cosmetic == null)
             {
                 return;
             }
 
-            if (NetworkManager.Singleton == null ||
-                !NetworkManager.Singleton.SpawnManager.SpawnedObjects
+            if (NetworkManager.Singleton == null)
+                return;
+
+            if (!NetworkManager.Singleton
+                    .SpawnManager
+                    .SpawnedObjects
                     .TryGetValue(
                         playerNetworkObjectId,
                         out NetworkObject playerNetworkObject))
@@ -93,21 +151,84 @@ namespace Splime.Collectibles
             }
 
             PlayerCosmeticController player =
-                playerNetworkObject.GetComponent<PlayerCosmeticController>();
+                playerNetworkObject
+                    .GetComponent<PlayerCosmeticController>();
 
             if (player == null)
                 return;
 
-            _collected = true;
+            // Server collects the collectible and equips it to the player.
+            _networkCollected.Value = true;
 
-            player.EquipServer(_cosmetic.Id);
-
-            NetworkObject.Despawn(true);
+            player.EquipServer(
+                _cosmetic.Id,
+                this);
 
             Debug.Log(
                 $"[{nameof(CosmeticCollectible)}] " +
-                $"{player.gameObject.name} recogió {_cosmetic.Id}.",
+                $"{player.gameObject.name} picked up {_cosmetic.Id}.",
                 this);
+        }
+
+        private void TryCollectLocal(
+            PlayerCosmeticController player)
+        {
+            if (_localCollected ||
+                player == null ||
+                _cosmetic == null)
+            {
+                return;
+            }
+
+            _localCollected = true;
+
+            ApplyCollectedState(true);
+
+            Debug.Log(
+                $"[{nameof(CosmeticCollectible)}] " +
+                $"{player.gameObject.name} picked up {_cosmetic.Id} LOCAL.",
+                this);
+        }
+
+        /// <summary>
+        /// Make the collectible available again. 
+        /// Server just needs to call it.
+        /// </summary>
+        public void ReleaseServer()
+        {
+            if (!IsServer)
+                return;
+
+            if (!_networkCollected.Value)
+                return;
+
+            _networkCollected.Value = false;
+
+            Debug.Log(
+                $"[{nameof(CosmeticCollectible)}] " +
+                $"{gameObject.name} is available again.",
+                this);
+        }
+
+        private void HandleCollectedChanged(
+            bool previousValue,
+            bool newValue)
+        {
+            ApplyCollectedState(newValue);
+        }
+
+        private void ApplyCollectedState(
+            bool collected)
+        {
+            if (_visual != null)
+            {
+                _visual.SetActive(!collected);
+            }
+
+            if (_trigger != null)
+            {
+                _trigger.enabled = !collected;
+            }
         }
     }
 }

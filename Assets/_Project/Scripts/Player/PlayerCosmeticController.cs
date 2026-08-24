@@ -21,9 +21,15 @@ namespace Splime.Player
         private readonly Dictionary<CosmeticId, CosmeticDefinition> _definitions =
             new Dictionary<CosmeticId, CosmeticDefinition>();
 
+        // Equipped visual cosmetic instances
         private GameObject _equippedHead;
         private GameObject _equippedFace;
         private GameObject _equippedNeck;
+
+        // Original pickup currently assigned to each slot
+        private CosmeticCollectible _headSource;
+        private CosmeticCollectible _faceSource;
+        private CosmeticCollectible _neckSource;
 
         private readonly NetworkVariable<int> _headCosmetic =
             new NetworkVariable<int>(
@@ -56,6 +62,7 @@ namespace Splime.Player
             _faceCosmetic.OnValueChanged += HandleFaceChanged;
             _neckCosmetic.OnValueChanged += HandleNeckChanged;
 
+            // Important: Apply the current values to ensure the visuals are correct on spawn.
             ApplyCosmetic(
                 CosmeticSlot.Head,
                 (CosmeticId)_headCosmetic.Value);
@@ -78,7 +85,11 @@ namespace Splime.Player
             base.OnNetworkDespawn();
         }
 
-        public void EquipServer(CosmeticId cosmeticId)
+        /// <summary>
+        /// Onlythe server has a collectible.
+        /// source is the original pickup instance in the scene.
+        /// </summary>
+        public void EquipServer(CosmeticId cosmeticId, CosmeticCollectible source)
         {
             if (!IsServer)
                 return;
@@ -89,13 +100,27 @@ namespace Splime.Player
             {
                 Debug.LogWarning(
                     $"[{nameof(PlayerCosmeticController)}] " +
-                    $"Cosmetic '{cosmeticId}' no está registrado en {gameObject.name}.",
+                    $"Cosmetic '{cosmeticId}' not registered in {gameObject.name}.",
                     this);
 
                 return;
             }
 
-            switch (definition.Slot)
+            CosmeticSlot slot = definition.Slot;
+
+            // If the player already has a cosmetic in this slot, we need to release it.
+            CosmeticCollectible previousSource =
+                GetSource(slot);
+
+            if (previousSource != null &&
+                previousSource != source)
+            {
+                previousSource.ReleaseServer();
+            }
+
+            SetSource(slot, source);
+
+            switch (slot)
             {
                 case CosmeticSlot.Head:
                     _headCosmetic.Value = (int)cosmeticId;
@@ -109,10 +134,16 @@ namespace Splime.Player
                     _neckCosmetic.Value = (int)cosmeticId;
                     break;
             }
+
+            // Apply the cosmetic locally for immediate feedback.
+            ApplyCosmetic(slot, cosmeticId);
         }
 
         private void HandleHeadChanged(int previousValue, int newValue)
         {
+            if (IsServer)
+                return;
+
             ApplyCosmetic(
                 CosmeticSlot.Head,
                 (CosmeticId)newValue);
@@ -120,6 +151,9 @@ namespace Splime.Player
 
         private void HandleFaceChanged(int previousValue, int newValue)
         {
+            if (IsServer)
+                return;
+
             ApplyCosmetic(
                 CosmeticSlot.Face,
                 (CosmeticId)newValue);
@@ -127,6 +161,9 @@ namespace Splime.Player
 
         private void HandleNeckChanged(int previousValue, int newValue)
         {
+            if (IsServer)
+                return;
+
             ApplyCosmetic(
                 CosmeticSlot.Neck,
                 (CosmeticId)newValue);
@@ -141,7 +178,7 @@ namespace Splime.Player
             {
                 Debug.LogWarning(
                     $"[{nameof(PlayerCosmeticController)}] " +
-                    $"Socket '{slot}' no asignado en {gameObject.name}.",
+                    $"Socket '{slot}' not assigned in {gameObject.name}.",
                     this);
 
                 return;
@@ -165,11 +202,7 @@ namespace Splime.Player
             GameObject instance =
                 Instantiate(
                     definition.Prefab,
-                    socket);
-
-            instance.transform.localPosition = Vector3.zero;
-            instance.transform.localRotation = Quaternion.identity;
-            instance.transform.localScale = Vector3.one;
+                    socket, false);
 
             SetEquippedObject(slot, instance);
         }
@@ -184,6 +217,39 @@ namespace Splime.Player
                 _ => null
             };
         }
+
+        private CosmeticCollectible GetSource(
+            CosmeticSlot slot)
+        {
+            return slot switch
+            {
+                CosmeticSlot.Head => _headSource,
+                CosmeticSlot.Face => _faceSource,
+                CosmeticSlot.Neck => _neckSource,
+                _ => null
+            };
+        }
+
+        private void SetSource(
+            CosmeticSlot slot,
+            CosmeticCollectible source)
+        {
+            switch (slot)
+            {
+                case CosmeticSlot.Head:
+                    _headSource = source;
+                    break;
+
+                case CosmeticSlot.Face:
+                    _faceSource = source;
+                    break;
+
+                case CosmeticSlot.Neck:
+                    _neckSource = source;
+                    break;
+            }
+        }
+
 
         private void ClearSlot(CosmeticSlot slot)
         {
