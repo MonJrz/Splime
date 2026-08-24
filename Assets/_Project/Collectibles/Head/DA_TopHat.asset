@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Collectibles.CosmeticDefinition
   _id: 3
   _slot: 0
-  _prefab: {fileID: 4480061406864588730, guid: 07024e20f4bf6f2409a649ba3829d06b, type: 3}
+  _prefab: {fileID: 856086805977888247, guid: f68c2eee3f4d67240bfa0e3f3b0768fe, type: 3}
