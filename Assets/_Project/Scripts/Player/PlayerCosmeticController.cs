@@ -111,35 +111,6 @@ namespace Splime.Player
             }
         }
 
-        public void EquipLocal(CosmeticId cosmeticId)
-        {
-            if (IsSpawned)
-            {
-                Debug.LogWarning(
-                    $"[{nameof(PlayerCosmeticController)}] " +
-                    $"EquipLocal sólo debe utilizarse fuera de una sesión Netcode.",
-                    this);
-
-                return;
-            }
-
-            if (!_definitions.TryGetValue(
-                    cosmeticId,
-                    out CosmeticDefinition definition))
-            {
-                Debug.LogWarning(
-                    $"[{nameof(PlayerCosmeticController)}] " +
-                    $"Cosmetic '{cosmeticId}' no está registrado.",
-                    this);
-
-                return;
-            }
-
-            ApplyCosmetic(
-                definition.Slot,
-                cosmeticId);
-        }
-
         private void HandleHeadChanged(int previousValue, int newValue)
         {
             ApplyCosmetic(

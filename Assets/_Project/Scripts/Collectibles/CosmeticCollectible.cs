@@ -12,86 +12,62 @@ namespace Splime.Collectibles
         [Header("Cosmetic")]
         [SerializeField] private CosmeticDefinition _cosmetic;
 
-        [Header("Presentation")]
-        [Tooltip("Objeto visual que se ocultará al recoger el collectible. " +
-                 "Si queda vacío se intentará usar el primer hijo.")]
-        [SerializeField] private GameObject _visual;
-
-        private Collider _trigger;
-
-        private readonly NetworkVariable<bool> _collected =
-            new NetworkVariable<bool>(
-                false,
-                NetworkVariableReadPermission.Everyone,
-                NetworkVariableWritePermission.Server
-            );
-
-        public bool IsCollected =>
-            IsSpawned
-                ? _collected.Value
-                : !_trigger.enabled;
+        private bool _collected;
 
         private void Awake()
         {
-            _trigger = GetComponent<Collider>();
+            Collider trigger = GetComponent<Collider>();
 
-            if (_visual == null && transform.childCount > 0)
+            if (!trigger.isTrigger)
             {
-                _visual = transform.GetChild(0).gameObject;
+                Debug.LogWarning(
+                    $"[{nameof(CosmeticCollectible)}] " +
+                    $"Collider de '{gameObject.name}' debe usar Is Trigger.",
+                    this);
             }
-        }
-
-        public override void OnNetworkSpawn()
-        {
-            base.OnNetworkSpawn();
-
-            _collected.OnValueChanged += HandleCollectedChanged;
-
-            ApplyCollectedState(_collected.Value);
-        }
-
-        public override void OnNetworkDespawn()
-        {
-            _collected.OnValueChanged -= HandleCollectedChanged;
-
-            base.OnNetworkDespawn();
         }
 
         private void OnTriggerEnter(Collider other)
         {
-            if (_cosmetic == null || IsCollected)
-                return;
-
             PlayerCosmeticController player =
                 other.GetComponentInParent<PlayerCosmeticController>();
 
             if (player == null)
                 return;
 
-            // Sólo el propietario de ese player solicita recogerlo.
-            if (IsSpawned && !player.IsOwner)
+            if (!player.IsOwner)
                 return;
 
-            // ─────────────────────────────
-            // OFFLINE
-            // ─────────────────────────────
             if (!IsSpawned)
             {
-                CollectLocal(player);
+                TryCollectLocal(player);
                 return;
             }
 
-            // ─────────────────────────────
-            // ONLINE
-            // ─────────────────────────────
-            if (IsServer)
+            RequestCollectRpc(
+                player.NetworkObjectId);
+        }
+
+        private void TryCollectLocal(
+            PlayerCosmeticController player)
+        {
+            if (_collected ||
+                _cosmetic == null ||
+                player == null)
             {
-                TryCollectServer(player.NetworkObjectId);
+                return;
             }
-            else
-            {
-                RequestCollectRpc(player.NetworkObjectId);
-            }
+
+            _collected = true;
+
+            // Offline no tenemos Server/NetworkVariable.
+            // En esta primera versión online es el caso principal.
+            Debug.Log(
+                $"[{nameof(CosmeticCollectible)}] " +
+                $"{player.gameObject.name} recogió {_cosmetic.name}.",
+                this);
+
+            gameObject.SetActive(false);
         }
 
         [Rpc(
@@ -100,25 +76,15 @@ namespace Splime.Collectibles
         private void RequestCollectRpc(
             ulong playerNetworkObjectId)
         {
-            TryCollectServer(playerNetworkObjectId);
-        }
-
-        private void TryCollectServer(
-            ulong playerNetworkObjectId)
-        {
             if (!IsServer ||
-                _collected.Value ||
+                _collected ||
                 _cosmetic == null)
             {
                 return;
             }
 
-            if (NetworkManager.Singleton == null)
-                return;
-
-            if (!NetworkManager.Singleton
-                    .SpawnManager
-                    .SpawnedObjects
+            if (NetworkManager.Singleton == null ||
+                !NetworkManager.Singleton.SpawnManager.SpawnedObjects
                     .TryGetValue(
                         playerNetworkObjectId,
                         out NetworkObject playerNetworkObject))
@@ -127,58 +93,21 @@ namespace Splime.Collectibles
             }
 
             PlayerCosmeticController player =
-                playerNetworkObject
-                    .GetComponent<PlayerCosmeticController>();
+                playerNetworkObject.GetComponent<PlayerCosmeticController>();
 
             if (player == null)
                 return;
 
-            // IMPORTANTE:
-            // primero reservamos el collectible.
-            // Así un segundo request ya encontrará true.
-            _collected.Value = true;
+            _collected = true;
 
             player.EquipServer(_cosmetic.Id);
+
+            NetworkObject.Despawn(true);
 
             Debug.Log(
                 $"[{nameof(CosmeticCollectible)}] " +
                 $"{player.gameObject.name} recogió {_cosmetic.Id}.",
                 this);
-        }
-
-        private void CollectLocal(
-            PlayerCosmeticController player)
-        {
-            if (player == null ||
-                _cosmetic == null ||
-                IsCollected)
-            {
-                return;
-            }
-
-            player.EquipLocal(_cosmetic.Id);
-
-            ApplyCollectedState(true);
-        }
-
-        private void HandleCollectedChanged(
-            bool previousValue,
-            bool newValue)
-        {
-            ApplyCollectedState(newValue);
-        }
-
-        private void ApplyCollectedState(bool collected)
-        {
-            if (_visual != null)
-            {
-                _visual.SetActive(!collected);
-            }
-
-            if (_trigger != null)
-            {
-                _trigger.enabled = !collected;
-            }
         }
     }
 }
