@@ -15,6 +15,12 @@ namespace Splime.UI
         [SerializeField] private TMP_Text _pageIndicatorText;
         [SerializeField] private Image _illustrationImage;
 
+        [Header("Optional Dialogue Participants")]
+        [SerializeField] private TMP_Text _leftParticipantTitleText;
+        [SerializeField] private TMP_Text _rightParticipantTitleText;
+        [SerializeField] private Image _leftParticipantImage;
+        [SerializeField] private Image _rightParticipantImage;
+
         [Header("Actions")]
         [SerializeField] private Button _nextButton;
         [SerializeField] private Button _skipButton;
@@ -58,6 +64,7 @@ namespace Splime.UI
             _activeSequence = sequence;
             _currentPageIndex = 0;
             SetPanelActive(true);
+            RefreshParticipants();
             RefreshPage();
             Opened?.Invoke();
         }
@@ -117,6 +124,8 @@ namespace Splime.UI
                 _illustrationImage.gameObject.SetActive(page.Illustration != null);
             }
 
+            RefreshParticipantVisibility(page.Speaker);
+
             bool isLastPage = _currentPageIndex + 1 >= _activeSequence.PageCount;
             SetText(_nextButtonText, isLastPage ? _finishActionText : _nextActionText);
 
@@ -130,6 +139,73 @@ namespace Splime.UI
         {
             Hide();
             Completed?.Invoke();
+        }
+
+        private void RefreshParticipants()
+        {
+            SetParticipant(
+                _leftParticipantTitleText,
+                _leftParticipantImage,
+                _activeSequence?.LeftParticipant);
+            SetParticipant(
+                _rightParticipantTitleText,
+                _rightParticipantImage,
+                _activeSequence?.RightParticipant);
+        }
+
+        private void RefreshParticipantVisibility(UIMessageSpeaker speaker)
+        {
+            SetParticipantVisible(
+                _leftParticipantTitleText,
+                _leftParticipantImage,
+                speaker == UIMessageSpeaker.Left);
+            SetParticipantVisible(
+                _rightParticipantTitleText,
+                _rightParticipantImage,
+                speaker == UIMessageSpeaker.Right);
+        }
+
+        private static void SetParticipant(
+            TMP_Text titleText,
+            Image portraitImage,
+            UIMessageParticipant participant)
+        {
+            bool isConfigured = participant != null && participant.IsConfigured;
+
+            if (titleText != null)
+            {
+                if (string.IsNullOrWhiteSpace(titleText.text) && isConfigured)
+                {
+                    titleText.text = participant.Name ?? string.Empty;
+                }
+
+                titleText.gameObject.SetActive(
+                    isConfigured && !string.IsNullOrWhiteSpace(titleText.text));
+            }
+
+            if (portraitImage != null)
+            {
+                portraitImage.sprite = isConfigured ? participant.Portrait : null;
+                portraitImage.preserveAspect = true;
+                portraitImage.gameObject.SetActive(isConfigured && participant.Portrait != null);
+            }
+        }
+
+        private static void SetParticipantVisible(
+            TMP_Text titleText,
+            Image portraitImage,
+            bool isVisible)
+        {
+            if (titleText != null)
+            {
+                titleText.gameObject.SetActive(
+                    isVisible && !string.IsNullOrWhiteSpace(titleText.text));
+            }
+
+            if (portraitImage != null)
+            {
+                portraitImage.gameObject.SetActive(isVisible && portraitImage.sprite != null);
+            }
         }
 
         private void SetPanelActive(bool isActive)

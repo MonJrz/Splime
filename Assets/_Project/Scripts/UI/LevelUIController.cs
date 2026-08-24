@@ -74,11 +74,15 @@ namespace Splime.UI
         public event Action<bool> InputBlockChanged;
 
         public LevelUIView CurrentView => _currentView;
-        public bool IsInputBlocked => _currentView != LevelUIView.Gameplay;
+        public bool IsInputBlocked =>
+            _currentView != LevelUIView.Gameplay &&
+            _currentView != LevelUIView.Tutorial;
         public bool HasBlockingOverlay => _blockingOverlayPanel != null;
         public bool IsBlockingOverlayVisible => _currentView == LevelUIView.BlockingOverlay;
         public bool IsLevelTimerPaused =>
-            _currentView == LevelUIView.Paused || IsBlockingOverlayVisible;
+            _currentView == LevelUIView.Paused ||
+            _currentView == LevelUIView.Dialogue ||
+            IsBlockingOverlayVisible;
 
         private void Awake()
         {

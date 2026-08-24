@@ -16,6 +16,7 @@ namespace Splime.UI
         [Header("References")]
         [SerializeField] private LevelUIController _levelUIController;
         [SerializeField] private TimedOverlayUIController _introController;
+        [SerializeField] private UIMessageSequence _openingDialogue;
         [SerializeField] private Button[] _hostOnlyButtons;
 
         [Header("Level Timer")]
@@ -40,6 +41,8 @@ namespace Splime.UI
         private bool _isChangingScene;
         private bool _isTimerPaused;
         private bool _isWaitingForIntro;
+        private bool _hasOpeningDialoguePending;
+        private bool _openingDialogueShown;
         private bool _levelEnded;
         private bool _failureRequested;
         private float _remainingTime;
@@ -111,6 +114,16 @@ namespace Splime.UI
                 _introController.Completed += HandleIntroCompleted;
             }
 
+            _hasOpeningDialoguePending =
+                !_openingDialogueShown &&
+                _openingDialogue != null &&
+                _openingDialogue.PageCount > 0;
+
+            if (!_isWaitingForIntro)
+            {
+                TryShowOpeningDialogue();
+            }
+
             BindNetworkEvents();
             FindLocalInput();
             ApplyCurrentInputState();
@@ -164,12 +177,18 @@ namespace Splime.UI
 
         private void Update()
         {
+            if (_hasOpeningDialoguePending && !_isWaitingForIntro)
+            {
+                TryShowOpeningDialogue();
+            }
+
             if (_levelEnded ||
                 _failureRequested ||
                 _isChangingScene ||
                 _isTimerPaused ||
                 _levelUIController.IsLevelTimerPaused ||
                 _isWaitingForIntro ||
+                _hasOpeningDialoguePending ||
                 !HasTimerAuthority)
             {
                 return;
@@ -197,6 +216,21 @@ namespace Splime.UI
         private void HandleIntroCompleted()
         {
             _isWaitingForIntro = false;
+            TryShowOpeningDialogue();
+        }
+
+        private void TryShowOpeningDialogue()
+        {
+            if (!_hasOpeningDialoguePending ||
+                _levelUIController.CurrentView != LevelUIView.Gameplay)
+            {
+                return;
+            }
+
+            _levelUIController.ShowDialogue(_openingDialogue);
+            bool dialogueOpened = _levelUIController.CurrentView == LevelUIView.Dialogue;
+            _openingDialogueShown = dialogueOpened;
+            _hasOpeningDialoguePending = !dialogueOpened;
         }
 
         private void HandleRestartRequested()
