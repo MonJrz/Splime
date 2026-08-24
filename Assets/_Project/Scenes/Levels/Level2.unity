@@ -20494,9 +20494,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5047fbfdd8545baa01d024a6c703a9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Splime.UI.InteractionPromptTrigger
-  _levelUIController: {fileID: 0}
-  _message: Press E to interact
-  _hideAfterInteraction: 1
+  _hideAfterInteraction: 0
+  _markerPrefab: {fileID: 8318518913257714200, guid: 9ae3218f7f4f499599e5f32759099720, type: 3}
+  _markerHeight: 0.35
+  _attentionRange: 4.5
   _interactionRequested:
     m_PersistentCalls:
       m_Calls:
