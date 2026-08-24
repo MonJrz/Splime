@@ -9104,6 +9104,7 @@ GameObject:
   m_Component:
   - component: {fileID: 372572510}
   - component: {fileID: 372572511}
+  - component: {fileID: 372572512}
   m_Layer: 0
   m_Name: HeadCosmeticOcclusion
   m_TagString: Untagged
@@ -9147,6 +9148,18 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.5, y: 0.5, z: 0.3}
   m_Center: {x: 0.15, y: 0.25, z: 0}
+--- !u!114 &372572512
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 372572509}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5488fe23d37c1124c805394838756e78, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.Collectibles.CosmeticOcclusionZone
 --- !u!1001 &373677428
 PrefabInstance:
   m_ObjectHideFlags: 0
