@@ -56557,7 +56557,7 @@ MonoBehaviour:
   _tutorialController: {fileID: 1999999680}
   _interactionPromptController: {fileID: 1999999670}
   _checkpointPanel: {fileID: 1999999837}
-  _manageCursor: 0
+  _manageCursor: 1
 --- !u!1 &1999999992
 GameObject:
   m_ObjectHideFlags: 0

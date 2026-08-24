@@ -53,7 +53,7 @@ namespace Splime.UI
         [SerializeField] private GameObject _checkpointPanel;
 
         [Header("Local Presentation")]
-        [SerializeField] private bool _manageCursor;
+        [SerializeField] private bool _manageCursor = true;
 
         private LevelUIView _currentView = (LevelUIView)(-1);
         private LevelUIView _returnView = LevelUIView.Paused;
@@ -141,14 +141,40 @@ namespace Splime.UI
             {
                 _connectionLostReturnButton.onClick.RemoveListener(HandleConnectionLostReturnButtonPressed);
             }
+
+            if (_manageCursor)
+            {
+                Cursor.visible = true;
+                Cursor.lockState = CursorLockMode.None;
+            }
         }
 
         private void OnDestroy()
         {
             if (_manageCursor)
             {
-                Cursor.visible = _initialCursorVisible;
-                Cursor.lockState = _initialCursorLockMode;
+                Cursor.visible = true;
+                Cursor.lockState = CursorLockMode.None;
+            }
+        }
+
+        private void Update()
+        {
+            if (_manageCursor && !IsInputBlocked)
+            {
+                // Re-lock cursor if player clicks back into the window during active gameplay
+                if (Cursor.lockState != CursorLockMode.Locked && (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1)))
+                {
+                    UpdateCursor();
+                }
+            }
+        }
+
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (hasFocus && _manageCursor)
+            {
+                UpdateCursor();
             }
         }
 

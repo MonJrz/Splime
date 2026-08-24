@@ -1133,7 +1133,7 @@ MonoBehaviour:
   _tutorialController: {fileID: 1483347590}
   _interactionPromptController: {fileID: 1566270390}
   _checkpointPanel: {fileID: 806840220}
-  _manageCursor: 0
+  _manageCursor: 1
 --- !u!4 &64293008
 Transform:
   m_ObjectHideFlags: 0
