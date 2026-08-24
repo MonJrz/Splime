@@ -70,6 +70,8 @@ namespace Splime.UI
         public event Action MainMenuRequested;
         public event Action<LevelUIView> ViewChanged;
         public event Action<bool> InputBlockChanged;
+        public event Action<int> DialogueAdvanceRequested;
+        public event Action DialogueSkipRequested;
 
         public LevelUIView CurrentView => _currentView;
         public bool IsInputBlocked =>
@@ -102,6 +104,8 @@ namespace Splime.UI
             if (_dialogueController != null)
             {
                 _dialogueController.Completed += HandleDialogueCompleted;
+                _dialogueController.AdvanceRequested += HandleDialogueAdvanceRequested;
+                _dialogueController.SkipRequested += HandleDialogueSkipRequested;
             }
 
             if (_connectionLostReturnButton == null && _connectionLostPanel != null)
@@ -125,6 +129,8 @@ namespace Splime.UI
             if (_dialogueController != null)
             {
                 _dialogueController.Completed -= HandleDialogueCompleted;
+                _dialogueController.AdvanceRequested -= HandleDialogueAdvanceRequested;
+                _dialogueController.SkipRequested -= HandleDialogueSkipRequested;
             }
 
             if (_tutorialController != null)
@@ -355,6 +361,33 @@ namespace Splime.UI
             _dialogueController.Show(sequence);
         }
 
+        public bool ShowSynchronizedDialoguePage(
+            UIMessageSequence sequence,
+            int pageIndex)
+        {
+            bool canShow =
+                (_currentView == LevelUIView.Gameplay ||
+                 _currentView == LevelUIView.Dialogue) &&
+                sequence != null &&
+                pageIndex >= 0 &&
+                pageIndex < sequence.PageCount &&
+                _dialogueController != null;
+
+            if (!canShow)
+            {
+                return false;
+            }
+
+            SetView(LevelUIView.Dialogue);
+            _dialogueController.ShowExternallyControlled(sequence, pageIndex);
+            return _dialogueController.IsOpen;
+        }
+
+        public void CompleteSynchronizedDialogue()
+        {
+            _dialogueController?.CompleteExternallyControlledSequence();
+        }
+
         public void ShowTutorial(UIMessageSequence sequence)
         {
             if (!CanOpenSequence(sequence) || _tutorialController == null)
@@ -411,6 +444,16 @@ namespace Splime.UI
             {
                 ShowGameplay();
             }
+        }
+
+        private void HandleDialogueAdvanceRequested(int pageIndex)
+        {
+            DialogueAdvanceRequested?.Invoke(pageIndex);
+        }
+
+        private void HandleDialogueSkipRequested()
+        {
+            DialogueSkipRequested?.Invoke();
         }
 
         private void HandleTutorialCompleted()

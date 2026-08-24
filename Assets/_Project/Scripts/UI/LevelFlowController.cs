@@ -38,13 +38,16 @@ namespace Splime.UI
         private SlimeInput _localInput;
         private NetworkManager _networkManager;
         private PlayerLevelNetworkController _levelNetworkBridge;
+        private PlayerLevelNetworkController _localLevelNetworkBridge;
         private bool _isChangingScene;
         private bool _isTimerPaused;
         private bool _isWaitingForIntro;
         private bool _hasOpeningDialoguePending;
         private bool _openingDialogueShown;
+        private bool _openingDialogueReadySent;
         private bool _levelEnded;
         private bool _failureRequested;
+        private int _synchronizedOpeningDialoguePageIndex = -1;
         private float _remainingTime;
         private int _lastPublishedTime = -1;
         private Coroutine _connectionFailureCoroutine;
@@ -98,6 +101,8 @@ namespace Splime.UI
             _levelUIController.ReplayAllRequested += HandleReplayAllRequested;
             _levelUIController.MainMenuRequested += HandleMainMenuRequested;
             _levelUIController.InputBlockChanged += HandleInputBlockChanged;
+            _levelUIController.DialogueAdvanceRequested += HandleDialogueAdvanceRequested;
+            _levelUIController.DialogueSkipRequested += HandleDialogueSkipRequested;
             _togglePauseAction.performed += HandleTogglePausePerformed;
             _togglePauseAction.Enable();
             SlimeInput.LocalInputReady += HandleLocalInputReady;
@@ -107,6 +112,10 @@ namespace Splime.UI
             PlayerLevelNetworkController.LevelTimerUpdatedReceived += HandleLevelTimerUpdatedReceived;
             PlayerLevelNetworkController.AvailableContentEndedReceived +=
                 HandleAvailableContentEndedReceived;
+            PlayerLevelNetworkController.SharedDialoguePageChangedReceived +=
+                HandleSharedDialoguePageChangedReceived;
+            PlayerLevelNetworkController.SharedDialogueCompletedReceived +=
+                HandleSharedDialogueCompletedReceived;
 
             if (_introController != null)
             {
@@ -147,6 +156,8 @@ namespace Splime.UI
                 _levelUIController.ReplayAllRequested -= HandleReplayAllRequested;
                 _levelUIController.MainMenuRequested -= HandleMainMenuRequested;
                 _levelUIController.InputBlockChanged -= HandleInputBlockChanged;
+                _levelUIController.DialogueAdvanceRequested -= HandleDialogueAdvanceRequested;
+                _levelUIController.DialogueSkipRequested -= HandleDialogueSkipRequested;
             }
 
             SlimeInput.LocalInputReady -= HandleLocalInputReady;
@@ -156,6 +167,10 @@ namespace Splime.UI
             PlayerLevelNetworkController.LevelTimerUpdatedReceived -= HandleLevelTimerUpdatedReceived;
             PlayerLevelNetworkController.AvailableContentEndedReceived -=
                 HandleAvailableContentEndedReceived;
+            PlayerLevelNetworkController.SharedDialoguePageChangedReceived -=
+                HandleSharedDialoguePageChangedReceived;
+            PlayerLevelNetworkController.SharedDialogueCompletedReceived -=
+                HandleSharedDialogueCompletedReceived;
 
             if (_introController != null)
             {
@@ -227,10 +242,95 @@ namespace Splime.UI
                 return;
             }
 
+            if (IsNetworkSessionActive)
+            {
+                if (_synchronizedOpeningDialoguePageIndex >= 0)
+                {
+                    TryPresentSynchronizedOpeningDialogue();
+                    return;
+                }
+
+                if (_openingDialogueReadySent ||
+                    !TryGetLocalLevelNetworkBridge(
+                        out PlayerLevelNetworkController localBridge))
+                {
+                    return;
+                }
+
+                _openingDialogueReadySent =
+                    localBridge.MarkSharedDialogueReady(_openingDialogue.PageCount);
+                return;
+            }
+
             _levelUIController.ShowDialogue(_openingDialogue);
             bool dialogueOpened = _levelUIController.CurrentView == LevelUIView.Dialogue;
             _openingDialogueShown = dialogueOpened;
             _hasOpeningDialoguePending = !dialogueOpened;
+        }
+
+        private void HandleSharedDialoguePageChangedReceived(int pageIndex)
+        {
+            if (_openingDialogue == null ||
+                pageIndex < 0 ||
+                pageIndex >= _openingDialogue.PageCount ||
+                (_synchronizedOpeningDialoguePageIndex >= 0 &&
+                 pageIndex < _synchronizedOpeningDialoguePageIndex))
+            {
+                return;
+            }
+
+            _synchronizedOpeningDialoguePageIndex = pageIndex;
+            TryPresentSynchronizedOpeningDialogue();
+        }
+
+        private void HandleSharedDialogueCompletedReceived()
+        {
+            if (_openingDialogue == null)
+            {
+                return;
+            }
+
+            _synchronizedOpeningDialoguePageIndex = -1;
+            _openingDialogueReadySent = true;
+            _openingDialogueShown = true;
+            _hasOpeningDialoguePending = false;
+            _levelUIController.CompleteSynchronizedDialogue();
+        }
+
+        private void TryPresentSynchronizedOpeningDialogue()
+        {
+            if (_synchronizedOpeningDialoguePageIndex < 0)
+            {
+                return;
+            }
+
+            bool dialogueOpened = _levelUIController.ShowSynchronizedDialoguePage(
+                _openingDialogue,
+                _synchronizedOpeningDialoguePageIndex);
+
+            if (dialogueOpened)
+            {
+                _openingDialogueShown = true;
+                _hasOpeningDialoguePending = false;
+            }
+        }
+
+        private void HandleDialogueAdvanceRequested(int expectedPageIndex)
+        {
+            if (TryGetLocalLevelNetworkBridge(
+                    out PlayerLevelNetworkController localBridge))
+            {
+                localBridge.RequestSharedDialogueAdvance(expectedPageIndex);
+            }
+        }
+
+        private void HandleDialogueSkipRequested()
+        {
+            if (TryGetLocalLevelNetworkBridge(
+                    out PlayerLevelNetworkController localBridge))
+            {
+                localBridge.RequestSharedDialogueSkip();
+            }
         }
 
         private void HandleRestartRequested()
@@ -392,6 +492,58 @@ namespace Splime.UI
                 }
 
                 _levelNetworkBridge = player;
+                bridge = player;
+                return true;
+            }
+
+            bridge = null;
+            return false;
+        }
+
+        private bool TryGetLocalLevelNetworkBridge(
+            out PlayerLevelNetworkController bridge)
+        {
+            if (_localLevelNetworkBridge != null &&
+                (!IsNetworkSessionActive ||
+                 (_localLevelNetworkBridge.IsSpawned &&
+                  _localLevelNetworkBridge.IsOwner)))
+            {
+                bridge = _localLevelNetworkBridge;
+                return true;
+            }
+
+            _localLevelNetworkBridge = null;
+
+            if (_localInput != null)
+            {
+                PlayerLevelNetworkController inputBridge =
+                    _localInput.GetComponent<PlayerLevelNetworkController>();
+
+                if (inputBridge != null &&
+                    (!IsNetworkSessionActive ||
+                     (inputBridge.IsSpawned && inputBridge.IsOwner)))
+                {
+                    _localLevelNetworkBridge = inputBridge;
+                    bridge = inputBridge;
+                    return true;
+                }
+            }
+
+            PlayerLevelNetworkController[] players =
+                FindObjectsByType<PlayerLevelNetworkController>(
+                    FindObjectsInactive.Exclude,
+                    FindObjectsSortMode.None);
+
+            foreach (PlayerLevelNetworkController player in players)
+            {
+                if (player == null ||
+                    (IsNetworkSessionActive &&
+                     (!player.IsSpawned || !player.IsOwner)))
+                {
+                    continue;
+                }
+
+                _localLevelNetworkBridge = player;
                 bridge = player;
                 return true;
             }
@@ -711,6 +863,8 @@ namespace Splime.UI
             }
 
             _localInput = slimeInput;
+            _localLevelNetworkBridge =
+                slimeInput.GetComponent<PlayerLevelNetworkController>();
             ApplyCurrentInputState();
         }
 
@@ -725,6 +879,8 @@ namespace Splime.UI
                 if (input.IsLocalInputSource)
                 {
                     _localInput = input;
+                    _localLevelNetworkBridge =
+                        input.GetComponent<PlayerLevelNetworkController>();
                     return;
                 }
             }

@@ -30,9 +30,12 @@ namespace Splime.UI
 
         private UIMessageSequence _activeSequence;
         private int _currentPageIndex;
+        private bool _isNavigationExternallyControlled;
 
         public event Action Opened;
         public event Action Completed;
+        public event Action<int> AdvanceRequested;
+        public event Action SkipRequested;
 
         public bool IsOpen => _panel != null && _panel.activeSelf;
 
@@ -55,24 +58,65 @@ namespace Splime.UI
 
         public void Show(UIMessageSequence sequence)
         {
+            Show(sequence, 0, false);
+        }
+
+        public void ShowExternallyControlled(UIMessageSequence sequence, int pageIndex)
+        {
+            Show(sequence, pageIndex, true);
+        }
+
+        public void CompleteExternallyControlledSequence()
+        {
+            if (_activeSequence != null && _isNavigationExternallyControlled)
+            {
+                CompleteSequence();
+            }
+        }
+
+        private void Show(
+            UIMessageSequence sequence,
+            int pageIndex,
+            bool isNavigationExternallyControlled)
+        {
             if (sequence == null || sequence.PageCount == 0)
             {
                 Debug.LogWarning($"[{nameof(PagedContentUIController)}] The requested sequence has no pages.", this);
                 return;
             }
 
+            if (pageIndex < 0 || pageIndex >= sequence.PageCount)
+            {
+                Debug.LogWarning(
+                    $"[{nameof(PagedContentUIController)}] Page index {pageIndex} is out of range.",
+                    this);
+                return;
+            }
+
+            bool isAlreadyShowingSequence = IsOpen && _activeSequence == sequence;
             _activeSequence = sequence;
-            _currentPageIndex = 0;
+            _currentPageIndex = pageIndex;
+            _isNavigationExternallyControlled = isNavigationExternallyControlled;
             SetPanelActive(true);
-            RefreshParticipants();
+
+            if (!isAlreadyShowingSequence)
+            {
+                RefreshParticipants();
+            }
+
             RefreshPage();
-            Opened?.Invoke();
+
+            if (!isAlreadyShowingSequence)
+            {
+                Opened?.Invoke();
+            }
         }
 
         public void Hide()
         {
             _activeSequence = null;
             _currentPageIndex = 0;
+            _isNavigationExternallyControlled = false;
             SetPanelActive(false);
         }
 
@@ -80,6 +124,12 @@ namespace Splime.UI
         {
             if (_activeSequence == null)
             {
+                return;
+            }
+
+            if (_isNavigationExternallyControlled)
+            {
+                AdvanceRequested?.Invoke(_currentPageIndex);
                 return;
             }
 
@@ -95,7 +145,16 @@ namespace Splime.UI
 
         public void HandleSkipButtonPressed()
         {
-            if (_activeSequence != null && _activeSequence.CanSkip)
+            if (_activeSequence == null || !_activeSequence.CanSkip)
+            {
+                return;
+            }
+
+            if (_isNavigationExternallyControlled)
+            {
+                SkipRequested?.Invoke();
+            }
+            else
             {
                 CompleteSequence();
             }
