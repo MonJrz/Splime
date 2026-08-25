@@ -58,7 +58,7 @@ Material:
     - _QueueControl: 0
     - _QueueOffset: 0
     - _Warm_Falloff: 1.5
-    - _Warm_Strength: 3.26
+    - _Warm_Strength: 2
     m_Colors:
     - _Base_Color: {r: 0.12941177, g: 0.105882354, b: 0.23137255, a: 1}
     - _Gradient_Color: {r: 0.14901961, g: 0.21666718, b: 0.30980393, a: 1}
