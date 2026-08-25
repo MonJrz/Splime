@@ -4254,7 +4254,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0.20898329, y: 0.000000014572134, z: -0.0000000031140939, w: 0.9779192}
-  m_LocalPosition: {x: -1, y: 2.1604807, z: -4.0305805}
+  m_LocalPosition: {x: 5, y: 11.065481, z: -3.6605806}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -24976,7 +24976,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -26090,7 +26090,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -37553,7 +37553,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!222 &1999999872
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -40457,6 +40457,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Splime.UI.LevelFlowController
   _levelUIController: {fileID: 1999999991}
   _introController: {fileID: 1999999988}
+  _howToPlayController: {fileID: 0}
   _openingDialogue: {fileID: 11400000, guid: 3b781f0a92d64e75bcd039e61a3f7824, type: 2}
   _hostOnlyButtons:
   - {fileID: 1999999902}
@@ -40464,6 +40465,7 @@ MonoBehaviour:
   - {fileID: 1999999787}
   - {fileID: 1999999745}
   - {fileID: 1529452337}
+  _showHowToPlayAfterLobby: 0
   _levelDurationSeconds: 300
   _nextLevelSceneName: 
   _showBlockingOverlayInsteadOfNextLevel: 1
