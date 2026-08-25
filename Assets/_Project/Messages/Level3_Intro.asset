@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 476ad496359b44358d3a4fd321ce1218, type: 3}
-  m_Name: Level2_Intro
+  m_Name: Level3_Intro
   m_EditorClassIdentifier: Assembly-CSharp::Splime.UI.UIMessageSequence
   _canSkip: 1
   _leftParticipant:
@@ -21,46 +21,30 @@ MonoBehaviour:
     _portrait: {fileID: 21300000, guid: 8a57a8d0a2a7f5642aad0562ecf1cf16, type: 3}
   _pages:
   - _title:
-    _body: There are a lot of weird rocks around here.
+    _body: Orange... something's wrong.
     _illustration: {fileID: 0}
     _speaker: 1
   - _title:
-    _body: Yeah. Too many.
+    _body: The walls?
     _illustration: {fileID: 0}
     _speaker: 0
   - _title:
-    _body: And those ugly flowers.
+    _body: No.
     _illustration: {fileID: 0}
     _speaker: 1
   - _title:
-    _body: And the metal roots.
+    _body: The giant floating platform?
     _illustration: {fileID: 0}
     _speaker: 0
   - _title:
-    _body: Yeah! Fancy roots.
+    _body: No.
     _illustration: {fileID: 0}
     _speaker: 1
   - _title:
-    _body: I'm starting to think this isn't nature...
+    _body: Then what?
     _illustration: {fileID: 0}
     _speaker: 0
   - _title:
-    _body: Don't be ridiculous.
-    _illustration: {fileID: 0}
-    _speaker: 1
-  - _title:
-    _body: Blue, the roots are made of metal.
-    _illustration: {fileID: 0}
-    _speaker: 0
-  - _title:
-    _body: So?
-    _illustration: {fileID: 0}
-    _speaker: 1
-  - _title:
-    _body: ROOTS AREN'T MADE OF METAL!
-    _illustration: {fileID: 0}
-    _speaker: 0
-  - _title:
-    _body: Nature is full of surprises.
+    _body: We're really high up.
     _illustration: {fileID: 0}
     _speaker: 1
