@@ -2263,6 +2263,7 @@ MonoBehaviour:
   _player2SpawnPosition: {x: 10, y: 6, z: -4.5}
   _lobbyUIController: {fileID: 884226669}
   _mainMenuSceneName: Main
+  _lobbySceneName: Lobby
   _gameplaySceneName: Level1
 --- !u!4 &596464024
 Transform:

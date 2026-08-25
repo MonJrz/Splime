@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 476ad496359b44358d3a4fd321ce1218, type: 3}
-  m_Name: Level1_Intro
+  m_Name: Level2_Intro
   m_EditorClassIdentifier: Assembly-CSharp::Splime.UI.UIMessageSequence
   _canSkip: 1
   _leftParticipant:
@@ -21,62 +21,46 @@ MonoBehaviour:
     _portrait: {fileID: 21300000, guid: 8a57a8d0a2a7f5642aad0562ecf1cf16, type: 3}
   _pages:
   - _title:
-    _body: Hey Blue! Come on. We need berries.
-    _illustration: {fileID: 0}
-    _speaker: 0
-  - _title:
-    _body: No can do. Very important business.
+    _body: There are a lot of weird rocks around here.
     _illustration: {fileID: 0}
     _speaker: 1
   - _title:
-    _body: You're napping.
+    _body: Yeah. Too many.
     _illustration: {fileID: 0}
     _speaker: 0
   - _title:
-    _body: I'm recharging.
+    _body: And those ugly flowers.
     _illustration: {fileID: 0}
     _speaker: 1
   - _title:
-    _body: You don't have batteries.
+    _body: And the metal roots.
     _illustration: {fileID: 0}
     _speaker: 0
   - _title:
-    _body: Not with that attitude.
+    _body: Yeah! Fancy roots.
     _illustration: {fileID: 0}
     _speaker: 1
   - _title:
-    _body: Look, I can't get to the berries without you.
+    _body: I'm starting to think this isn't nature...
     _illustration: {fileID: 0}
     _speaker: 0
   - _title:
-    _body: And skip my beauty sleep? Ha! That's how you get wrinkles.
+    _body: Don't be ridiculous.
     _illustration: {fileID: 0}
     _speaker: 1
   - _title:
-    _body: ...Do slimes even get wrinkles?
+    _body: Blue, the roots are made of metal.
     _illustration: {fileID: 0}
     _speaker: 0
   - _title:
-    _body: I'm not taking that risk.
+    _body: So?
     _illustration: {fileID: 0}
     _speaker: 1
   - _title:
-    _body: Fine. Stay here. More antioxidant-rich berries for me.
+    _body: ROOTS AREN'T MADE OF METAL!
     _illustration: {fileID: 0}
     _speaker: 0
   - _title:
-    _body: ...Antioxidant-rich?
-    _illustration: {fileID: 0}
-    _speaker: 1
-  - _title:
-    _body: Mhm. Good for your skin.
-    _illustration: {fileID: 0}
-    _speaker: 0
-  - _title:
-    _body: WHY ARE WE STILL HERE?!
-    _illustration: {fileID: 0}
-    _speaker: 1
-  - _title:
-    _body: TO THE BERRIES!
+    _body: Nature is full of surprises.
     _illustration: {fileID: 0}
     _speaker: 1

@@ -63,6 +63,7 @@ namespace Splime.Network
         [Header("Lobby Flow")]
         [SerializeField] private LobbyUIController _lobbyUIController;
         [SerializeField] private string _mainMenuSceneName = "Main";
+        [SerializeField] private string _lobbySceneName = "Lobby";
         [SerializeField] private string _gameplaySceneName = "SceneTest";
 
         private readonly Dictionary<ulong, GameObject> _spawnedPlayers = new Dictionary<ulong, GameObject>();
@@ -76,6 +77,8 @@ namespace Splime.Network
         private Task _cleanupTask;
         private SessionRole _sessionRole;
         private SessionFlowState _sessionFlowState;
+        private string _lastLoadedSceneName;
+        private bool _howToPlayEntryConsumed;
 
         private void Awake()
         {
@@ -88,6 +91,7 @@ namespace Splime.Network
             Instance = this;
             DontDestroyOnLoad(gameObject);
             Application.runInBackground = true;
+            _lastLoadedSceneName = SceneManager.GetActiveScene().name;
             SceneManager.sceneLoaded += OnSceneLoaded;
             LobbyUIController configuredLobbyUI = _lobbyUIController;
             _lobbyUIController = null;
@@ -698,6 +702,22 @@ namespace Splime.Network
             return true;
         }
 
+        public bool ConsumeHowToPlayForLobbyEntry()
+        {
+            string activeSceneName = SceneManager.GetActiveScene().name;
+            bool shouldShow =
+                !_howToPlayEntryConsumed &&
+                string.Equals(_lastLoadedSceneName, _lobbySceneName, StringComparison.Ordinal) &&
+                string.Equals(activeSceneName, _gameplaySceneName, StringComparison.Ordinal);
+
+            if (shouldShow)
+            {
+                _howToPlayEntryConsumed = true;
+            }
+
+            return shouldShow;
+        }
+
         private void BindLobbyUI(LobbyUIController lobbyUIController)
         {
             if (_lobbyUIController == lobbyUIController)
@@ -1110,6 +1130,12 @@ namespace Splime.Network
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
         {
+            if (string.Equals(scene.name, _lobbySceneName, StringComparison.Ordinal))
+            {
+                _howToPlayEntryConsumed = false;
+            }
+
+            _lastLoadedSceneName = scene.name;
             DestroyDuplicateNetworkManagers();
             BindLobbyUI(FindFirstObjectByType<LobbyUIController>());
         }

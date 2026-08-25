@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,10 +17,17 @@ namespace Splime.UI
         [Header("Navigation")]
         [SerializeField] private Button _previousButton;
         [SerializeField] private Button _nextButton;
+        [SerializeField] private Button _closeButton;
 
         private int _currentPageIndex;
+        private bool _isNavigationExternallyControlled;
 
-        private int PageCount => _pagesContainer != null ? _pagesContainer.childCount : 0;
+        public event Action<int> PreviousPageRequested;
+        public event Action<int> NextPageRequested;
+        public event Action CloseRequested;
+
+        public int PageCount => _pagesContainer != null ? _pagesContainer.childCount : 0;
+        public int CurrentPageIndex => _currentPageIndex;
 
         private void Awake()
         {
@@ -33,6 +41,7 @@ namespace Splime.UI
         {
             _previousButton.onClick.AddListener(ShowPreviousPage);
             _nextButton.onClick.AddListener(ShowNextPage);
+            _closeButton?.onClick.AddListener(HandleCloseButtonPressed);
             ShowPage(0);
         }
 
@@ -40,16 +49,58 @@ namespace Splime.UI
         {
             _previousButton?.onClick.RemoveListener(ShowPreviousPage);
             _nextButton?.onClick.RemoveListener(ShowNextPage);
+            _closeButton?.onClick.RemoveListener(HandleCloseButtonPressed);
+        }
+
+        public void ShowExternallyControlled(int pageIndex)
+        {
+            if (PageCount <= 0 || pageIndex < 0 || pageIndex >= PageCount)
+            {
+                Debug.LogWarning(
+                    $"[{nameof(HowToPlayCarouselController)}] Page index {pageIndex} is out of range.",
+                    this);
+                return;
+            }
+
+            _isNavigationExternallyControlled = true;
+            gameObject.SetActive(true);
+            ShowPage(pageIndex);
+        }
+
+        public void HideExternallyControlled()
+        {
+            _isNavigationExternallyControlled = false;
+            gameObject.SetActive(false);
         }
 
         private void ShowPreviousPage()
         {
+            if (_isNavigationExternallyControlled)
+            {
+                PreviousPageRequested?.Invoke(_currentPageIndex);
+                return;
+            }
+
             ShowPage(_currentPageIndex - 1);
         }
 
         private void ShowNextPage()
         {
+            if (_isNavigationExternallyControlled)
+            {
+                NextPageRequested?.Invoke(_currentPageIndex);
+                return;
+            }
+
             ShowPage(_currentPageIndex + 1);
+        }
+
+        private void HandleCloseButtonPressed()
+        {
+            if (_isNavigationExternallyControlled)
+            {
+                CloseRequested?.Invoke();
+            }
         }
 
         private void ShowPage(int pageIndex)
