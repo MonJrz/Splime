@@ -17898,10 +17898,10 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 0.63529414, g: 0.27450982, b: 1, a: 1}
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 1, g: 0.909804, b: 0.23137257, a: 1}
     m_PressedColor: {r: 0.60784316, g: 1, b: 0.32941177, a: 1}
-    m_SelectedColor: {r: 0.63529414, g: 0.27450982, b: 1, a: 1}
+    m_SelectedColor: {r: 1, g: 1, b: 1, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
@@ -27030,6 +27030,8 @@ MonoBehaviour:
   _messageSequence: {fileID: 11400000, guid: be545dec379282e4687534bf6c8c12cd, type: 2}
   _presentation: 0
   _showOnlyOnce: 1
+  _completionTarget: {fileID: 0}
+  _completionDistance: 0.05
 --- !u!65 &1077698312
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -36132,6 +36134,7 @@ RectTransform:
   - {fileID: 1564974218}
   - {fileID: 182555033}
   - {fileID: 491178047}
+  - {fileID: 2147500001}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -48515,7 +48518,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1981231652
 RectTransform:
   m_ObjectHideFlags: 0
@@ -53024,6 +53027,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c9f5ea136b8d4024a61ac0e6571723f4, type: 3}
+--- !u!224 &2147500001 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 1138619682, guid: c9f5ea136b8d4024a61ac0e6571723f4, type: 3}
+  m_PrefabInstance: {fileID: 2147500000}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
