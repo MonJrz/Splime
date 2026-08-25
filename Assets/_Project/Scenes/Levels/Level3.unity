@@ -21985,6 +21985,21 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6262060497225955299, guid: f4998ba4423f7724c8cb012c19b33c3f, type: 3}
   m_PrefabInstance: {fileID: 1552479937}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1552790852
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1999999610}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1361afe6618204f6890a317d067b5e91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioSettingsController
+  mixer: {fileID: 24100000, guid: 80c72e42a472849cc85bf967d951d401, type: 2}
+  musicSlider: {fileID: 1999999600}
+  sfxSlider: {fileID: 1999999676}
 --- !u!1001 &1556327623
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -31063,10 +31078,10 @@ MonoBehaviour:
   m_FillRect: {fileID: 1999999627}
   m_HandleRect: {fileID: 1999999658}
   m_Direction: 0
-  m_MinValue: 0
-  m_MaxValue: 100
+  m_MinValue: 0.0001
+  m_MaxValue: 1
   m_WholeNumbers: 0
-  m_Value: 100
+  m_Value: 1
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -31268,6 +31283,7 @@ GameObject:
   - component: {fileID: 1999999607}
   - component: {fileID: 1999999608}
   - component: {fileID: 1999999609}
+  - component: {fileID: 1552790852}
   m_Layer: 5
   m_Name: Settings Panel
   m_TagString: Untagged
@@ -32732,10 +32748,10 @@ MonoBehaviour:
   m_FillRect: {fileID: 1999999619}
   m_HandleRect: {fileID: 1999999929}
   m_Direction: 0
-  m_MinValue: 0
-  m_MaxValue: 100
+  m_MinValue: 0.0001
+  m_MaxValue: 1
   m_WholeNumbers: 0
-  m_Value: 100
+  m_Value: 1
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -32815,6 +32831,10 @@ MonoBehaviour:
   _bodyText: {fileID: 1999999666}
   _pageIndicatorText: {fileID: 0}
   _illustrationImage: {fileID: 1999999981}
+  _leftParticipantTitleText: {fileID: 0}
+  _rightParticipantTitleText: {fileID: 0}
+  _leftParticipantImage: {fileID: 0}
+  _rightParticipantImage: {fileID: 0}
   _nextButton: {fileID: 1999999907}
   _skipButton: {fileID: 0}
   _nextButtonText: {fileID: 1999999820}
@@ -33377,6 +33397,10 @@ MonoBehaviour:
   _bodyText: {fileID: 1999999723}
   _pageIndicatorText: {fileID: 0}
   _illustrationImage: {fileID: 1999999612}
+  _leftParticipantTitleText: {fileID: 0}
+  _rightParticipantTitleText: {fileID: 0}
+  _leftParticipantImage: {fileID: 0}
+  _rightParticipantImage: {fileID: 0}
   _nextButton: {fileID: 1999999860}
   _skipButton: {fileID: 1999999692}
   _nextButtonText: {fileID: 1999999709}
@@ -40787,12 +40811,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Splime.UI.LevelFlowController
   _levelUIController: {fileID: 1999999991}
   _introController: {fileID: 1999999988}
+  _howToPlayController: {fileID: 0}
+  _openingDialogue: {fileID: 0}
   _hostOnlyButtons:
   - {fileID: 1999999902}
   - {fileID: 1999999916}
   - {fileID: 1999999787}
   - {fileID: 1999999745}
   - {fileID: 1529452337}
+  _showHowToPlayAfterLobby: 0
   _levelDurationSeconds: 300
   _nextLevelSceneName: 
   _showBlockingOverlayInsteadOfNextLevel: 1
