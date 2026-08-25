@@ -52866,6 +52866,8 @@ MonoBehaviour:
   _messageSequence: {fileID: 11400000, guid: 6a1d6f172d8c4af5a6d6e8b4e3c91270, type: 2}
   _presentation: 1
   _showOnlyOnce: 1
+  _completionTarget: {fileID: 2049044265}
+  _completionDistance: 0.05
 --- !u!1 &2147001001
 GameObject:
   m_ObjectHideFlags: 0

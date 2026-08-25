@@ -399,6 +399,19 @@ namespace Splime.UI
             _tutorialController.Show(sequence);
         }
 
+        public void DismissTutorial(UIMessageSequence sequence)
+        {
+            if (_currentView != LevelUIView.Tutorial ||
+                _tutorialController == null ||
+                !_tutorialController.IsShowing(sequence))
+            {
+                return;
+            }
+
+            _tutorialController.Hide();
+            ShowGameplay();
+        }
+
         public void ShowInteractionPrompt(string message)
         {
             if (_currentView == LevelUIView.Gameplay)

@@ -39,6 +39,11 @@ namespace Splime.UI
 
         public bool IsOpen => _panel != null && _panel.activeSelf;
 
+        public bool IsShowing(UIMessageSequence sequence)
+        {
+            return IsOpen && _activeSequence == sequence;
+        }
+
         private void Awake()
         {
             Hide();
