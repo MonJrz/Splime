@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 476ad496359b44358d3a4fd321ce1218, type: 3}
+  m_Name: Level2_Intro
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.UI.UIMessageSequence
+  _canSkip: 1
+  _leftParticipant:
+    _name: Orange
+    _portrait: {fileID: 21300000, guid: 312cd6597f9a5354183398155c754e76, type: 3}
+  _rightParticipant:
+    _name: Blue
+    _portrait: {fileID: 21300000, guid: 8a57a8d0a2a7f5642aad0562ecf1cf16, type: 3}
+  _pages:
+  - _title:
+    _body: That's... a lot of water.
+    _illustration: {fileID: 0}
+    _speaker: 1
+  - _title:
+    _body: Yep.
+    _illustration: {fileID: 0}
+    _speaker: 0
+  - _title:
+    _body: Think we can swim?
+    _illustration: {fileID: 0}
+    _speaker: 1
+  - _title:
+    _body: We're slimes.
+    _illustration: {fileID: 0}
+    _speaker: 0
+  - _title:
+    _body: So?
+    _illustration: {fileID: 0}
+    _speaker: 1
+  - _title:
+    _body: Remember the puddle incident?
+    _illustration: {fileID: 0}
+    _speaker: 0
+  - _title:
+    _body: We agreed to NEVER talk about the puddle incident again!
+    _illustration: {fileID: 0}
+    _speaker: 1
+  - _title:
+    _body: Right.
+    _illustration: {fileID: 0}
+    _speaker: 0
+  - _title:
+    _body: EVER.
+    _illustration: {fileID: 0}
+    _speaker: 1

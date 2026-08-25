@@ -62670,6 +62670,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Splime.UI.LevelFlowController
   _levelUIController: {fileID: 1999999991}
   _introController: {fileID: 1999999988}
+  _openingDialogue: {fileID: 11400000, guid: f2a39cc4b6e54d09a52c3f7d184b821e, type: 2}
   _hostOnlyButtons:
   - {fileID: 1999999902}
   - {fileID: 1999999916}
