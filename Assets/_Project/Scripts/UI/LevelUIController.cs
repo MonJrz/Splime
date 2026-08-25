@@ -14,6 +14,7 @@ namespace Splime.UI
         LeaveConfirmation,
         Dialogue,
         Tutorial,
+        HowToPlay,
         LevelComplete,
         LevelFailed,
         ConnectionLost,
@@ -57,6 +58,7 @@ namespace Splime.UI
 
         private LevelUIView _currentView = (LevelUIView)(-1);
         private LevelUIView _returnView = LevelUIView.Paused;
+        private LevelUIView _viewBeforePause = LevelUIView.Gameplay;
         private Coroutine _checkpointRoutine;
 
         public event Action RestartRequested;
@@ -82,6 +84,7 @@ namespace Splime.UI
         public bool IsLevelTimerPaused =>
             _currentView == LevelUIView.Paused ||
             _currentView == LevelUIView.Dialogue ||
+            _currentView == LevelUIView.HowToPlay ||
             IsBlockingOverlayVisible;
         private bool ShouldShowCursor => _currentView != LevelUIView.Gameplay;
 
@@ -187,7 +190,8 @@ namespace Splime.UI
 
         public void HandlePauseButtonPressed()
         {
-            if (_currentView == LevelUIView.Gameplay)
+            if (_currentView == LevelUIView.Gameplay ||
+                _currentView == LevelUIView.Tutorial)
             {
                 PauseRequested?.Invoke();
             }
@@ -297,7 +301,29 @@ namespace Splime.UI
 
         public void ShowPause()
         {
+            if (_currentView == LevelUIView.Gameplay ||
+                _currentView == LevelUIView.Tutorial)
+            {
+                _viewBeforePause = _currentView;
+            }
+
             SetView(LevelUIView.Paused);
+        }
+
+        public void RestoreViewAfterPause()
+        {
+            if (!IsPauseFlowView(_currentView))
+            {
+                return;
+            }
+
+            bool canRestoreTutorial =
+                _viewBeforePause == LevelUIView.Tutorial &&
+                _tutorialController != null &&
+                _tutorialController.HasActiveSequence;
+
+            _viewBeforePause = LevelUIView.Gameplay;
+            SetView(canRestoreTutorial ? LevelUIView.Tutorial : LevelUIView.Gameplay);
         }
 
         public void ShowBlockingOverlay()
@@ -399,17 +425,38 @@ namespace Splime.UI
             _tutorialController.Show(sequence);
         }
 
+        public void ShowHowToPlay()
+        {
+            SetView(LevelUIView.HowToPlay);
+        }
+
+        public void CompleteHowToPlay()
+        {
+            if (_currentView == LevelUIView.HowToPlay)
+            {
+                ShowGameplay();
+            }
+        }
+
         public void DismissTutorial(UIMessageSequence sequence)
         {
-            if (_currentView != LevelUIView.Tutorial ||
-                _tutorialController == null ||
-                !_tutorialController.IsShowing(sequence))
+            if (_tutorialController == null ||
+                !_tutorialController.HasActiveSequenceFor(sequence))
             {
                 return;
             }
 
             _tutorialController.Hide();
-            ShowGameplay();
+
+            if (_viewBeforePause == LevelUIView.Tutorial)
+            {
+                _viewBeforePause = LevelUIView.Gameplay;
+            }
+
+            if (_currentView == LevelUIView.Tutorial)
+            {
+                ShowGameplay();
+            }
         }
 
         public void ShowInteractionPrompt(string message)
@@ -504,7 +551,19 @@ namespace Splime.UI
                 _dialogueController?.Hide();
             }
 
-            if (view != LevelUIView.Tutorial)
+            bool preserveTutorial =
+                _viewBeforePause == LevelUIView.Tutorial &&
+                IsPauseFlowView(view);
+
+            if (view == LevelUIView.Tutorial)
+            {
+                _tutorialController?.Resume();
+            }
+            else if (preserveTutorial)
+            {
+                _tutorialController?.Suspend();
+            }
+            else
             {
                 _tutorialController?.Hide();
             }
@@ -517,6 +576,13 @@ namespace Splime.UI
             UpdateCursor();
             ViewChanged?.Invoke(view);
             InputBlockChanged?.Invoke(IsInputBlocked);
+        }
+
+        private static bool IsPauseFlowView(LevelUIView view)
+        {
+            return view == LevelUIView.Paused ||
+                   view == LevelUIView.Settings ||
+                   view == LevelUIView.LeaveConfirmation;
         }
 
         private IEnumerator ShowCheckpointTemporarily(float duration)

@@ -1163,12 +1163,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Splime.UI.LevelFlowController
   _levelUIController: {fileID: 64293007}
   _introController: {fileID: 64293010}
+  _howToPlayController: {fileID: 0}
   _openingDialogue: {fileID: 11400000, guid: be545dec379282e4687534bf6c8c12cd, type: 2}
   _hostOnlyButtons:
   - {fileID: 455774432}
   - {fileID: 429235781}
   - {fileID: 1037784489}
   - {fileID: 1187810752}
+  _showHowToPlayAfterLobby: 1
   _levelDurationSeconds: 150
   _nextLevelSceneName: Level2
   _showBlockingOverlayInsteadOfNextLevel: 0
@@ -1195,7 +1197,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Splime.UI.TimedOverlayUIController
   _panel: {fileID: 2143575010}
   _displayDuration: 3
-  _showOnEnable: 1
+  _showOnEnable: 0
   _levelStartSoundDelay: 1.5
   _graphics: {fileID: 859407667}
   _circlesImage: {fileID: 1550181113}
@@ -53005,6 +53007,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2147001001}
   m_CullTransparentMesh: 1
+--- !u!1001 &2147500000
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1437885931}
+    m_Modifications:
+    - target: {fileID: 1138619681, guid: c9f5ea136b8d4024a61ac0e6571723f4, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: c9f5ea136b8d4024a61ac0e6571723f4, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

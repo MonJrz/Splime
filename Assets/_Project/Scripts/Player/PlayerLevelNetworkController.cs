@@ -16,7 +16,7 @@ namespace Splime.Player
     [RequireComponent(typeof(CharacterController))]
     public sealed class PlayerLevelNetworkController : NetworkBehaviour
     {
-        private const int InactiveDialoguePage = -1;
+        private const int InactiveSharedPage = -1;
 
         private enum LevelOutcome
         {
@@ -30,9 +30,13 @@ namespace Splime.Player
         private static LevelOutcome _levelOutcome;
         private static bool _outcomeEventRaised;
         private static readonly HashSet<ulong> _sharedDialogueReadyClients = new();
-        private static int _sharedDialoguePageIndex = InactiveDialoguePage;
+        private static int _sharedDialoguePageIndex = InactiveSharedPage;
         private static int _sharedDialoguePageCount;
         private static bool _sharedDialogueCompleted;
+        private static readonly HashSet<ulong> _sharedHowToPlayReadyClients = new();
+        private static int _sharedHowToPlayPageIndex = InactiveSharedPage;
+        private static int _sharedHowToPlayPageCount;
+        private static bool _sharedHowToPlayCompleted;
 
         private CharacterController _characterController;
         private NetworkTransform _networkTransform;
@@ -46,6 +50,8 @@ namespace Splime.Player
         public static event Action<int, SpawnPlayerRole> CheckpointActivatedReceived;
         public static event Action<int> SharedDialoguePageChangedReceived;
         public static event Action SharedDialogueCompletedReceived;
+        public static event Action<int> SharedHowToPlayPageChangedReceived;
+        public static event Action SharedHowToPlayCompletedReceived;
 
         public SpawnPlayerRole SpawnRole => _spawnRole;
 
@@ -65,9 +71,13 @@ namespace Splime.Player
             _levelOutcome = LevelOutcome.None;
             _outcomeEventRaised = false;
             _sharedDialogueReadyClients.Clear();
-            _sharedDialoguePageIndex = InactiveDialoguePage;
+            _sharedDialoguePageIndex = InactiveSharedPage;
             _sharedDialoguePageCount = 0;
             _sharedDialogueCompleted = false;
+            _sharedHowToPlayReadyClients.Clear();
+            _sharedHowToPlayPageIndex = InactiveSharedPage;
+            _sharedHowToPlayPageCount = 0;
+            _sharedHowToPlayCompleted = false;
             UniversalSpawnPoint.ResetPlayerSpawns();
         }
 
@@ -274,6 +284,95 @@ namespace Splime.Player
             return true;
         }
 
+        public bool MarkSharedHowToPlayReady(int pageCount)
+        {
+            if (pageCount <= 0)
+            {
+                return false;
+            }
+
+            if (!IsNetworkSessionActive)
+            {
+                _sharedHowToPlayPageCount = pageCount;
+                _sharedHowToPlayPageIndex = 0;
+                _sharedHowToPlayCompleted = false;
+                SharedHowToPlayPageChangedReceived?.Invoke(0);
+                return true;
+            }
+
+            if (!IsSpawned || !IsOwner)
+            {
+                return false;
+            }
+
+            if (IsServer)
+            {
+                RegisterSharedHowToPlayReady(NetworkManager.Singleton.LocalClientId, pageCount);
+            }
+            else
+            {
+                MarkSharedHowToPlayReadyRpc(pageCount);
+            }
+
+            return true;
+        }
+
+        public bool RequestSharedHowToPlayPageChange(int expectedPageIndex, int direction)
+        {
+            int normalizedDirection = Math.Sign(direction);
+            if (normalizedDirection == 0)
+            {
+                return false;
+            }
+
+            if (!IsNetworkSessionActive)
+            {
+                TryChangeSharedHowToPlayPage(expectedPageIndex, normalizedDirection);
+                return true;
+            }
+
+            if (!IsSpawned || !IsOwner)
+            {
+                return false;
+            }
+
+            if (IsServer)
+            {
+                TryChangeSharedHowToPlayPage(expectedPageIndex, normalizedDirection);
+            }
+            else
+            {
+                RequestSharedHowToPlayPageChangeRpc(expectedPageIndex, normalizedDirection);
+            }
+
+            return true;
+        }
+
+        public bool RequestSharedHowToPlayClose()
+        {
+            if (!IsNetworkSessionActive)
+            {
+                CompleteSharedHowToPlay();
+                return true;
+            }
+
+            if (!IsSpawned || !IsOwner)
+            {
+                return false;
+            }
+
+            if (IsServer)
+            {
+                CompleteSharedHowToPlay();
+            }
+            else
+            {
+                RequestSharedHowToPlayCloseRpc();
+            }
+
+            return true;
+        }
+
         [Rpc(SendTo.ClientsAndHost)]
         private void BroadcastCheckpointActivatedRpc(int checkpointIndex, SpawnPlayerRole role)
         {
@@ -310,6 +409,40 @@ namespace Splime.Player
         private void BroadcastSharedDialogueCompletedRpc()
         {
             SharedDialogueCompletedReceived?.Invoke();
+        }
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void MarkSharedHowToPlayReadyRpc(
+            int pageCount,
+            RpcParams rpcParams = default)
+        {
+            RegisterSharedHowToPlayReady(rpcParams.Receive.SenderClientId, pageCount);
+        }
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void RequestSharedHowToPlayPageChangeRpc(
+            int expectedPageIndex,
+            int direction)
+        {
+            TryChangeSharedHowToPlayPage(expectedPageIndex, direction);
+        }
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void RequestSharedHowToPlayCloseRpc()
+        {
+            CompleteSharedHowToPlay();
+        }
+
+        [Rpc(SendTo.NotServer)]
+        private void BroadcastSharedHowToPlayPageRpc(int pageIndex)
+        {
+            SharedHowToPlayPageChangedReceived?.Invoke(pageIndex);
+        }
+
+        [Rpc(SendTo.NotServer)]
+        private void BroadcastSharedHowToPlayCompletedRpc()
+        {
+            SharedHowToPlayCompletedReceived?.Invoke();
         }
 
         [Rpc(SendTo.Owner)]
@@ -369,7 +502,7 @@ namespace Splime.Player
 
             _sharedDialogueReadyClients.Add(clientId);
 
-            if (!AreAllConnectedClientsReadyForDialogue())
+            if (!AreAllConnectedClientsReady(_sharedDialogueReadyClients))
             {
                 return;
             }
@@ -378,7 +511,7 @@ namespace Splime.Player
             PublishSharedDialoguePage(0);
         }
 
-        private static bool AreAllConnectedClientsReadyForDialogue()
+        private static bool AreAllConnectedClientsReady(HashSet<ulong> readyClients)
         {
             NetworkManager networkManager = NetworkManager.Singleton;
             if (networkManager == null || !networkManager.IsListening)
@@ -393,7 +526,7 @@ namespace Splime.Player
 
             foreach (ulong clientId in networkManager.ConnectedClientsIds)
             {
-                if (!_sharedDialogueReadyClients.Contains(clientId))
+                if (!readyClients.Contains(clientId))
                 {
                     return false;
                 }
@@ -430,7 +563,7 @@ namespace Splime.Player
             }
 
             _sharedDialogueCompleted = true;
-            _sharedDialoguePageIndex = InactiveDialoguePage;
+            _sharedDialoguePageIndex = InactiveSharedPage;
             SharedDialogueCompletedReceived?.Invoke();
 
             if (IsNetworkSessionActive)
@@ -446,6 +579,90 @@ namespace Splime.Player
             if (IsNetworkSessionActive)
             {
                 BroadcastSharedDialoguePageRpc(pageIndex);
+            }
+        }
+
+        private void RegisterSharedHowToPlayReady(ulong clientId, int pageCount)
+        {
+            if (!IsServer ||
+                pageCount <= 0 ||
+                _sharedHowToPlayCompleted ||
+                _sharedHowToPlayPageIndex >= 0)
+            {
+                return;
+            }
+
+            if (_sharedHowToPlayPageCount == 0)
+            {
+                _sharedHowToPlayPageCount = pageCount;
+            }
+            else if (_sharedHowToPlayPageCount != pageCount)
+            {
+                Debug.LogWarning(
+                    $"[{nameof(PlayerLevelNetworkController)}] Clients reported different How To Play page counts.",
+                    this);
+                return;
+            }
+
+            _sharedHowToPlayReadyClients.Add(clientId);
+
+            if (!AreAllConnectedClientsReady(_sharedHowToPlayReadyClients))
+            {
+                return;
+            }
+
+            _sharedHowToPlayPageIndex = 0;
+            PublishSharedHowToPlayPage(0);
+        }
+
+        private void TryChangeSharedHowToPlayPage(int expectedPageIndex, int direction)
+        {
+            if (_sharedHowToPlayCompleted ||
+                _sharedHowToPlayPageIndex < 0 ||
+                _sharedHowToPlayPageIndex != expectedPageIndex ||
+                _sharedHowToPlayPageCount <= 0)
+            {
+                return;
+            }
+
+            int normalizedDirection = Math.Sign(direction);
+            if (normalizedDirection == 0)
+            {
+                return;
+            }
+
+            int nextPageIndex =
+                (_sharedHowToPlayPageIndex + normalizedDirection +
+                 _sharedHowToPlayPageCount) % _sharedHowToPlayPageCount;
+
+            _sharedHowToPlayPageIndex = nextPageIndex;
+            PublishSharedHowToPlayPage(nextPageIndex);
+        }
+
+        private void CompleteSharedHowToPlay()
+        {
+            if (_sharedHowToPlayCompleted || _sharedHowToPlayPageIndex < 0)
+            {
+                return;
+            }
+
+            _sharedHowToPlayCompleted = true;
+            _sharedHowToPlayPageIndex = InactiveSharedPage;
+            SharedHowToPlayCompletedReceived?.Invoke();
+
+            if (IsNetworkSessionActive)
+            {
+                BroadcastSharedHowToPlayCompletedRpc();
+            }
+        }
+
+        private void PublishSharedHowToPlayPage(int pageIndex)
+        {
+            SharedHowToPlayPageChangedReceived?.Invoke(pageIndex);
+
+            if (IsNetworkSessionActive)
+            {
+                BroadcastSharedHowToPlayPageRpc(pageIndex);
             }
         }
 

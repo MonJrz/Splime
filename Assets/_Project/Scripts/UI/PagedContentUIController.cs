@@ -38,10 +38,11 @@ namespace Splime.UI
         public event Action SkipRequested;
 
         public bool IsOpen => _panel != null && _panel.activeSelf;
+        public bool HasActiveSequence => _activeSequence != null;
 
-        public bool IsShowing(UIMessageSequence sequence)
+        public bool HasActiveSequenceFor(UIMessageSequence sequence)
         {
-            return IsOpen && _activeSequence == sequence;
+            return _activeSequence == sequence;
         }
 
         private void Awake()
@@ -123,6 +124,19 @@ namespace Splime.UI
             _currentPageIndex = 0;
             _isNavigationExternallyControlled = false;
             SetPanelActive(false);
+        }
+
+        public void Suspend()
+        {
+            SetPanelActive(false);
+        }
+
+        public void Resume()
+        {
+            if (_activeSequence != null)
+            {
+                SetPanelActive(true);
+            }
         }
 
         public void HandleNextButtonPressed()
