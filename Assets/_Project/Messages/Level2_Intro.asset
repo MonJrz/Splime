@@ -21,19 +21,35 @@ MonoBehaviour:
     _portrait: {fileID: 21300000, guid: 8a57a8d0a2a7f5642aad0562ecf1cf16, type: 3}
   _pages:
   - _title:
-    _body: That's... a lot of water.
+    _body: There are a lot of weird rocks around here.
     _illustration: {fileID: 0}
     _speaker: 1
   - _title:
-    _body: Yep.
+    _body: Yeah. Too many.
     _illustration: {fileID: 0}
     _speaker: 0
   - _title:
-    _body: Think we can swim?
+    _body: And those ugly flowers.
     _illustration: {fileID: 0}
     _speaker: 1
   - _title:
-    _body: We're slimes.
+    _body: And the metal roots.
+    _illustration: {fileID: 0}
+    _speaker: 0
+  - _title:
+    _body: Yeah! Fancy roots.
+    _illustration: {fileID: 0}
+    _speaker: 1
+  - _title:
+    _body: I'm starting to think this isn't nature...
+    _illustration: {fileID: 0}
+    _speaker: 0
+  - _title:
+    _body: Don't be ridiculous.
+    _illustration: {fileID: 0}
+    _speaker: 1
+  - _title:
+    _body: Blue, the roots are made of metal.
     _illustration: {fileID: 0}
     _speaker: 0
   - _title:
@@ -41,18 +57,10 @@ MonoBehaviour:
     _illustration: {fileID: 0}
     _speaker: 1
   - _title:
-    _body: Remember the puddle incident?
+    _body: ROOTS AREN'T MADE OF METAL!
     _illustration: {fileID: 0}
     _speaker: 0
   - _title:
-    _body: We agreed to NEVER talk about the puddle incident again!
-    _illustration: {fileID: 0}
-    _speaker: 1
-  - _title:
-    _body: Right.
-    _illustration: {fileID: 0}
-    _speaker: 0
-  - _title:
-    _body: EVER.
+    _body: Nature is full of surprises.
     _illustration: {fileID: 0}
     _speaker: 1
