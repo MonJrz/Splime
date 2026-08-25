@@ -68,6 +68,12 @@ namespace Splime.UI
             !NetworkManager.Singleton.IsListening ||
             NetworkManager.Singleton.IsServer;
 
+        private bool ShouldBlockLocalInput =>
+            (_levelUIController != null && _levelUIController.IsInputBlocked) ||
+            _isWaitingForHowToPlay ||
+            _isWaitingForIntro ||
+            _hasOpeningDialoguePending;
+            
         private void Awake()
         {
             PlayerLevelNetworkController.ResetLevelState();
@@ -309,6 +315,8 @@ namespace Splime.UI
         {
             _isWaitingForIntro = false;
             TryShowOpeningDialogue();
+
+            ApplyCurrentInputState();
         }
 
         private void TryStartHowToPlay()
@@ -398,8 +406,19 @@ namespace Splime.UI
             _shouldShowHowToPlay = false;
             _isWaitingForHowToPlay = false;
             _synchronizedHowToPlayPageIndex = -1;
+
+            // Preparar el siguiente bloqueo ANTES de volver a Gameplay.
+            if (_introController != null)
+            {
+                _isWaitingForIntro = true;
+            }
+
             _howToPlayController?.HideExternallyControlled();
+
             _levelUIController.CompleteHowToPlay();
+
+            ApplyCurrentInputState();
+
             StartIntroAfterHowToPlay();
         }
 
@@ -408,11 +427,16 @@ namespace Splime.UI
             if (_introController == null)
             {
                 _isWaitingForIntro = false;
+
                 TryShowOpeningDialogue();
+                ApplyCurrentInputState();
+
                 return;
             }
 
             _isWaitingForIntro = true;
+
+            ApplyCurrentInputState();
             _introController.Show();
         }
 
@@ -532,6 +556,13 @@ namespace Splime.UI
 
         private void HandleTogglePausePerformed(InputAction.CallbackContext context)
         {
+            if (_isWaitingForHowToPlay ||
+                _isWaitingForIntro ||
+                _hasOpeningDialoguePending)
+            {
+                return;
+            }
+
             switch (_levelUIController.CurrentView)
             {
                 case LevelUIView.Gameplay:
@@ -1035,7 +1066,7 @@ namespace Splime.UI
                 FindLocalInput();
             }
 
-            _localInput?.SetInputBlocked(isBlocked);
+            ApplyCurrentInputState();
         }
 
         private void HandleLocalInputReady(SlimeInput slimeInput)
@@ -1071,10 +1102,12 @@ namespace Splime.UI
 
         private void ApplyCurrentInputState()
         {
-            if (_localInput != null && _levelUIController != null)
+            if (_localInput == null)
             {
-                _localInput.SetInputBlocked(_levelUIController.IsInputBlocked);
+                return;
             }
+            
+            _localInput.SetInputBlocked(ShouldBlockLocalInput);
         }
 
         private void RefreshHostOnlyButtons()

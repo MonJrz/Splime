@@ -2264,7 +2264,7 @@ MonoBehaviour:
   _lobbyUIController: {fileID: 884226669}
   _mainMenuSceneName: Main
   _lobbySceneName: Lobby
-  _gameplaySceneName: Level3
+  _gameplaySceneName: Level1
 --- !u!4 &596464024
 Transform:
   m_ObjectHideFlags: 0

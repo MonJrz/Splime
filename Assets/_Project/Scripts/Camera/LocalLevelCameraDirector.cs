@@ -66,11 +66,6 @@ namespace Splime.CameraSystem
         {
             SlimeInput.LocalInputReady -= HandleLocalInputReady;
 
-            // if (_localInput != null)
-            // {
-            //     _localInput.SetInputBlocked(false);
-            // }
-
             if (Instance == this)
             {
                 Instance = null;
@@ -138,16 +133,12 @@ namespace Splime.CameraSystem
 
         private IEnumerator OverviewRoutine()
         {
-            // _localInput?.SetInputBlocked(true);
-
             _overviewCamera.Priority = _overviewPriority;
 
             yield return new WaitForSecondsRealtime(
                 _overviewDuration);
 
             _overviewCamera.Priority = 0;
-
-            // _localInput?.SetInputBlocked(false);
 
             _overviewRoutine = null;
         }

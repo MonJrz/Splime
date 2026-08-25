@@ -4386,8 +4386,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.20898329, y: 0.000000014572134, z: -0.0000000031140939, w: 0.9779192}
-  m_LocalPosition: {x: -1, y: 2.1604807, z: -4.0305805}
+  m_LocalRotation: {x: 0.21138817, y: 0.006452089, z: -0.0013935228, w: 0.9773799}
+  m_LocalPosition: {x: 1.9923444, y: 1.7950706, z: -36.67959}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -22505,6 +22505,10 @@ PrefabInstance:
     - target: {fileID: 2567156094081796724, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: InScenePlacedSourceGlobalObjectIdHash
       value: 3065987430
+      objectReference: {fileID: 0}
+    - target: {fileID: 3523136248344390768, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _hideAfterInteraction
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4296322541567232827, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: m_Size.y
@@ -44200,6 +44204,10 @@ PrefabInstance:
     - target: {fileID: 2567156094081796724, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: InScenePlacedSourceGlobalObjectIdHash
       value: 3065987430
+      objectReference: {fileID: 0}
+    - target: {fileID: 3523136248344390768, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _hideAfterInteraction
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5838578912262438145, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: m_Name
