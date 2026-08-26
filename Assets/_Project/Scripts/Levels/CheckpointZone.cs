@@ -251,8 +251,6 @@ namespace Splime.Levels
             var (spawnPos, spawnRot) = GetSpawnForRole(role);
             UniversalSpawnPoint.SetActivePlayerSpawn(role, spawnPos, spawnRot, _checkpointIndex);
 
-            Debug.Log($"[{nameof(CheckpointZone)}] 🚩 Checkpoint #{_checkpointIndex} activado INDIVIDUALMENTE para {role} en {spawnPos}.");
-
             // Sincronizar por red
             if (IsNetworkSessionActive)
             {
@@ -275,8 +273,6 @@ namespace Splime.Levels
 
             UniversalSpawnPoint.SetActivePlayerSpawn(SpawnPlayerRole.Player1, p1Pos, p1Rot, _checkpointIndex);
             UniversalSpawnPoint.SetActivePlayerSpawn(SpawnPlayerRole.Player2, p2Pos, p2Rot, _checkpointIndex);
-
-            Debug.Log($"[{nameof(CheckpointZone)}] 🚩 Checkpoint #{_checkpointIndex} activado para TODO EL EQUIPO. P1: {p1Pos}, P2: {p2Pos}");
 
             if (IsNetworkSessionActive)
             {

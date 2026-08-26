@@ -103,25 +103,12 @@ namespace Splime.Abilities
         public void PushNormalFormBlock()
         {
             _normalFormBlockCount++;
-
-            Debug.Log(
-                $"[{nameof(PlayerSqueezeAbility)}] " +
-                $"Normal form BLOCKED | Count={_normalFormBlockCount}",
-                this
-            );
         }
 
         public void PopNormalFormBlock()
         {
             _normalFormBlockCount =
                 Mathf.Max(0, _normalFormBlockCount - 1);
-
-            Debug.Log(
-                $"[{nameof(PlayerSqueezeAbility)}] " +
-                $"Normal form {(IsNormalFormBlocked ? "BLOCKED" : "UNLOCKED")} | " +
-                $"Count={_normalFormBlockCount}",
-                this
-            );
         }
 
         public void SetAgileMode(bool active)
@@ -132,12 +119,6 @@ namespace Splime.Abilities
                 IsAbilityActive &&
                 IsNormalFormBlocked)
             {
-                Debug.Log(
-                    $"[{nameof(PlayerSqueezeAbility)}] " +
-                    $"No se puede volver a Normal dentro de una zona estrecha.",
-                    this
-                );
-
                 return;
             }
 
@@ -162,14 +143,6 @@ namespace Splime.Abilities
                 if (active) _characterSFX.PlaySqueezeOn();
                 else _characterSFX.PlaySqueezeOff();
             }
-
-            Debug.Log(
-                $"[{nameof(PlayerSqueezeAbility)}] " +
-                $"Local Agile={active} | " +
-                $"MaxJumps={_statsModifier?.MaxJumpCount} | " +
-                $"Weight={_statsModifier?.Weight}",
-                this
-            );
         }
 
         private void OnAgileModeStateChanged(bool previousValue, bool newValue)
@@ -222,11 +195,6 @@ namespace Splime.Abilities
                     _characterController.center = _normalCenter;
                 }
             }
-
-            Debug.Log(
-                $"[{nameof(PlayerSqueezeAbility)}] " +
-                $"{(active ? "MODO SMALL" : "MODO NORMAL")} en {gameObject.name}.",
-                this);
         }
 
         private void ApplyAgileStats(bool active)

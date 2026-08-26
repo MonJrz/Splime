@@ -13,7 +13,7 @@ public class LevelMusicPlayer : MonoBehaviour
         }
         else
         {   
-            Debug.LogWarning($"[{nameof(LevelMusicPlayer)}] AudioManager.Instance es null — ¿se entró a la escena sin pasar por Main?", this);
+            Debug.LogWarning($"[{nameof(LevelMusicPlayer)}] AudioManager instance not found. Scene may have been loaded directly without initializing Main.", this);
         }
     }
 }

@@ -185,16 +185,6 @@ namespace Splime.Player
                         ? _slimeData.JumpForce
                         : 8f);
 
-            Debug.Log(
-                $"[SlimeJump] Jump input | " +
-                $"Grounded={_isGrounded} | " +
-                $"Coyote={_coyoteTimer:F2} | " +
-                $"JumpsUsed={_jumpsUsed} | " +
-                $"MaxJumps={maxJumpCount} | " +
-                $"JumpForce={jumpForce:F2}",
-                this
-            );
-
             bool canGroundJump =
                 _coyoteTimer > 0f;
 

@@ -133,7 +133,7 @@ namespace Splime.Network
 
         private void OnClientConnected(ulong clientId)
         {
-            Debug.Log($"[{nameof(NetworkGameManager)}] 🟢 OnClientConnected disparado. ClientId: {clientId}, IsServer: {NetworkManager.Singleton?.IsServer}, IsLevelScene: {IsLevelSceneActive()}");
+            Debug.Log($"[{nameof(NetworkGameManager)}] Client connected (ClientId: {clientId}).");
 
             if (NetworkManager.Singleton != null &&
                 NetworkManager.Singleton.IsServer &&
@@ -210,20 +210,14 @@ namespace Splime.Network
             {
                 spawnPos = activePos;
                 spawnRot = activeRot;
-                Debug.Log($"[{nameof(NetworkGameManager)}] 📍 Usando Spawn/Checkpoint activo para {targetRole}: {spawnPos}, Rot: {spawnRot.eulerAngles}");
-            }
-            else
-            {
-                Debug.Log($"[{nameof(NetworkGameManager)}] ℹ️ No se encontró UniversalSpawnPoint para {targetRole}, usando posición por defecto: {spawnPos}");
             }
 
             if (prefabToSpawn == null)
             {
-                Debug.LogError($"[{nameof(NetworkGameManager)}] Prefab de jugador no asignado en el Inspector para clientId {clientId}.", this);
+                Debug.LogError($"[{nameof(NetworkGameManager)}] Player prefab not assigned in the Inspector for clientId {clientId}.", this);
                 return;
             }
 
-            Debug.Log($"[{nameof(NetworkGameManager)}] 🚀 Intentando SpawnPlayerForClient para ClientId: {clientId}, Prefab: {prefabToSpawn.name}, Pos: {spawnPos}");
             GameObject playerInstance = Instantiate(prefabToSpawn, spawnPos, spawnRot);
             NetworkObject netObj = playerInstance.GetComponent<NetworkObject>();
 
@@ -252,7 +246,7 @@ namespace Splime.Network
                     statsModifier.Initialize(dataToAssign);
                 }
 
-                Debug.Log($"[{nameof(NetworkGameManager)}] 🎮 Jugador {clientId + 1} ({prefabToSpawn.name}) instanciado exitosamente en {spawnPos} con Ownership para clientId {clientId}.", this);
+                Debug.Log($"[{nameof(NetworkGameManager)}] Spawned player instance for client {clientId} ({targetRole}).", this);
             }
         }
 
@@ -283,7 +277,6 @@ namespace Splime.Network
         {
             try
             {
-                Debug.Log($"[{nameof(NetworkGameManager)}] 🔄 Inicializando Unity Gaming Services...");
                 await UnityServices.InitializeAsync();
 
                 // Si ya tiene token cacheado de una sesión anterior, no re-autenticamos
@@ -292,23 +285,23 @@ namespace Splime.Network
                     await AuthenticationService.Instance.SignInAnonymouslyAsync();
                 }
 
-                Debug.Log($"[{nameof(NetworkGameManager)}] ✅ Autenticado. PlayerID: {AuthenticationService.Instance.PlayerId}");
+                Debug.Log($"[{nameof(NetworkGameManager)}] Authenticated with Unity Gaming Services (PlayerId: {AuthenticationService.Instance.PlayerId}).");
                 _isInitialized = true;
                 return true;
             }
             catch (AuthenticationException e)
             {
-                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error de autenticación: {e.Message}");
+                Debug.LogError($"[{nameof(NetworkGameManager)}] Authentication failed: {e.Message}");
                 return false;
             }
             catch (RequestFailedException e)
             {
-                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error al inicializar UGS (posiblemente Project ID no vinculado): {e.Message}");
+                Debug.LogError($"[{nameof(NetworkGameManager)}] Failed to initialize UGS: {e.Message}");
                 return false;
             }
             catch (Exception e)
             {
-                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error inesperado en InitializeServices: {e.Message}");
+                Debug.LogError($"[{nameof(NetworkGameManager)}] Unexpected error during service initialization: {e.Message}");
                 return false;
             }
         }
@@ -341,8 +334,6 @@ namespace Splime.Network
                     return;
                 }
 
-                Debug.Log($"[{nameof(NetworkGameManager)}] 🌐 Creando Sesión de Relay (MaxPlayers = 2)...");
-
                 EnsureTransportOptimized();
 
                 // Forzar protocolo WSS para compatibilidad WebGL ↔ Windows.
@@ -365,14 +356,13 @@ namespace Splime.Network
                 SetCurrentSession(session);
                 _sessionFlowState = SessionFlowState.HostWaiting;
 
-                Debug.Log($"[{nameof(NetworkGameManager)}] 🎉 ¡HOST CREADO EXITOSAMENTE!");
-                Debug.Log($"[{nameof(NetworkGameManager)}] 🔑 JOIN CODE: {_joinCode}");
+                Debug.Log($"[{nameof(NetworkGameManager)}] Host session created successfully. Join Code: {_joinCode}");
                 _lobbyUIController?.ShowHostWaitingRoom(_joinCode);
                 RefreshLobbyUI();
             }
             catch (SessionException e)
             {
-                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error al crear la sesión: {e}", this);
+                Debug.LogError($"[{nameof(NetworkGameManager)}] Failed to create Relay session: {e}", this);
                 await HandleConnectionAttemptFailedAsync(
                     operationVersion,
                     SessionRole.Host,
@@ -380,7 +370,7 @@ namespace Splime.Network
             }
             catch (Exception e)
             {
-                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error inesperado al iniciar Host: {e}", this);
+                Debug.LogError($"[{nameof(NetworkGameManager)}] Unexpected error starting Host: {e}", this);
                 await HandleConnectionAttemptFailedAsync(
                     operationVersion,
                     SessionRole.Host,
@@ -407,7 +397,6 @@ namespace Splime.Network
 
             if (string.IsNullOrWhiteSpace(codeToJoin))
             {
-                Debug.LogWarning($"[{nameof(NetworkGameManager)}] ⚠️ Debes ingresar un Join Code válido para conectarte.");
                 ShowLobbyError("Ingresa un código de sala válido.");
                 return;
             }
@@ -430,7 +419,6 @@ namespace Splime.Network
                 }
 
                 string formattedCode = codeToJoin.Trim().ToUpper();
-                Debug.Log($"[{nameof(NetworkGameManager)}] 🌐 Conectándose a la sesión con Join Code: {formattedCode}...");
 
                 EnsureTransportOptimized();
 
@@ -443,8 +431,7 @@ namespace Splime.Network
                 if (session == null)
                 {
                     Debug.LogError(
-                        $"[{nameof(NetworkGameManager)}] ❌ JoinSessionByCodeAsync retornó null " +
-                        $"para el código: {formattedCode}",
+                        $"[{nameof(NetworkGameManager)}] JoinSessionByCodeAsync returned null for code: {formattedCode}",
                         this);
                     await HandleConnectionAttemptFailedAsync(
                         operationVersion,
@@ -462,12 +449,12 @@ namespace Splime.Network
                 SetCurrentSession(session);
                 _sessionFlowState = SessionFlowState.Synchronizing;
 
-                Debug.Log($"[{nameof(NetworkGameManager)}] 🎉 ¡CONEXIÓN COMO CLIENTE EXITOSA!");
+                Debug.Log($"[{nameof(NetworkGameManager)}] Successfully joined session as client (Code: {formattedCode}).");
                 RefreshLobbyUI();
             }
             catch (SessionException e)
             {
-                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error al unirse a la sesión: {e}", this);
+                Debug.LogError($"[{nameof(NetworkGameManager)}] Failed to join session: {e}", this);
                 await HandleConnectionAttemptFailedAsync(
                     operationVersion,
                     SessionRole.Guest,
@@ -475,7 +462,7 @@ namespace Splime.Network
             }
             catch (Exception e)
             {
-                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ Error inesperado al unirse como Cliente: {e}", this);
+                Debug.LogError($"[{nameof(NetworkGameManager)}] Unexpected error joining session: {e}", this);
                 await HandleConnectionAttemptFailedAsync(
                     operationVersion,
                     SessionRole.Guest,
@@ -529,7 +516,6 @@ namespace Splime.Network
             _isConnecting = false;
             _sessionFlowState = SessionFlowState.Leaving;
             ++_sessionOperationVersion;
-            Debug.Log($"[{nameof(NetworkGameManager)}] 🚪 Iniciando proceso de desconexión...");
 
             ISession session = _currentSession;
             _currentSession = null;
@@ -641,7 +627,7 @@ namespace Splime.Network
             catch (Exception e)
             {
                 Debug.LogWarning(
-                    $"[{nameof(NetworkGameManager)}] ⚠️ No se pudo cerrar la sesión de UGS: {e.Message}");
+                    $"[{nameof(NetworkGameManager)}] Failed to close UGS session: {e.Message}");
             }
         }
 
@@ -652,7 +638,6 @@ namespace Splime.Network
             if (networkManager != null && networkManager.IsListening)
             {
                 networkManager.Shutdown();
-                Debug.Log($"[{nameof(NetworkGameManager)}] ✅ Netcode for GameObjects apagado.");
             }
         }
 
@@ -669,7 +654,7 @@ namespace Splime.Network
             if (string.IsNullOrWhiteSpace(sceneName) || !Application.CanStreamedLevelBeLoaded(sceneName))
             {
                 Debug.LogError(
-                    $"[{nameof(NetworkGameManager)}] La escena '{sceneName}' no existe o no está en Build Settings.",
+                    $"[{nameof(NetworkGameManager)}] Scene '{sceneName}' not found in Build Settings.",
                     this);
                 return false;
             }
@@ -684,7 +669,7 @@ namespace Splime.Network
             if (!networkManager.IsServer)
             {
                 Debug.LogWarning(
-                    $"[{nameof(NetworkGameManager)}] Solo el host puede cambiar la escena de nivel.",
+                    $"[{nameof(NetworkGameManager)}] Only the host can initiate level loading.",
                     this);
                 return false;
             }
@@ -693,7 +678,7 @@ namespace Splime.Network
             if (status != SceneEventProgressStatus.Started)
             {
                 Debug.LogError(
-                    $"[{nameof(NetworkGameManager)}] No se pudo cargar '{sceneName}' ({status}).",
+                    $"[{nameof(NetworkGameManager)}] Failed to load scene '{sceneName}' ({status}).",
                     this);
                 return false;
             }
@@ -775,12 +760,9 @@ namespace Splime.Network
 
             if (session == null)
             {
-                Debug.LogWarning($"[{nameof(NetworkGameManager)}] ⚠️ HandleReadyChangeRequested: No hay sesión activa.");
-                ShowLobbyError("No hay una sala activa.");
+                ShowLobbyError("No active session.");
                 return;
             }
-
-            Debug.Log($"[{nameof(NetworkGameManager)}] 🔄 Solicitando cambio de Ready a: {isReady} por jugador ID: {session.CurrentPlayer?.Id} (IsHost: {session.IsHost})");
 
             session.CurrentPlayer.Properties.TryGetValue(ReadyPropertyKey, out PlayerProperty previousValue);
             session.CurrentPlayer.SetProperty(
@@ -790,14 +772,13 @@ namespace Splime.Network
             try
             {
                 await session.SaveCurrentPlayerDataAsync();
-                Debug.Log($"[{nameof(NetworkGameManager)}] ✅ Ready guardado exitosamente en UGS. Refrescando UI...");
                 RefreshLobbyUI();
             }
             catch (Exception e)
             {
                 session.CurrentPlayer.SetProperty(ReadyPropertyKey, previousValue);
-                Debug.LogError($"[{nameof(NetworkGameManager)}] ❌ No se pudo actualizar Ready: {e.Message}", this);
-                ShowLobbyError("No se pudo actualizar tu estado.");
+                Debug.LogError($"[{nameof(NetworkGameManager)}] Failed to update player ready status: {e.Message}", this);
+                ShowLobbyError("Failed to update your status.");
             }
         }
 
@@ -805,13 +786,13 @@ namespace Splime.Network
         {
             if (_currentSession == null || !_currentSession.IsHost || !ArePlayersReady())
             {
-                ShowLobbyError("Ambos jugadores deben estar listos.");
+                ShowLobbyError("Both players must be ready.");
                 return;
             }
 
             if (!TryLoadLevelScene(_gameplaySceneName))
             {
-                ShowLobbyError("No se pudo iniciar la partida.");
+                ShowLobbyError("Failed to start the game.");
             }
         }
 
@@ -876,7 +857,6 @@ namespace Splime.Network
 
         private void OnSessionChanged()
         {
-            Debug.Log($"[{nameof(NetworkGameManager)}] 🔄 OnSessionChanged recibido de UGS.");
             RefreshLobbyUI();
         }
 
@@ -899,7 +879,6 @@ namespace Splime.Network
 
         private void OnSessionPlayerJoined(string playerId)
         {
-            Debug.Log($"[{nameof(NetworkGameManager)}] 👤 OnSessionPlayerJoined recibido para PlayerId: {playerId}. PlayerCount: {_currentSession?.PlayerCount}");
             RefreshLobbyUI();
         }
 
@@ -1006,11 +985,6 @@ namespace Splime.Network
             }
 
             GetReadyStates(out bool hostReady, out bool guestReady);
-            Debug.Log(
-                $"[{nameof(NetworkGameManager)}] 📊 RefreshLobbyUI | " +
-                $"PlayerCount: {playerCount} | NetworkReady: {networkReady} | " +
-                $"HostReady: {hostReady} | GuestReady: {guestReady} | " +
-                $"Role: {_sessionRole}");
             _lobbyUIController.SetConnectedPlayerCount(networkReady ? playerCount : 0);
             _lobbyUIController.SetReadyStates(hostReady, guestReady);
         }
@@ -1075,8 +1049,6 @@ namespace Splime.Network
                     isReady = propVal == ReadyValue;
                 }
 
-                Debug.Log($"[{nameof(NetworkGameManager)}] 🔍 Player in Session: Id={player.Id} | IsHost={player.Id == _currentSession.Host} | ReadyKey={propVal} | IsReady={isReady}");
-
                 if (player.Id == _currentSession.Host)
                 {
                     hostReady = isReady;
@@ -1112,7 +1084,7 @@ namespace Splime.Network
             List<ulong> clientsCompleted,
             List<ulong> clientsTimedOut)
         {
-            Debug.Log($"[{nameof(NetworkGameManager)}] 🎬 OnNetworkSceneLoadCompleted para escena: '{sceneName}'. IsServer: {NetworkManager.Singleton?.IsServer}, IsLevel: {IsLevelSceneActive()}");
+            Debug.Log($"[{nameof(NetworkGameManager)}] Network scene load completed: '{sceneName}'.");
 
             if (NetworkManager.Singleton == null ||
                 !NetworkManager.Singleton.IsServer ||
@@ -1123,7 +1095,6 @@ namespace Splime.Network
 
             foreach (ulong clientId in NetworkManager.Singleton.ConnectedClientsIds)
             {
-                Debug.Log($"[{nameof(NetworkGameManager)}] 👥 Spawneando jugador para ClientId: {clientId}");
                 SpawnPlayerForClient(clientId);
             }
         }
@@ -1211,7 +1182,6 @@ namespace Splime.Network
             if (!transport.UseWebSockets)
             {
                 transport.UseWebSockets = true;
-                Debug.Log("[NetworkGameManager] 🔌 UseWebSockets activado en UnityTransport.");
             }
 
             // Aumentar la cola de paquetes de 128 a 512 para evitar 'Receive queue is full' en WebGL

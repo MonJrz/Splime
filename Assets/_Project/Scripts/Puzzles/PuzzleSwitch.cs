@@ -67,12 +67,6 @@ namespace Splime.Puzzles
             if (_blockingMechanismLock != null &&
                 _blockingMechanismLock.IsLocked)
             {
-                Debug.Log(
-                    $"[{nameof(PuzzleSwitch)}] " +
-                    $"{gameObject.name} bloqueado por Mechanism Lock.",
-                    this
-                );
-
                 return true;
             }
 
