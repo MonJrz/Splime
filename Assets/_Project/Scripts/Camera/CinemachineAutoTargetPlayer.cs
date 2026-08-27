@@ -1,6 +1,7 @@
 using Unity.Cinemachine;
 using Unity.Netcode;
 using UnityEngine;
+using Splime.Core;
 using Splime.Player;
 using Splime.UI;
 
@@ -110,14 +111,22 @@ namespace Splime.CameraControl
 
         private Transform FindLocalPlayerTransform()
         {
+            bool isNetworkActive = NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;
+
+            if (!isNetworkActive && SinglePlayerManager.Instance != null && SinglePlayerManager.Instance.IsSinglePlayerActive)
+            {
+                if (SinglePlayerManager.Instance.ActiveSlime != null)
+                {
+                    return SinglePlayerManager.Instance.ActiveSlime.transform;
+                }
+            }
+
             SlimeMovement[] slimes = FindObjectsByType<SlimeMovement>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
 
             if (slimes == null || slimes.Length == 0)
             {
                 return null;
             }
-
-            bool isNetworkActive = NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;
 
             foreach (var slime in slimes)
             {
@@ -133,16 +142,16 @@ namespace Splime.CameraControl
                 }
                 else
                 {
-                    // In offline / local testing mode, pick the local input source or the first active slime
+                    // In offline / single player mode, pick the slime that is currently controlled
                     SlimeInput input = slime.GetComponent<SlimeInput>();
-                    if (input == null || input.IsLocalInputSource)
+                    if (input != null && input.IsLocallyControlled)
                     {
                         return slime.transform;
                     }
                 }
             }
 
-            // Fallback for offline testing if no specific owner found
+            // Fallback for offline testing if no specific controlled slime found
             return slimes[0].transform;
         }
 

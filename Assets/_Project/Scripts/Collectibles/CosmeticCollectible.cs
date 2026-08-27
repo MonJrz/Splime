@@ -221,6 +221,20 @@ namespace Splime.Collectibles
             _localCollected = true;
 
             ApplyCollectedState(true);
+
+            player.EquipLocal(_cosmetic.Id, this);
+        }
+
+        /// <summary>
+        /// Make the collectible available again in offline / single player mode.
+        /// </summary>
+        public void ReleaseLocal()
+        {
+            if (!_localCollected)
+                return;
+
+            _localCollected = false;
+            ApplyCollectedState(false);
         }
 
         /// <summary>
