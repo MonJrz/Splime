@@ -33,16 +33,23 @@ namespace Splime.Puzzles
 
             direction.Normalize();
 
-            Vector3 currentVelocity = _rigidbody.linearVelocity;
+            if (_rigidbody != null)
+            {
+                if (_rigidbody.isKinematic)
+                {
+                    _rigidbody.isKinematic = false;
+                }
 
-            Vector3 horizontalVelocity =
-                direction * _pushSpeed;
+                _rigidbody.WakeUp();
 
-            _rigidbody.linearVelocity =
-                new Vector3(
+                Vector3 currentVelocity = _rigidbody.linearVelocity;
+                Vector3 horizontalVelocity = direction * _pushSpeed;
+
+                _rigidbody.linearVelocity = new Vector3(
                     horizontalVelocity.x,
                     currentVelocity.y,
                     horizontalVelocity.z);
+            }
         }
     }
 }
