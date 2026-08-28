@@ -35,7 +35,6 @@ namespace Splime.UI
             }
 
             _mainMenuUIController.PlayOnlineRequested += HandlePlayOnlineRequested;
-            _mainMenuUIController.PlaySinglePlayerRequested += HandlePlaySinglePlayerRequested;
             _mainMenuUIController.LevelRequested += HandleLevelRequested;
             _mainMenuUIController.QuitRequested += HandleQuitRequested;
         }
@@ -48,7 +47,6 @@ namespace Splime.UI
             }
 
             _mainMenuUIController.PlayOnlineRequested -= HandlePlayOnlineRequested;
-            _mainMenuUIController.PlaySinglePlayerRequested -= HandlePlaySinglePlayerRequested;
             _mainMenuUIController.LevelRequested -= HandleLevelRequested;
             _mainMenuUIController.QuitRequested -= HandleQuitRequested;
         }
@@ -56,18 +54,6 @@ namespace Splime.UI
         private void HandlePlayOnlineRequested()
         {
             LoadScene(_lobbySceneName);
-        }
-
-        private void HandlePlaySinglePlayerRequested()
-        {
-            if (_levelSceneNames != null && _levelSceneNames.Length > 0)
-            {
-                LoadScene(_levelSceneNames[0]);
-            }
-            else
-            {
-                LoadScene("Level1");
-            }
         }
 
         private void HandleLevelRequested(int levelIndex)

@@ -1,7 +1,6 @@
 using Unity.Cinemachine;
 using Unity.Netcode;
 using UnityEngine;
-using Splime.Core;
 using Splime.Player;
 
 namespace Splime.CameraControl
@@ -29,13 +28,7 @@ namespace Splime.CameraControl
             // Pruebas offline / unijugador
             if (!IsSpawned)
             {
-                // Si SinglePlayerManager está activo, este gestiona qué slime debe seguir la cámara
-                if (SinglePlayerManager.Instance != null && SinglePlayerManager.Instance.IsSinglePlayerActive)
-                {
-                    return;
-                }
-
-                bool isLocalInput = _slimeInput == null || _slimeInput.IsLocallyControlled;
+                bool isLocalInput = _slimeInput == null || _slimeInput.IsLocalInputSource;
                 if (isLocalInput)
                 {
                     BindToActiveCamera();

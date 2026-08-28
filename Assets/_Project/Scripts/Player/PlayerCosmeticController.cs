@@ -88,7 +88,7 @@ namespace Splime.Player
         }
 
         /// <summary>
-        /// Only the server has a collectible in online mode.
+        /// Onlythe server has a collectible.
         /// source is the original pickup instance in the scene.
         /// </summary>
         public void EquipServer(CosmeticId cosmeticId, CosmeticCollectible source)
@@ -138,38 +138,6 @@ namespace Splime.Player
             }
 
             // Apply the cosmetic locally for immediate feedback.
-            ApplyCosmetic(slot, cosmeticId);
-        }
-
-        /// <summary>
-        /// Equips a cosmetic in offline / single player mode directly.
-        /// </summary>
-        public void EquipLocal(CosmeticId cosmeticId, CosmeticCollectible source)
-        {
-            if (!_definitions.TryGetValue(
-                    cosmeticId,
-                    out CosmeticDefinition definition))
-            {
-                Debug.LogWarning(
-                    $"[{nameof(PlayerCosmeticController)}] " +
-                    $"Cosmetic '{cosmeticId}' not registered in {gameObject.name}.",
-                    this);
-
-                return;
-            }
-
-            CosmeticSlot slot = definition.Slot;
-
-            // If the player already has a cosmetic in this slot, release previous.
-            CosmeticCollectible previousSource = GetSource(slot);
-            if (previousSource != null && previousSource != source)
-            {
-                previousSource.ReleaseLocal();
-            }
-
-            SetSource(slot, source);
-
-            // Apply the cosmetic locally.
             ApplyCosmetic(slot, cosmeticId);
         }
 

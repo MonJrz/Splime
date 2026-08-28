@@ -56,11 +56,6 @@ namespace Splime.Network
         [SerializeField] private SlimeData _transformerData;
         [SerializeField] private SlimeData _agileData;
 
-        public GameObject SlimeTransformerPrefab => _slimeTransformerPrefab;
-        public GameObject SlimeAgilePrefab => _slimeAgilePrefab;
-        public SlimeData TransformerData => _transformerData;
-        public SlimeData AgileData => _agileData;
-
         [Header("Spawn Locations")]
         [SerializeField] private Vector3 _player1SpawnPosition = new Vector3(-2f, 1f, 0f);
         [SerializeField] private Vector3 _player2SpawnPosition = new Vector3(2f, 1f, 0f);
@@ -1114,29 +1109,6 @@ namespace Splime.Network
             _lastLoadedSceneName = scene.name;
             DestroyDuplicateNetworkManagers();
             BindLobbyUI(FindFirstObjectByType<LobbyUIController>());
-
-            // Si se carga un nivel de juego y NO estamos en sesión multijugador activa (1P / Offline)
-            if (IsLevelSceneActive() && (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening))
-            {
-                EnsureSinglePlayerSession();
-            }
-        }
-
-        private void EnsureSinglePlayerSession()
-        {
-            SinglePlayerManager spManager = FindFirstObjectByType<SinglePlayerManager>(FindObjectsInactive.Include);
-            if (spManager == null)
-            {
-                GameObject spObj = new GameObject("SinglePlayerManager");
-                spManager = spObj.AddComponent<SinglePlayerManager>();
-            }
-
-            spManager.ConfigureAndInitialize(
-                _slimeTransformerPrefab,
-                _slimeAgilePrefab,
-                _transformerData,
-                _agileData
-            );
         }
 
         private static void DestroyDuplicateNetworkManagers()

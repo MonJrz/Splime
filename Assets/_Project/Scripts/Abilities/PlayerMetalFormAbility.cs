@@ -167,30 +167,14 @@ namespace Splime.Abilities
         {
             if (!IsAbilityActive) return;
 
-            // Ignorar colisiones con el suelo sobre el que está parado el slime
-            if (hit.normal.y > 0.7f) return;
-
             PushableObject pushable = hit.collider.GetComponentInParent<PushableObject>();
             if (pushable == null) return;
 
-            // Calcular dirección horizontal empujando hacia el objeto (opuesta a la normal de impacto)
-            Vector3 pushDir = -hit.normal;
-            pushDir.y = 0f;
+            Vector3 direction = hit.moveDirection;
+            direction.y = 0f;
 
-            if (pushDir.sqrMagnitude < 0.001f)
-            {
-                pushDir = hit.collider.bounds.center - transform.position;
-                pushDir.y = 0f;
-            }
-
-            if (pushDir.sqrMagnitude < 0.001f)
-            {
-                pushDir = transform.forward;
-                pushDir.y = 0f;
-            }
-
-            float strength = _statsModifier != null && _statsModifier.PushStrength > 0 ? _statsModifier.PushStrength : _metalPushStrength;
-            pushable.TryPush(pushDir.normalized, strength, Time.deltaTime);
+            float strength = _statsModifier != null ? _statsModifier.PushStrength : 0f;
+            pushable.TryPush(direction.normalized, strength, Time.deltaTime);
         }
     }
 }

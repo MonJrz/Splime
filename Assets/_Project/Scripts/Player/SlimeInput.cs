@@ -15,7 +15,6 @@ namespace Splime.Player
     {
         public static event Action<SlimeInput> LocalInputReady;
         public static event Action<bool> PauseStateReceived;
-        public static event Action SwitchCharacterRequested;
 
         [Header("Input Action Asset Reference")]
         [SerializeField] private InputActionAsset _inputActionAsset;
@@ -27,27 +26,22 @@ namespace Splime.Player
         private InputAction _jumpAction;
         private InputAction _abilityAction;
         private InputAction _interactAction;
-        private InputAction _switchCharacterAction;
         private bool _isInputBlocked;
-        private bool _isLocallyControlled = true;
 
         // Properties for current frame input states
         public Vector2 MoveInput { get; private set; }
         public bool JumpPressedThisFrame { get; private set; }
         public bool AbilityPressedThisFrame { get; private set; }
         public bool InteractPressedThisFrame { get; private set; }
-        public bool SwitchCharacterPressedThisFrame { get; private set; }
 
         // Events for action triggers
         public event Action OnJumpPressed;
         public event Action OnAbilityPressed;
         public event Action OnInteractPressed;
-        public event Action OnSwitchCharacterPressed;
 
         public bool IsLocalInputSource => !IsSpawned || IsOwner;
         public bool IsInputBlocked => _isInputBlocked;
-        public bool IsLocallyControlled => _isLocallyControlled;
-        public bool ShouldProcessInput => IsLocalInputSource && !_isInputBlocked && _isLocallyControlled;
+        public bool ShouldProcessInput => IsLocalInputSource && !_isInputBlocked;
 
         private void Start()
         {
@@ -100,14 +94,12 @@ namespace Splime.Player
                 _jumpAction = _playerMap.FindAction("Jump", true);
                 _abilityAction = _playerMap.FindAction("Ability", true);
                 _interactAction = _playerMap.FindAction("Interact", true);
-                _switchCharacterAction = _playerMap.FindAction("SwitchCharacter", false);
 
                 UnsubscribeEvents();
 
                 if (_jumpAction != null) _jumpAction.performed += HandleJump;
                 if (_abilityAction != null) _abilityAction.performed += HandleAbility;
                 if (_interactAction != null) _interactAction.performed += HandleInteract;
-                if (_switchCharacterAction != null) _switchCharacterAction.performed += HandleSwitchCharacter;
 
                 if (ShouldProcessInput)
                 {
@@ -128,7 +120,6 @@ namespace Splime.Player
             JumpPressedThisFrame = _jumpAction != null && _jumpAction.WasPressedThisFrame();
             AbilityPressedThisFrame = _abilityAction != null && _abilityAction.WasPressedThisFrame();
             InteractPressedThisFrame = _interactAction != null && _interactAction.WasPressedThisFrame();
-            SwitchCharacterPressedThisFrame = _switchCharacterAction != null && _switchCharacterAction.WasPressedThisFrame();
         }
 
         private void HandleJump(InputAction.CallbackContext context)
@@ -147,35 +138,6 @@ namespace Splime.Player
         {
             if (!ShouldProcessInput) return;
             OnInteractPressed?.Invoke();
-        }
-
-        private void HandleSwitchCharacter(InputAction.CallbackContext context)
-        {
-            if (!ShouldProcessInput) return;
-            OnSwitchCharacterPressed?.Invoke();
-            SwitchCharacterRequested?.Invoke();
-        }
-
-        public void SetLocallyControlled(bool isControlled)
-        {
-            if (_isLocallyControlled == isControlled)
-            {
-                return;
-            }
-
-            _isLocallyControlled = isControlled;
-            ClearFrameInput();
-
-            if (!isControlled)
-            {
-                SlimeMovement movement = GetComponent<SlimeMovement>();
-                if (movement != null) movement.ResetMotion();
-
-                SlimeJump jump = GetComponent<SlimeJump>();
-                if (jump != null) jump.ResetMotion();
-            }
-
-            ApplyInputMapState();
         }
 
         public void SetInputBlocked(bool isBlocked)
@@ -236,7 +198,6 @@ namespace Splime.Player
             JumpPressedThisFrame = false;
             AbilityPressedThisFrame = false;
             InteractPressedThisFrame = false;
-            SwitchCharacterPressedThisFrame = false;
         }
 
         private void UnsubscribeEvents()
@@ -244,7 +205,6 @@ namespace Splime.Player
             if (_jumpAction != null) _jumpAction.performed -= HandleJump;
             if (_abilityAction != null) _abilityAction.performed -= HandleAbility;
             if (_interactAction != null) _interactAction.performed -= HandleInteract;
-            if (_switchCharacterAction != null) _switchCharacterAction.performed -= HandleSwitchCharacter;
         }
 
         public override void OnDestroy()
