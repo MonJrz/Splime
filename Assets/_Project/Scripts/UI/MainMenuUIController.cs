@@ -29,6 +29,7 @@ namespace Splime.UI
         private bool _isBusy;
 
         public event Action PlayOnlineRequested;
+        public event Action PlaySinglePlayerRequested;
         public event Action<int> LevelRequested;
         public event Action QuitRequested;
         public event Action<MainMenuView> ViewChanged;
@@ -54,6 +55,14 @@ namespace Splime.UI
             if (!_isBusy)
             {
                 PlayOnlineRequested?.Invoke();
+            }
+        }
+
+        public void HandlePlaySinglePlayerButtonPressed()
+        {
+            if (!_isBusy)
+            {
+                PlaySinglePlayerRequested?.Invoke();
             }
         }
 

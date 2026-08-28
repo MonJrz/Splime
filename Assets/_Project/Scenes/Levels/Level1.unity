@@ -29834,6 +29834,56 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8033880461002595357, guid: 014b2fa3afeda9849ac1028def54b8da, type: 3}
   m_PrefabInstance: {fileID: 1187449040}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1187505408
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1187505410}
+  - component: {fileID: 1187505409}
+  m_Layer: 0
+  m_Name: SinglePlayerManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1187505409
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1187505408}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e63387d2aebd950458e0303124f32a38, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.Core.SinglePlayerManager
+  _slimeTransformerPrefab: {fileID: 7538095413511950189, guid: 86d5225e36a36b64eaeea98c57f2b0b1, type: 3}
+  _slimeAgilePrefab: {fileID: 7538095413511950189, guid: 163907bdb5f425f47b42e8ab16bf2952, type: 3}
+  _transformerData: {fileID: 11400000, guid: 4b0903865f5d12d40a361e21b4c1c523, type: 2}
+  _agileData: {fileID: 11400000, guid: fbc69a99f0cbe654e821fe0c4a4e6627, type: 2}
+  _startingSlime: 0
+  _autoSpawnIfMissing: 1
+--- !u!4 &1187505410
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1187505408}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1187810750
 GameObject:
   m_ObjectHideFlags: 0
@@ -53124,3 +53174,4 @@ SceneRoots:
   - {fileID: 791972714}
   - {fileID: 1095302268}
   - {fileID: 1495320945}
+  - {fileID: 1187505410}
