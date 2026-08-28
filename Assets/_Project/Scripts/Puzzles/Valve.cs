@@ -102,11 +102,6 @@ namespace Splime.Puzzles
             if (_mechanismLock != null &&
                 _mechanismLock.IsLocked)
             {
-                Debug.Log(
-                    $"[{nameof(Valve)}] {gameObject.name} bloqueada.",
-                    this
-                );
-
                 return true;
             }
 
@@ -132,12 +127,6 @@ namespace Splime.Puzzles
             {
                 _onClosed.Invoke();
             }
-
-            Debug.Log(
-                $"[{nameof(Valve)}] {gameObject.name} -> " +
-                $"{(open ? "OPEN" : "CLOSED")}",
-                this
-            );
         }
     }
 }

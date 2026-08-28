@@ -89,8 +89,6 @@ namespace Splime.Core
         {
             _baseData = baseData;
             ResetMultipliers();
-            Debug.Log($"[{nameof(SlimeStatsModifier)}] ✅ Inicializado para {gameObject.name} " +
-                      $"| Speed: {MoveSpeed} | Jump: {JumpForce} | Gravity: {Gravity}");
         }
 
         /// <summary>

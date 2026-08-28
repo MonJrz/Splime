@@ -29,8 +29,7 @@ namespace Splime.Puzzles
             if (_buttonCap == null)
             {
                 Debug.LogWarning(
-                    $"[{nameof(ButtonVisualFeedback)}] " +
-                    $"Button Cap no asignado en {gameObject.name}.",
+                    $"[{nameof(ButtonVisualFeedback)}] Button cap reference is missing on {gameObject.name}.",
                     this);
 
                 return;

@@ -138,8 +138,7 @@ namespace Splime.Collectibles
             {
                 Debug.LogWarning(
                     $"[{nameof(CosmeticCollectible)}] " +
-                    $"{gameObject.name} está en una sesión Netcode " +
-                    $"pero su NetworkObject no está spawneado.",
+                    $"{gameObject.name} is in a network session but its NetworkObject is not spawned.",
                     this);
 
                 return;
@@ -207,11 +206,6 @@ namespace Splime.Collectibles
             player.EquipServer(
                 _cosmetic.Id,
                 this);
-
-            Debug.Log(
-                $"[{nameof(CosmeticCollectible)}] " +
-                $"{player.gameObject.name} picked up {_cosmetic.Id}.",
-                this);
         }
 
         private void TryCollectLocal(
@@ -227,11 +221,6 @@ namespace Splime.Collectibles
             _localCollected = true;
 
             ApplyCollectedState(true);
-
-            Debug.Log(
-                $"[{nameof(CosmeticCollectible)}] " +
-                $"{player.gameObject.name} picked up {_cosmetic.Id} LOCAL.",
-                this);
         }
 
         /// <summary>
@@ -247,11 +236,6 @@ namespace Splime.Collectibles
                 return;
 
             _networkCollected.Value = false;
-
-            Debug.Log(
-                $"[{nameof(CosmeticCollectible)}] " +
-                $"{gameObject.name} is available again.",
-                this);
         }
 
         private void HandleCollectedChanged(

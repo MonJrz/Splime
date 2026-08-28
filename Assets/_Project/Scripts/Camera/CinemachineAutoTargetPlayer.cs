@@ -105,7 +105,6 @@ namespace Splime.CameraControl
             {
                 _cinemachineCam.Follow = targetTransform;
                 _cinemachineCam.LookAt = targetTransform;
-                Debug.Log($"[{nameof(CinemachineAutoTargetPlayer)}] 🎯 Cámara vinculada exitosamente al jugador local: '{targetTransform.gameObject.name}'.", this);
             }
         }
 

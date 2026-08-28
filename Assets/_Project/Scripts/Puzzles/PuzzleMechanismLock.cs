@@ -130,13 +130,6 @@ namespace Splime.Puzzles
         {
             _localIsLocked = locked;
 
-            Debug.Log(
-                $"[{nameof(PuzzleMechanismLock)}] " +
-                $"{gameObject.name} -> " +
-                $"{(locked ? "LOCKED" : "UNLOCKED")}",
-                this
-            );
-
             if (locked)
                 _onLocked.Invoke();
             else

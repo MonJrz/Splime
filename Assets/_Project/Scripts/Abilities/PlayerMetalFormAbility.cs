@@ -132,12 +132,10 @@ namespace Splime.Abilities
                 {
                     _bodyRenderer.material = _metalMaterial;
                 }
-                Debug.Log($"[{nameof(PlayerMetalFormAbility)}] Modo metalico activado en {gameObject.name}.", this);
             }
             else
             {
                 _bodyRenderer.material = _normalMaterial;
-                Debug.Log($"[{nameof(PlayerMetalFormAbility)}] Modo normal en {gameObject.name}.", this);
             }
         }
 

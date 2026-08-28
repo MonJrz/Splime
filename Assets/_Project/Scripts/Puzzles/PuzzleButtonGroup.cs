@@ -116,10 +116,8 @@ namespace Splime.Puzzles
                 _requiredButtons.Length == 0)
             {
                 Debug.LogWarning(
-                    $"[{nameof(PuzzleButtonGroup)}] " +
-                    $"{gameObject.name} no tiene botones asignados.",
-                    this
-                );
+                    $"[{nameof(PuzzleButtonGroup)}] No required buttons assigned on {gameObject.name}.",
+                    this);
 
                 return false;
             }
@@ -149,12 +147,6 @@ namespace Splime.Puzzles
 
         private void ApplyActivatedState()
         {
-            Debug.Log(
-                $"[{nameof(PuzzleButtonGroup)}] " +
-                $"{gameObject.name} -> ALL BUTTONS PRESSED",
-                this
-            );
-
             _onAllButtonsPressed.Invoke();
         }
     }

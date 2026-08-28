@@ -76,7 +76,7 @@ namespace Splime.Player
         {
             if (_inputActionAsset == null)
             {
-                Debug.LogError($"[{nameof(SlimeInput)}] Asset de Input System no asignado en {gameObject.name}. Asigna 'InputSystem_Actions' en el Inspector.", this);
+                Debug.LogError($"[{nameof(SlimeInput)}] Input Action Asset not assigned on {gameObject.name}. Assign 'InputSystem_Actions' in the Inspector.", this);
                 return;
             }
 
@@ -131,7 +131,6 @@ namespace Splime.Player
         private void HandleAbility(InputAction.CallbackContext context)
         {
             if (!ShouldProcessInput) return;
-            Debug.Log($"[{nameof(SlimeInput)}] 🎯 Entrada 'Ability' (Tecla F) detectada en {gameObject.name}.", this);
             OnAbilityPressed?.Invoke();
         }
 

@@ -133,12 +133,6 @@ namespace Splime.Puzzles
             if (_mechanismLock != null &&
                 _mechanismLock.IsLocked)
             {
-                Debug.Log(
-                    $"[{nameof(PuzzleButton)}] " +
-                    $"{gameObject.name} bloqueado.",
-                    this
-                );
-
                 return true;
             }
 
@@ -163,12 +157,6 @@ namespace Splime.Puzzles
 
         private void ApplyPressedState()
         {
-            Debug.Log(
-                $"[{nameof(PuzzleButton)}] " +
-                $"{gameObject.name} PRESSED",
-                this
-            );
-
             if (_oneShot)
             {
                 _interactionPromptTrigger?.SetInteractionAvailable(false);

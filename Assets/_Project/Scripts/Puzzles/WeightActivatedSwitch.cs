@@ -45,8 +45,6 @@ namespace Splime.Puzzles
         {
             _isActive = active;
 
-            Debug.Log($"[{nameof(WeightActivatedSwitch)}] {gameObject.name} -> {(active ? "ACTIVADO" : "DESACTIVADO")}", this);
-
             if (active)
             {
                 _onActivated.Invoke();

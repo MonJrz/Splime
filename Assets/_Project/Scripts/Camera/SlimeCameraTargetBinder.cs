@@ -58,7 +58,6 @@ namespace Splime.CameraControl
                 Transform targetTransform = _targetOverride != null ? _targetOverride : transform;
                 cinemachineCam.Follow = targetTransform;
                 cinemachineCam.LookAt = targetTransform;
-                Debug.Log($"[{nameof(SlimeCameraTargetBinder)}] 🎥 CinemachineCamera '{cinemachineCam.gameObject.name}' vinculada a '{gameObject.name}' (IsOwner: {IsOwner}).", this);
             }
         }
     }
