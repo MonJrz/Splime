@@ -45,7 +45,9 @@ namespace Splime.CameraControl
         private void Update()
         {
             // If the camera loses its target (e.g. player respawned, destroyed, or just spawned), re-acquire it.
-            if (_cinemachineCam != null && _cinemachineCam.Follow == null)
+            if (_cinemachineCam != null &&
+                (_cinemachineCam.Follow == null ||
+                _cinemachineCam.LookAt == null))
             {
                 TryTargetLocalPlayer();
             }

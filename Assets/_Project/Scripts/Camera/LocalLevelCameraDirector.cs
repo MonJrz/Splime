@@ -53,13 +53,7 @@ namespace Splime.CameraSystem
         private void OnEnable()
         {
             SlimeInput.LocalInputReady += HandleLocalInputReady;
-
             FindLocalInput();
-
-            if (_playOverviewOnStart && _localInput != null)
-            {
-                StartOverview();
-            }
         }
 
         private void OnDisable()
@@ -90,12 +84,6 @@ namespace Splime.CameraSystem
                 return;
 
             _localInput = input;
-
-            if (_playOverviewOnStart &&
-                _overviewRoutine == null)
-            {
-                StartOverview();
-            }
         }
 
         private void FindLocalInput()

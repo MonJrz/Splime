@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Splime.CameraSystem;
 
 namespace Splime.UI
 {
@@ -437,6 +438,9 @@ namespace Splime.UI
             _isWaitingForIntro = true;
 
             ApplyCurrentInputState();
+
+            LocalLevelCameraDirector.Instance?.StartOverview();
+
             _introController.Show();
         }
 
