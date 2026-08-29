@@ -2291,6 +2291,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6749944165554515289, guid: f4998ba4423f7724c8cb012c19b33c3f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1025323705}
+    - targetCorrespondingSourceObject: {fileID: 6749944165554515289, guid: f4998ba4423f7724c8cb012c19b33c3f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1025323706}
   m_SourcePrefab: {fileID: 100100000, guid: f4998ba4423f7724c8cb012c19b33c3f, type: 3}
 --- !u!1001 &167329566
 PrefabInstance:
@@ -14080,6 +14083,23 @@ MonoBehaviour:
   _modules: 3
   _moveSpeed: 4
   _arrivalThreshold: 0.001
+--- !u!114 &1025323706
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1025323701}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 335201dda6025824b8c2d93fb4755d3e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.CameraSystem.InteractionCameraFocus
+  _focusTarget: {fileID: 327258555}
+  _duration: 2
+  _offset: {x: -8.5, y: 4, z: 2}
+  _useCustomRotation: 1
+  _customEulerRotation: {x: 30, y: 90, z: 0}
 --- !u!1 &1029567987
 GameObject:
   m_ObjectHideFlags: 0
@@ -15050,6 +15070,7 @@ GameObject:
   - component: {fileID: 1084345400}
   - component: {fileID: 1084345401}
   - component: {fileID: 1084345402}
+  - component: {fileID: 1084345403}
   m_Layer: 0
   m_Name: FinalButtonsGroup
   m_TagString: Untagged
@@ -15142,6 +15163,23 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &1084345403
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1084345399}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 335201dda6025824b8c2d93fb4755d3e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.CameraSystem.InteractionCameraFocus
+  _focusTarget: {fileID: 1084345400}
+  _duration: 2
+  _offset: {x: 5, y: 4, z: -5}
+  _useCustomRotation: 0
+  _customEulerRotation: {x: 25, y: -45, z: 0}
 --- !u!114 &1099952448
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22393,7 +22431,7 @@ PrefabInstance:
       objectReference: {fileID: 119459489}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.size
-      value: 3
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[1].m_Mode
@@ -22404,9 +22442,13 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1084345402}
+      objectReference: {fileID: 1084345403}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[1].m_Target
       value: 
@@ -22416,6 +22458,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1560148943}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_Target
+      value: 
+      objectReference: {fileID: 1084345402}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[1].m_CallState
       value: 2
       objectReference: {fileID: 0}
@@ -22424,8 +22470,12 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: Evaluate
+      value: ShowFocus
       objectReference: {fileID: 0}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[1].m_MethodName
@@ -22436,8 +22486,12 @@ PrefabInstance:
       value: MarkUsed
       objectReference: {fileID: 0}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_MethodName
+      value: Evaluate
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: Splime.Puzzles.PuzzleButtonGroup, Assembly-CSharp
+      value: Splime.CameraSystem.InteractionCameraFocus, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[1].m_TargetAssemblyTypeName
@@ -22448,11 +22502,19 @@ PrefabInstance:
       value: Splime.Puzzles.PuzzleInteractableFeedback, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_TargetAssemblyTypeName
+      value: Splime.Puzzles.PuzzleButtonGroup, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[1].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[2].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -41770,12 +41832,36 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 1025323706}
+        m_TargetAssemblyTypeName: Splime.CameraSystem.InteractionCameraFocus, Assembly-CSharp
+        m_MethodName: ShowFocus
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   _onStateB:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2030392467}
         m_TargetAssemblyTypeName: Splime.Puzzles.SwitchVisualFeedback, Assembly-CSharp
         m_MethodName: SetLocked
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1025323706}
+        m_TargetAssemblyTypeName: Splime.CameraSystem.InteractionCameraFocus, Assembly-CSharp
+        m_MethodName: ShowFocus
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -44021,16 +44107,68 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 119459489}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1084345403}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[1].m_Target
+      value: 
+      objectReference: {fileID: 389727976406244685}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[2].m_Target
+      value: 
+      objectReference: {fileID: 1840399659}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_Target
       value: 
       objectReference: {fileID: 1084345402}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: ShowFocus
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[1].m_MethodName
+      value: Press
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[2].m_MethodName
+      value: MarkUsed
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_MethodName
       value: Evaluate
       objectReference: {fileID: 0}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: Splime.CameraSystem.InteractionCameraFocus, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[1].m_TargetAssemblyTypeName
+      value: Splime.Puzzles.ButtonVisualFeedback, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[2].m_TargetAssemblyTypeName
+      value: Splime.Puzzles.PuzzleInteractableFeedback, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_TargetAssemblyTypeName
       value: Splime.Puzzles.PuzzleButtonGroup, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -44048,6 +44186,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 39cc944c04bdc5c4ca694fb57d15da10, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Puzzles.PuzzleButton
+--- !u!114 &389727976406244685 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5431915290939556549, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+  m_PrefabInstance: {fileID: 389727976406244682}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfc37d2dce744f744a4f346adae6bec5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.Puzzles.ButtonVisualFeedback
 --- !u!1001 &2003977236493534135
 PrefabInstance:
   m_ObjectHideFlags: 0

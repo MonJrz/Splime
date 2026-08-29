@@ -141,13 +141,17 @@ namespace Splime.CameraSystem
             ShowInteractionFocus(
                 target,
                 _defaultFocusDuration,
-                _defaultFocusOffset);
+                _defaultFocusOffset,
+                false,
+                Vector3.zero);
         }
 
         public void ShowInteractionFocus(
             Transform target,
             float duration,
-            Vector3 offset)
+            Vector3 offset,
+            bool useCustomRotation,
+            Vector3 customEulerRotation)
         {
             if (target == null ||
                 _interactionCamera == null)
@@ -165,29 +169,41 @@ namespace Splime.CameraSystem
                     InteractionFocusRoutine(
                         target,
                         duration,
-                        offset));
+                        offset,
+                        useCustomRotation,
+                        customEulerRotation));
         }
 
         private IEnumerator InteractionFocusRoutine(
             Transform target,
             float duration,
-            Vector3 offset)
+            Vector3 offset,
+            bool useCustomRotation,
+            Vector3 customEulerRotation)
         {
             Vector3 targetPosition = target.position;
 
             _interactionCamera.transform.position =
                 targetPosition + offset;
 
-            Vector3 lookDirection =
-                targetPosition -
-                _interactionCamera.transform.position;
-
-            if (lookDirection.sqrMagnitude > 0.001f)
+            if (useCustomRotation)
             {
                 _interactionCamera.transform.rotation =
-                    Quaternion.LookRotation(
-                        lookDirection.normalized,
-                        Vector3.up);
+                    Quaternion.Euler(customEulerRotation);
+            }
+            else
+            {
+                Vector3 lookDirection =
+                    targetPosition -
+                    _interactionCamera.transform.position;
+
+                if (lookDirection.sqrMagnitude > 0.001f)
+                {
+                    _interactionCamera.transform.rotation =
+                        Quaternion.LookRotation(
+                            lookDirection.normalized,
+                            Vector3.up);
+                }
             }
 
             _interactionCamera.Priority =
