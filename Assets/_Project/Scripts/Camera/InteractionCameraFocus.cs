@@ -1,4 +1,5 @@
 using UnityEngine;
+using Splime.UI;
 
 namespace Splime.CameraSystem
 {
@@ -24,8 +25,17 @@ namespace Splime.CameraSystem
         [SerializeField] private Vector3 _customEulerRotation =
             new Vector3(25f, -45f, 0f);
 
+        [Header("Interaction Source")]
+        [SerializeField] private InteractionPromptTrigger _interactionSource;
+
         public void ShowFocus()
         {
+            if (_interactionSource != null &&
+                !_interactionSource.ConsumeLocalInteractionRequest())
+            {
+                return;
+            }
+
             Transform target =
                 _focusTarget != null
                     ? _focusTarget

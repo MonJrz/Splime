@@ -31,6 +31,8 @@ namespace Splime.UI
         private bool _isInteractionAvailable = true;
         private float _nextLocalPlayerSearchTime;
 
+        private bool _localInteractionRequested;
+
         private const float LocalPlayerSearchInterval = 0.5f;
 
         private void Awake()
@@ -112,6 +114,8 @@ namespace Splime.UI
 
         private void HandleInteractionRequested()
         {
+            _localInteractionRequested = true;
+            
             _localAnimatorController?.TriggerAction();
             _interactionRequested.Invoke();
 
@@ -227,6 +231,15 @@ namespace Splime.UI
             }
 
             _markerView.Hide();
+        }
+
+        public bool ConsumeLocalInteractionRequest()
+        {
+            if (!_localInteractionRequested)
+                return false;
+
+            _localInteractionRequested = false;
+            return true;
         }
 
         private void UnbindLocalInput()
