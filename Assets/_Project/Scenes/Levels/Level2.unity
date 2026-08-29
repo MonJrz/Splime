@@ -2076,6 +2076,7 @@ GameObject:
   m_Component:
   - component: {fileID: 79449453}
   - component: {fileID: 79449452}
+  - component: {fileID: 79449454}
   m_Layer: 0
   m_Name: River
   m_TagString: Untagged
@@ -2118,6 +2119,24 @@ Transform:
   - {fileID: 733103059}
   m_Father: {fileID: 1127764449}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &79449454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 79449451}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 335201dda6025824b8c2d93fb4755d3e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.CameraSystem.InteractionCameraFocus
+  _focusTarget: {fileID: 79449453}
+  _duration: 2
+  _offset: {x: 5, y: 8, z: -9}
+  _useCustomRotation: 1
+  _customEulerRotation: {x: 25, y: -20, z: 0}
+  _interactionSource: {fileID: 585709892}
 --- !u!1001 &81047447
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8151,8 +8170,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.20898329, y: 0.000000014572134, z: -0.0000000031140939, w: 0.9779192}
-  m_LocalPosition: {x: -1, y: 2.1604807, z: -4.0305805}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -9982,7 +10001,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineCamera
   Priority:
     Enabled: 0
-    m_Value: 0
+    m_Value: 10
   OutputChannel: 1
   StandbyUpdate: 2
   m_StreamingVersion: 20241001
@@ -10024,7 +10043,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1052191159}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &390755463
 PrefabInstance:
@@ -15024,9 +15043,9 @@ MonoBehaviour:
   _onOpened:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 79449452}
-        m_TargetAssemblyTypeName: Splime.Puzzles.ModularMover, Assembly-CSharp
-        m_MethodName: MoveToActive
+      - m_Target: {fileID: 79449454}
+        m_TargetAssemblyTypeName: Splime.CameraSystem.InteractionCameraFocus, Assembly-CSharp
+        m_MethodName: ShowFocus
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -15048,12 +15067,24 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 79449452}
+        m_TargetAssemblyTypeName: Splime.Puzzles.ModularMover, Assembly-CSharp
+        m_MethodName: MoveToActive
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   _onClosed:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 79449452}
-        m_TargetAssemblyTypeName: Splime.Puzzles.ModularMover, Assembly-CSharp
-        m_MethodName: ReturnToStart
+      - m_Target: {fileID: 79449454}
+        m_TargetAssemblyTypeName: Splime.CameraSystem.InteractionCameraFocus, Assembly-CSharp
+        m_MethodName: ShowFocus
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -15066,6 +15097,18 @@ MonoBehaviour:
       - m_Target: {fileID: 585709889}
         m_TargetAssemblyTypeName: Splime.Puzzles.ValveVisualFeedback, Assembly-CSharp
         m_MethodName: Close
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 79449452}
+        m_TargetAssemblyTypeName: Splime.Puzzles.ModularMover, Assembly-CSharp
+        m_MethodName: ReturnToStart
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -17237,6 +17280,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8033880461002595357, guid: 014b2fa3afeda9849ac1028def54b8da, type: 3}
   m_PrefabInstance: {fileID: 663434871}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &663502665 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3523136248344390768, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+  m_PrefabInstance: {fileID: 1811078398}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5047fbfdd8545baa01d024a6c703a9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.UI.InteractionPromptTrigger
 --- !u!1 &664205892
 GameObject:
   m_ObjectHideFlags: 0
@@ -27024,6 +27078,63 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b85a2f4e92f341b38ef5cbf041813e67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Splime.Levels.PlayerRespawnZone
+--- !u!1 &1052191158
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1052191159}
+  - component: {fileID: 1052191160}
+  m_Layer: 0
+  m_Name: Cameras
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1052191159
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1052191158}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 389901436}
+  - {fileID: 1068433558}
+  - {fileID: 1915606767}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1052191160
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1052191158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b46175868ad03644bb9d33830f79aa49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.CameraSystem.LocalLevelCameraDirector
+  _gameplayCamera: {fileID: 389901435}
+  _overviewCamera: {fileID: 1068433559}
+  _interactionCamera: {fileID: 1915606768}
+  _gameplayPriority: 10
+  _overviewPriority: 30
+  _interactionPriority: 40
+  _playOverviewOnStart: 1
+  _overviewDuration: 4
+  _defaultFocusDuration: 2
+  _defaultFocusOffset: {x: 5, y: 4, z: -5}
 --- !u!1001 &1053742685
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -27991,6 +28102,81 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6262060497225955299, guid: f4998ba4423f7724c8cb012c19b33c3f, type: 3}
   m_PrefabInstance: {fileID: 1067501738}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1068433557
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1068433558}
+  - component: {fileID: 1068433559}
+  m_Layer: 0
+  m_Name: LevelOverviewCamera
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1068433558
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1068433557}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.18419191, y: -0.37500095, z: 0.07629479, w: 0.90533245}
+  m_LocalPosition: {x: 22, y: 15.5, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1052191159}
+  m_LocalEulerAnglesHint: {x: 23, y: -45, z: 0}
+--- !u!114 &1068433559
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1068433557}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9dfa5b682dcd46bda6128250e975f58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineCamera
+  Priority:
+    Enabled: 1
+    m_Value: 0
+  OutputChannel: 1
+  StandbyUpdate: 2
+  m_StreamingVersion: 20241001
+  m_LegacyPriority: 0
+  Target:
+    TrackingTarget: {fileID: 0}
+    LookAtTarget: {fileID: 0}
+    CustomLookAtTarget: 0
+  Lens:
+    FieldOfView: 60.000004
+    OrthographicSize: 5
+    NearClipPlane: 0.32
+    FarClipPlane: 1000
+    Dutch: 0
+    ModeOverride: 0
+    PhysicalProperties:
+      GateFit: 2
+      SensorSize: {x: 21.946, y: 16.002}
+      LensShift: {x: 0, y: 0}
+      FocusDistance: 10
+      Iso: 200
+      ShutterSpeed: 0.005
+      Aperture: 16
+      BladeCount: 5
+      Curvature: {x: 2, y: 11}
+      BarrelClipping: 0.25
+      Anamorphism: 0
+  BlendHint: 0
 --- !u!1001 &1069056408
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -30186,9 +30372,69 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 0}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
+      objectReference: {fileID: 1278882662}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[1].m_Target
+      value: 
+      objectReference: {fileID: 1149775995}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[2].m_Target
+      value: 
+      objectReference: {fileID: 1149775996}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_Target
+      value: 
       objectReference: {fileID: 1278882661}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: ShowFocus
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[1].m_MethodName
+      value: Press
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[2].m_MethodName
+      value: MarkUsed
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_MethodName
+      value: MoveToActive
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: Splime.CameraSystem.InteractionCameraFocus, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[1].m_TargetAssemblyTypeName
+      value: Splime.Puzzles.ButtonVisualFeedback, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[2].m_TargetAssemblyTypeName
+      value: Splime.Puzzles.PuzzleInteractableFeedback, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_TargetAssemblyTypeName
+      value: Splime.Puzzles.ModularMover, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -30199,6 +30445,28 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7775538863059865820, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
   m_PrefabInstance: {fileID: 1149775993}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1149775995 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5431915290939556549, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+  m_PrefabInstance: {fileID: 1149775993}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfc37d2dce744f744a4f346adae6bec5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.Puzzles.ButtonVisualFeedback
+--- !u!114 &1149775996 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 169615304789526831, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+  m_PrefabInstance: {fileID: 1149775993}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 525a0c8ae688e584c9f0c314b9fb150d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.Puzzles.PuzzleInteractableFeedback
 --- !u!1 &1158221915
 GameObject:
   m_ObjectHideFlags: 0
@@ -32608,6 +32876,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1264679073}
   - component: {fileID: 1264679072}
+  - component: {fileID: 1264679074}
   m_Layer: 0
   m_Name: PipeJoints
   m_TagString: Untagged
@@ -32649,6 +32918,24 @@ Transform:
   - {fileID: 799667923}
   m_Father: {fileID: 1922942670}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1264679074
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1264679071}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 335201dda6025824b8c2d93fb4755d3e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.CameraSystem.InteractionCameraFocus
+  _focusTarget: {fileID: 1264679073}
+  _duration: 2
+  _offset: {x: 5, y: 4, z: -5}
+  _useCustomRotation: 0
+  _customEulerRotation: {x: 25, y: -45, z: 0}
+  _interactionSource: {fileID: 663502665}
 --- !u!1 &1266288521
 GameObject:
   m_ObjectHideFlags: 0
@@ -33165,6 +33452,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3491206939858827807, guid: 26e576c449698794e9d62ae1b1e7d5c9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1278882661}
+    - targetCorrespondingSourceObject: {fileID: 3491206939858827807, guid: 26e576c449698794e9d62ae1b1e7d5c9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1278882662}
   m_SourcePrefab: {fileID: 100100000, guid: 26e576c449698794e9d62ae1b1e7d5c9, type: 3}
 --- !u!1 &1278882659 stripped
 GameObject:
@@ -33193,6 +33483,24 @@ MonoBehaviour:
   _modules: 1
   _moveSpeed: 2
   _arrivalThreshold: 0.001
+--- !u!114 &1278882662
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1278882659}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 335201dda6025824b8c2d93fb4755d3e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Splime.CameraSystem.InteractionCameraFocus
+  _focusTarget: {fileID: 1278882660}
+  _duration: 2
+  _offset: {x: 5, y: 4, z: -5}
+  _useCustomRotation: 0
+  _customEulerRotation: {x: 25, y: -45, z: 0}
+  _interactionSource: {fileID: 0}
 --- !u!1001 &1280272445
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -48104,7 +48412,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7775538863059865820, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -18.49
+      value: -18.5
       objectReference: {fileID: 0}
     - target: {fileID: 7775538863059865820, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: m_LocalPosition.y
@@ -48148,7 +48456,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.size
-      value: 3
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[1].m_Mode
@@ -48159,9 +48467,13 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1264679072}
+      objectReference: {fileID: 1264679074}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[1].m_Target
       value: 
@@ -48171,6 +48483,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1811078403}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_Target
+      value: 
+      objectReference: {fileID: 1264679072}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[1].m_CallState
       value: 2
       objectReference: {fileID: 0}
@@ -48179,8 +48495,12 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: MoveToActive
+      value: ShowFocus
       objectReference: {fileID: 0}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[1].m_MethodName
@@ -48191,6 +48511,14 @@ PrefabInstance:
       value: MarkUsed
       objectReference: {fileID: 0}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_MethodName
+      value: MoveToActive
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: Splime.CameraSystem.InteractionCameraFocus, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[1].m_TargetAssemblyTypeName
       value: Splime.Puzzles.ButtonVisualFeedback, Assembly-CSharp
       objectReference: {fileID: 0}
@@ -48199,11 +48527,19 @@ PrefabInstance:
       value: Splime.Puzzles.PuzzleInteractableFeedback, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_TargetAssemblyTypeName
+      value: Splime.Puzzles.ModularMover, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[1].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
       propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[2].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
+    - target: {fileID: 9179555472379036077, guid: 4f5cd61cd2166de4184bf259a68cc7d0, type: 3}
+      propertyPath: _onPressed.m_PersistentCalls.m_Calls.Array.data[3].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -50456,6 +50792,81 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6262060497225955299, guid: f4998ba4423f7724c8cb012c19b33c3f, type: 3}
   m_PrefabInstance: {fileID: 1913812826}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1915606766
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1915606767}
+  - component: {fileID: 1915606768}
+  m_Layer: 0
+  m_Name: InteractionCamera
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1915606767
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1915606766}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1052191159}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1915606768
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1915606766}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9dfa5b682dcd46bda6128250e975f58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineCamera
+  Priority:
+    Enabled: 1
+    m_Value: 0
+  OutputChannel: 1
+  StandbyUpdate: 2
+  m_StreamingVersion: 20241001
+  m_LegacyPriority: 0
+  Target:
+    TrackingTarget: {fileID: 0}
+    LookAtTarget: {fileID: 0}
+    CustomLookAtTarget: 0
+  Lens:
+    FieldOfView: 60.000004
+    OrthographicSize: 5
+    NearClipPlane: 0.32
+    FarClipPlane: 1000
+    Dutch: 0
+    ModeOverride: 0
+    PhysicalProperties:
+      GateFit: 2
+      SensorSize: {x: 21.946, y: 16.002}
+      LensShift: {x: 0, y: 0}
+      FocusDistance: 10
+      Iso: 200
+      ShutterSpeed: 0.005
+      Aperture: 16
+      BladeCount: 5
+      Curvature: {x: 2, y: 11}
+      BarrelClipping: 0.25
+      Anamorphism: 0
+  BlendHint: 0
 --- !u!1001 &1917311383
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -66532,9 +66943,9 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 330585546}
+  - {fileID: 1052191159}
   - {fileID: 410087041}
   - {fileID: 832575519}
-  - {fileID: 389901436}
   - {fileID: 615504403}
   - {fileID: 1684615165}
   - {fileID: 1202860204}
