@@ -195,13 +195,23 @@ namespace Splime.UI
 
         private void Start()
         {
-            if (!_startIntroOnStart)
+            if (_startIntroOnStart)
             {
+                _startIntroOnStart = false;
+                StartIntroAfterHowToPlay();
                 return;
             }
 
-            _startIntroOnStart = false;
-            StartIntroAfterHowToPlay();
+            // Algunos niveles muestran el TimedOverlay automáticamente
+            // mediante TimedOverlayUIController.OnEnable().
+            // En ese caso el intro ya está visible y no pasa por
+            // StartIntroAfterHowToPlay(), así que activamos aquí la Overview.
+            if (_isWaitingForIntro &&
+                _introController != null &&
+                _introController.IsVisible)
+            {
+                LocalLevelCameraDirector.Instance?.StartOverview();
+            }
         }
 
         private void OnDisable()
@@ -257,9 +267,17 @@ namespace Splime.UI
 
             UnbindNetworkEvents();
 
-            if (_localInput != null)
+            SlimeInput[] inputs =
+                FindObjectsByType<SlimeInput>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None);
+
+            foreach (SlimeInput input in inputs)
             {
-                _localInput.SetInputBlocked(false);
+                if (input != null && input.IsLocalInputSource)
+                {
+                    input.SetInputBlocked(false);
+                }
             }
         }
 
@@ -1106,12 +1124,20 @@ namespace Splime.UI
 
         private void ApplyCurrentInputState()
         {
-            if (_localInput == null)
+            SlimeInput[] inputs =
+                FindObjectsByType<SlimeInput>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None);
+
+            foreach (SlimeInput input in inputs)
             {
-                return;
+                if (input == null || !input.IsLocalInputSource)
+                {
+                    continue;
+                }
+
+                input.SetInputBlocked(ShouldBlockLocalInput);
             }
-            
-            _localInput.SetInputBlocked(ShouldBlockLocalInput);
         }
 
         private void RefreshHostOnlyButtons()
