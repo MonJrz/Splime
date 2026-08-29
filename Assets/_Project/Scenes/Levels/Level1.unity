@@ -50426,6 +50426,7 @@ MonoBehaviour:
   _offset: {x: 0, y: 4, z: -5}
   _useCustomRotation: 0
   _customEulerRotation: {x: 25, y: -45, z: 0}
+  _interactionSource: {fileID: 0}
 --- !u!1 &2036722260
 GameObject:
   m_ObjectHideFlags: 0

@@ -65,6 +65,8 @@ namespace Splime.Levels
         [SerializeField] private Vector3 _player2Offset = new Vector3(1.2f, 0f, 0f);
 
         [Header("Feedback Visual y Audio")]
+        [Tooltip("Beacon visual opcional que representa el estado de activación del checkpoint.")]
+        [SerializeField] private CheckpointBeaconVisual _checkpointBeacon;
         [Tooltip("Luz opcional que cambiará de color o intensidad al activarse.")]
         [SerializeField] private Light _checkpointLight;
 
@@ -142,6 +144,8 @@ namespace Splime.Levels
             {
                 _checkpointLight.color = _inactiveLightColor;
             }
+
+            RefreshCheckpointVisual();
         }
 
         private void OnEnable()
@@ -305,22 +309,35 @@ namespace Splime.Levels
             }
         }
 
-        private void PlayFeedback(SpawnPlayerRole activatedRole)
+        private void RefreshCheckpointVisual()
         {
-            // 1. Luz
+            Color stateColor;
+
+            if (_activatedRoles.Count >= 2)
+            {
+                stateColor = _fullActiveLightColor;
+            }
+            else if (_activatedRoles.Count > 0)
+            {
+                stateColor = _partialActiveLightColor;
+            }
+            else
+            {
+                stateColor = _inactiveLightColor;
+            }
+
             if (_checkpointLight != null)
             {
-                if (_activationMode == CheckpointActivationMode.IndividualPerPlayer)
-                {
-                    _checkpointLight.color = (_activatedRoles.Count >= 2)
-                        ? _fullActiveLightColor
-                        : _partialActiveLightColor;
-                }
-                else
-                {
-                    _checkpointLight.color = _fullActiveLightColor;
-                }
+                _checkpointLight.color = stateColor;
             }
+
+            _checkpointBeacon?.SetColor(stateColor);
+        }
+
+        private void PlayFeedback(SpawnPlayerRole activatedRole)
+        {
+            // 1. Feedback visual del estado
+            RefreshCheckpointVisual();
 
             // 2. Partículas
             if (_activationVfx != null)
