@@ -50,6 +50,7 @@ namespace Splime.UI
         [Header("Reusable Views")]
         [SerializeField] private PagedContentUIController _dialogueController;
         [SerializeField] private PagedContentUIController _tutorialController;
+        [SerializeField] private HowToPlayCarouselController _howToPlayController;
         [SerializeField] private InteractionPromptUIController _interactionPromptController;
         [SerializeField] private GameObject _checkpointPanel;
 
@@ -90,6 +91,13 @@ namespace Splime.UI
 
         private void Awake()
         {
+            if (_howToPlayController == null)
+            {
+                _howToPlayController =
+                    FindFirstObjectByType<HowToPlayCarouselController>(
+                        FindObjectsInactive.Include);
+            }
+
             SetCheckpointVisible(false);
 
             if (_showBlockingOverlayOnStart && _blockingOverlayPanel != null)
@@ -125,6 +133,12 @@ namespace Splime.UI
             {
                 _tutorialController.Completed += HandleTutorialCompleted;
             }
+
+            if (_howToPlayController != null)
+            {
+                _howToPlayController.CloseRequested +=
+                    HandleHowToPlayCloseRequested;
+            }
         }
 
         private void OnDisable()
@@ -139,6 +153,12 @@ namespace Splime.UI
             if (_tutorialController != null)
             {
                 _tutorialController.Completed -= HandleTutorialCompleted;
+            }
+
+            if (_howToPlayController != null)
+            {
+                _howToPlayController.CloseRequested -=
+                    HandleHowToPlayCloseRequested;
             }
 
             if (_checkpointRoutine != null)
@@ -292,6 +312,19 @@ namespace Splime.UI
         public void HandleMainMenuButtonPressed()
         {
             MainMenuRequested?.Invoke();
+        }
+
+        public void HandleHowToPlayButtonPressed()
+        {
+            if (_currentView != LevelUIView.Paused ||
+                _howToPlayController == null ||
+                !_howToPlayController.ShowLocally())
+            {
+                return;
+            }
+
+            _returnView = _currentView;
+            SetView(LevelUIView.HowToPlay);
         }
 
         public void ShowGameplay()
@@ -522,6 +555,19 @@ namespace Splime.UI
             {
                 ShowGameplay();
             }
+        }
+
+        private void HandleHowToPlayCloseRequested()
+        {
+            if (_currentView != LevelUIView.HowToPlay ||
+                _howToPlayController == null ||
+                _howToPlayController.IsNavigationExternallyControlled)
+            {
+                return;
+            }
+
+            _howToPlayController.Hide();
+            SetView(_returnView);
         }
 
         private void SetView(LevelUIView view)

@@ -6,6 +6,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Splime.CameraSystem;
 
@@ -22,7 +23,8 @@ namespace Splime.UI
         [SerializeField] private Button[] _hostOnlyButtons;
 
         [Header("Pre-Level Flow")]
-        [SerializeField] private bool _showHowToPlayAfterLobby;
+        [FormerlySerializedAs("_showHowToPlayAfterLobby")]
+        [SerializeField] private bool _showHowToPlayOnGameStart;
 
         [Header("Level Timer")]
         [SerializeField, Min(1f)] private float _levelDurationSeconds = 300f;
@@ -97,10 +99,12 @@ namespace Splime.UI
             }
 
             _shouldShowHowToPlay =
-                _showHowToPlayAfterLobby &&
+                _showHowToPlayOnGameStart &&
                 _howToPlayController != null &&
-                NetworkGameManager.Instance != null &&
-                NetworkGameManager.Instance.ConsumeHowToPlayForLobbyEntry();
+                (HowToPlayStartupRequest.ConsumeFor(
+                     SceneManager.GetActiveScene().name) ||
+                 (NetworkGameManager.Instance != null &&
+                  NetworkGameManager.Instance.ConsumeHowToPlayForLobbyEntry()));
 
             _remainingTime = Mathf.Max(1f, _levelDurationSeconds);
             _levelUIController?.SetRemainingTime(Mathf.CeilToInt(_remainingTime));
@@ -162,7 +166,7 @@ namespace Splime.UI
             if (_introController != null)
             {
                 _isWaitingForIntro =
-                    _showHowToPlayAfterLobby || _introController.WillShowOnEnable;
+                    _showHowToPlayOnGameStart || _introController.WillShowOnEnable;
                 _introController.Completed += HandleIntroCompleted;
             }
 
@@ -178,7 +182,7 @@ namespace Splime.UI
                 _levelUIController.ShowHowToPlay();
                 TryStartHowToPlay();
             }
-            else if (_showHowToPlayAfterLobby && _introController != null)
+            else if (_showHowToPlayOnGameStart && _introController != null)
             {
                 _startIntroOnStart = true;
             }
@@ -408,6 +412,12 @@ namespace Splime.UI
 
         private void HandleHowToPlayCloseRequested()
         {
+            if (_howToPlayController == null ||
+                !_howToPlayController.IsNavigationExternallyControlled)
+            {
+                return;
+            }
+
             if (TryGetLocalLevelNetworkBridge(
                     out PlayerLevelNetworkController localBridge))
             {

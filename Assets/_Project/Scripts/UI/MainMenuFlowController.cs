@@ -60,14 +60,12 @@ namespace Splime.UI
 
         private void HandlePlaySinglePlayerRequested()
         {
-            if (_levelSceneNames != null && _levelSceneNames.Length > 0)
-            {
-                LoadScene(_levelSceneNames[0]);
-            }
-            else
-            {
-                LoadScene("Level1");
-            }
+            string firstLevelSceneName =
+                _levelSceneNames != null && _levelSceneNames.Length > 0
+                    ? _levelSceneNames[0]
+                    : "Level1";
+
+            LoadScene(firstLevelSceneName, showHowToPlayOnStart: true);
         }
 
         private void HandleLevelRequested(int levelIndex)
@@ -95,7 +93,9 @@ namespace Splime.UI
             Application.Quit();
         }
 
-        private void LoadScene(string sceneName)
+        private void LoadScene(
+            string sceneName,
+            bool showHowToPlayOnStart = false)
         {
             if (_isChangingScene)
             {
@@ -112,7 +112,43 @@ namespace Splime.UI
 
             _isChangingScene = true;
             _mainMenuUIController.SetBusy(true);
+
+            if (showHowToPlayOnStart)
+            {
+                HowToPlayStartupRequest.ScheduleFor(sceneName);
+            }
+
             SceneManager.LoadScene(sceneName);
+        }
+    }
+
+    internal static class HowToPlayStartupRequest
+    {
+        private static string _pendingSceneName;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void Reset()
+        {
+            _pendingSceneName = null;
+        }
+
+        public static void ScheduleFor(string sceneName)
+        {
+            _pendingSceneName = sceneName;
+        }
+
+        public static bool ConsumeFor(string sceneName)
+        {
+            if (!string.Equals(
+                    _pendingSceneName,
+                    sceneName,
+                    System.StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            _pendingSceneName = null;
+            return true;
         }
     }
 }
