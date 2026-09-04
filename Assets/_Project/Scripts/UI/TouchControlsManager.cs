@@ -63,6 +63,13 @@ namespace Splime.UI
             DetermineVisibility();
         }
 
+        private SinglePlayerManager GetSinglePlayerManager()
+        {
+            return SinglePlayerManager.Instance != null
+                ? SinglePlayerManager.Instance
+                : FindFirstObjectByType<SinglePlayerManager>(FindObjectsInactive.Include);
+        }
+
         private void OnEnable()
         {
             DetermineVisibility();
@@ -70,10 +77,11 @@ namespace Splime.UI
             SlimeInput.LocalInputReady -= HandleLocalInputReady;
             SlimeInput.LocalInputReady += HandleLocalInputReady;
 
-            if (SinglePlayerManager.Instance != null)
+            SinglePlayerManager spManager = GetSinglePlayerManager();
+            if (spManager != null)
             {
-                SinglePlayerManager.Instance.ActiveSlimeChanged -= HandleActiveSlimeChanged;
-                SinglePlayerManager.Instance.ActiveSlimeChanged += HandleActiveSlimeChanged;
+                spManager.ActiveSlimeChanged -= HandleActiveSlimeChanged;
+                spManager.ActiveSlimeChanged += HandleActiveSlimeChanged;
             }
         }
 
@@ -81,9 +89,10 @@ namespace Splime.UI
         {
             SlimeInput.LocalInputReady -= HandleLocalInputReady;
 
-            if (SinglePlayerManager.Instance != null)
+            SinglePlayerManager spManager = GetSinglePlayerManager();
+            if (spManager != null)
             {
-                SinglePlayerManager.Instance.ActiveSlimeChanged -= HandleActiveSlimeChanged;
+                spManager.ActiveSlimeChanged -= HandleActiveSlimeChanged;
             }
         }
 
@@ -93,10 +102,11 @@ namespace Splime.UI
             FindActiveLocalPlayer();
             UpdateSwitchButtonVisibility();
 
-            if (SinglePlayerManager.Instance != null)
+            SinglePlayerManager spManager = GetSinglePlayerManager();
+            if (spManager != null)
             {
-                SinglePlayerManager.Instance.ActiveSlimeChanged -= HandleActiveSlimeChanged;
-                SinglePlayerManager.Instance.ActiveSlimeChanged += HandleActiveSlimeChanged;
+                spManager.ActiveSlimeChanged -= HandleActiveSlimeChanged;
+                spManager.ActiveSlimeChanged += HandleActiveSlimeChanged;
             }
         }
 
@@ -144,13 +154,12 @@ namespace Splime.UI
 
             if (action == TouchButtonAction.SwitchCharacter)
             {
-                // En modo 1P, ejecutamos el cambio directamente a través del manager y notificamos inputs
-                if (SinglePlayerManager.Instance != null && SinglePlayerManager.Instance.IsSinglePlayerActive)
+                // En modo 1P, ejecutamos el cambio directamente a través del SinglePlayerManager (una sola vez)
+                SinglePlayerManager spManager = GetSinglePlayerManager();
+                if (spManager != null && spManager.IsSinglePlayerActive)
                 {
-                    SinglePlayerManager.Instance.SwitchActiveSlime();
+                    spManager.SwitchActiveSlime();
                     FindActiveLocalPlayer();
-                    _currentLocalInput?.TriggerVirtualSwitchCharacter();
-                    return;
                 }
                 return;
             }
@@ -176,9 +185,6 @@ namespace Splime.UI
                     break;
                 case TouchButtonAction.Interact:
                     _currentLocalInput.TriggerVirtualInteract();
-                    break;
-                case TouchButtonAction.SwitchCharacter:
-                    _currentLocalInput.TriggerVirtualSwitchCharacter();
                     break;
             }
         }
@@ -225,9 +231,10 @@ namespace Splime.UI
             }
 
             // 2. En Un Solo Jugador (SinglePlayerManager activo): Tomar el Slime actualmente activo
-            if (SinglePlayerManager.Instance != null && SinglePlayerManager.Instance.IsSinglePlayerActive)
+            SinglePlayerManager spManager = GetSinglePlayerManager();
+            if (spManager != null && spManager.IsSinglePlayerActive)
             {
-                GameObject activeSlime = SinglePlayerManager.Instance.ActiveSlime;
+                GameObject activeSlime = spManager.ActiveSlime;
                 if (activeSlime != null)
                 {
                     SlimeInput spInput = activeSlime.GetComponent<SlimeInput>();
@@ -265,7 +272,8 @@ namespace Splime.UI
         {
             if (_switchCharacterButtonRoot != null)
             {
-                bool isSinglePlayer = SinglePlayerManager.Instance != null && SinglePlayerManager.Instance.IsSinglePlayerActive;
+                SinglePlayerManager spManager = GetSinglePlayerManager();
+                bool isSinglePlayer = spManager != null && spManager.IsSinglePlayerActive;
                 _switchCharacterButtonRoot.SetActive(isSinglePlayer);
             }
         }
