@@ -216,13 +216,13 @@ namespace Splime.Core
         {
             if (_slimeTransformerPrefab == null)
             {
-                Debug.LogError($"[{nameof(SinglePlayerManager)}] ❌ Falta _slimeTransformerPrefab. " +
+                Debug.LogError($"[{nameof(SinglePlayerManager)}] Falta _slimeTransformerPrefab. " +
                                "Asígnalo en el Inspector del SinglePlayerManager o en NetworkGameManager.", this);
                 return false;
             }
             if (_slimeAgilePrefab == null)
             {
-                Debug.LogError($"[{nameof(SinglePlayerManager)}] ❌ Falta _slimeAgilePrefab. " +
+                Debug.LogError($"[{nameof(SinglePlayerManager)}] Falta _slimeAgilePrefab. " +
                                "Asígnalo en el Inspector del SinglePlayerManager o en NetworkGameManager.", this);
                 return false;
             }

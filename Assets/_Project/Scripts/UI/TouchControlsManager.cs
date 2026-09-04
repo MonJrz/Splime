@@ -32,7 +32,7 @@ namespace Splime.UI
         [SerializeField] private bool _autoDetectPlatform = true;
 
         [Header("Debug")]
-        [SerializeField] private bool _showDebugLogs = true;
+        [SerializeField] private bool _showDebugLogs = false;
 
         private SlimeInput _currentLocalInput;
 
@@ -132,11 +132,6 @@ namespace Splime.UI
         {
             if (action == TouchButtonAction.Pause)
             {
-                if (_showDebugLogs)
-                {
-                    Debug.Log($"[{nameof(TouchControlsManager)}] ✅ Acción ejecutada: 'Pause'");
-                }
-
                 var levelUI = FindFirstObjectByType<LevelUIController>();
                 if (levelUI != null)
                 {
@@ -151,14 +146,9 @@ namespace Splime.UI
             {
                 if (_showDebugLogs)
                 {
-                    Debug.LogWarning($"[{nameof(TouchControlsManager)}] ⚠️ No se encontró SlimeInput activo para procesar la acción: {action}");
+                    Debug.LogWarning($"[{nameof(TouchControlsManager)}] No se encontró SlimeInput activo para procesar la acción: {action}");
                 }
                 return;
-            }
-
-            if (_showDebugLogs)
-            {
-                Debug.Log($"[{nameof(TouchControlsManager)}] ✅ Acción ejecutada: '{action}' en '{_currentLocalInput.gameObject.name}'");
             }
 
             switch (action)
