@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Splime.Core;
 using Splime.Player;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace Splime.UI
@@ -8,7 +9,7 @@ namespace Splime.UI
     /// <summary>
     /// Administrador de controles táctiles en pantalla para móviles / WebGL.
     /// Detecta la plataforma, activa la UI táctil si corresponde y redirige el Joystick y botones
-    /// hacia el SlimeInput local activo.
+    /// hacia el SlimeInput local activo (tanto en SinglePlayer como en Multiplayer Netcode).
     /// </summary>
     public class TouchControlsManager : MonoBehaviour
     {
@@ -104,6 +105,7 @@ namespace Splime.UI
             if (!IsTouchActive) return;
 
             FindActiveLocalPlayer();
+            UpdateSwitchButtonVisibility();
 
             // Enviar dirección del joystick al SlimeInput local
             if (_currentLocalInput != null && _movementJoystick != null)
@@ -140,6 +142,19 @@ namespace Splime.UI
                 return;
             }
 
+            if (action == TouchButtonAction.SwitchCharacter)
+            {
+                // En modo 1P, ejecutamos el cambio directamente a través del manager y notificamos inputs
+                if (SinglePlayerManager.Instance != null && SinglePlayerManager.Instance.IsSinglePlayerActive)
+                {
+                    SinglePlayerManager.Instance.SwitchActiveSlime();
+                    FindActiveLocalPlayer();
+                    _currentLocalInput?.TriggerVirtualSwitchCharacter();
+                    return;
+                }
+                return;
+            }
+
             FindActiveLocalPlayer();
 
             if (_currentLocalInput == null)
@@ -170,7 +185,7 @@ namespace Splime.UI
 
         private void HandleLocalInputReady(SlimeInput input)
         {
-            if (input != null && input.IsLocallyControlled)
+            if (input != null && input.IsLocalInputSource)
             {
                 _currentLocalInput = input;
                 UpdateSwitchButtonVisibility();
@@ -192,8 +207,25 @@ namespace Splime.UI
 
         public void FindActiveLocalPlayer()
         {
-            // 1. Intentar desde SinglePlayerManager
-            if (SinglePlayerManager.Instance != null)
+            bool isNetworkActive = NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;
+
+            // 1. En Multijugador (Netcode activo): ÚNICAMENTE el Slime del cual este cliente es dueño (IsOwner)
+            if (isNetworkActive)
+            {
+                SlimeInput[] netInputs = FindObjectsByType<SlimeInput>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+                foreach (var input in netInputs)
+                {
+                    if (input != null && input.gameObject.activeInHierarchy && input.IsSpawned && input.IsOwner)
+                    {
+                        _currentLocalInput = input;
+                        return;
+                    }
+                }
+                return;
+            }
+
+            // 2. En Un Solo Jugador (SinglePlayerManager activo): Tomar el Slime actualmente activo
+            if (SinglePlayerManager.Instance != null && SinglePlayerManager.Instance.IsSinglePlayerActive)
             {
                 GameObject activeSlime = SinglePlayerManager.Instance.ActiveSlime;
                 if (activeSlime != null)
@@ -207,21 +239,21 @@ namespace Splime.UI
                 }
             }
 
-            // 2. Buscar SlimeInput marcado como IsLocallyControlled
-            SlimeInput[] allInputs = FindObjectsByType<SlimeInput>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            // 3. Pruebas locales / offline: Buscar SlimeInput activo y marcado como IsLocallyControlled
+            SlimeInput[] allInputs = FindObjectsByType<SlimeInput>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
             foreach (var input in allInputs)
             {
-                if (input != null && input.gameObject.activeInHierarchy && input.IsLocallyControlled)
+                if (input != null && input.gameObject.activeInHierarchy && input.IsLocallyControlled && input.IsLocalInputSource)
                 {
                     _currentLocalInput = input;
                     return;
                 }
             }
 
-            // 3. Fallback: cualquier SlimeInput activo
+            // 4. Fallback final para pruebas offline
             foreach (var input in allInputs)
             {
-                if (input != null && input.gameObject.activeInHierarchy)
+                if (input != null && input.gameObject.activeInHierarchy && input.IsLocalInputSource)
                 {
                     _currentLocalInput = input;
                     return;

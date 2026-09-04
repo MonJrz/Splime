@@ -69,9 +69,13 @@ namespace Splime.Core
 
         private static void OnSceneLoadedStatic(Scene scene, LoadSceneMode mode)
         {
-            // Red activa (online) -> no hacer nada, Netcode gestiona el spawn de jugadores
+            // Red activa (online) -> desactivar SinglePlayerManager para no interferir con Netcode
             if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
             {
+                if (Instance != null)
+                {
+                    Instance.enabled = false;
+                }
                 return;
             }
 
@@ -100,6 +104,7 @@ namespace Splime.Core
                 }
             }
 
+            manager.enabled = true;
             manager.PrepareForNewScene();
             manager.InitializeSinglePlayerSession();
         }
@@ -128,6 +133,7 @@ namespace Splime.Core
 
         private void OnEnable()
         {
+            SlimeInput.SwitchCharacterRequested -= HandleSwitchCharacterRequested;
             SlimeInput.SwitchCharacterRequested += HandleSwitchCharacterRequested;
         }
 
@@ -143,6 +149,8 @@ namespace Splime.Core
                 enabled = false;
                 return;
             }
+
+            enabled = true;
 
             if (!_isInitialized)
             {
@@ -162,10 +170,12 @@ namespace Splime.Core
 
         public void PrepareForNewScene()
         {
+            enabled = true;
             _transformerInstance = null;
             _agileInstance = null;
             _cinemachineTargeter = null;
             _isInitialized = false;
+            _activeRole = _startingSlime;
         }
 
         /// <summary>
@@ -178,6 +188,7 @@ namespace Splime.Core
             SlimeData transformerData,
             SlimeData agileData)
         {
+            enabled = true;
             if (transformerPrefab != null) _slimeTransformerPrefab = transformerPrefab;
             if (agilePrefab != null) _slimeAgilePrefab = agilePrefab;
             if (transformerData != null) _transformerData = transformerData;
@@ -189,7 +200,9 @@ namespace Splime.Core
         public void InitializeSinglePlayerSession()
         {
             if (!IsSinglePlayerActive) return;
-            if (_isInitialized) return;
+
+            enabled = true;
+            if (_isInitialized && _transformerInstance != null && _agileInstance != null) return;
 
             ResolveMissingReferences();
 
@@ -267,34 +280,52 @@ namespace Splime.Core
 
         private void FindOrSpawnSlimes()
         {
-            // 1. Limpiar o destruir slimes inactivos/placeholders pre-colocados en la escena para evitar conflictos
+            EnsureSlimesExist();
+        }
+
+        private void EnsureSlimesExist()
+        {
+            // 1. Verificar y adoptar instancias existentes y activas en la escena
             SlimeMovement[] existingSlimes = FindObjectsByType<SlimeMovement>(
-                FindObjectsInactive.Include, FindObjectsSortMode.None);
+                FindObjectsInactive.Exclude, FindObjectsSortMode.None);
 
             foreach (var slime in existingSlimes)
             {
-                if (slime != null)
-                {
-                    // Si ya existe una instancia creada por este manager (termina en _1P) y está activa, mantenerla
-                    if (slime.gameObject.name.EndsWith("_1P") && slime.gameObject.activeInHierarchy)
-                    {
-                        PlayerLevelNetworkController ctrl = slime.GetComponent<PlayerLevelNetworkController>();
-                        if (ctrl != null)
-                        {
-                            if (ctrl.SpawnRole == SpawnPlayerRole.Player1 && _transformerInstance == null)
-                                _transformerInstance = slime.gameObject;
-                            else if (ctrl.SpawnRole == SpawnPlayerRole.Player2 && _agileInstance == null)
-                                _agileInstance = slime.gameObject;
-                        }
-                        continue;
-                    }
+                if (slime == null || !slime.gameObject.activeInHierarchy) continue;
 
-                    // Destruir placeholders o slimes residuales de la escena (ej: NetworkObjects inactivos en Level2 y Level3)
+                PlayerLevelNetworkController ctrl = slime.GetComponent<PlayerLevelNetworkController>();
+                if (ctrl != null)
+                {
+                    if (ctrl.SpawnRole == SpawnPlayerRole.Player1 && _transformerInstance == null)
+                        _transformerInstance = slime.gameObject;
+                    else if (ctrl.SpawnRole == SpawnPlayerRole.Player2 && _agileInstance == null)
+                        _agileInstance = slime.gameObject;
+                }
+                else
+                {
+                    string nameLower = slime.gameObject.name.ToLowerInvariant();
+                    if (nameLower.Contains("transformer") && _transformerInstance == null)
+                        _transformerInstance = slime.gameObject;
+                    else if (nameLower.Contains("agile") && _agileInstance == null)
+                        _agileInstance = slime.gameObject;
+                }
+            }
+
+            // 2. Destruir placeholders inactivos residuales de la escena si existen instancias vivas
+            SlimeMovement[] inactiveSlimes = FindObjectsByType<SlimeMovement>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+            foreach (var slime in inactiveSlimes)
+            {
+                if (slime != null && !slime.gameObject.activeInHierarchy &&
+                    slime.gameObject != _transformerInstance &&
+                    slime.gameObject != _agileInstance)
+                {
                     Destroy(slime.gameObject);
                 }
             }
 
-            // 2. Spawnear siempre instancias limpias y frescas desde los prefabs
+            // 3. Spawnear si aún falta alguno
             if (_autoSpawnIfMissing)
             {
                 if (_transformerInstance == null)
@@ -356,6 +387,13 @@ namespace Splime.Core
 
         public void SwitchActiveSlime()
         {
+            if (!IsSinglePlayerActive) return;
+
+            if (_transformerInstance == null || _agileInstance == null)
+            {
+                EnsureSlimesExist();
+            }
+
             _activeRole = _activeRole == SpawnPlayerRole.Player1
                 ? SpawnPlayerRole.Player2
                 : SpawnPlayerRole.Player1;
@@ -367,6 +405,13 @@ namespace Splime.Core
 
         public void SetActiveSlime(SpawnPlayerRole role)
         {
+            if (!IsSinglePlayerActive) return;
+
+            if (_transformerInstance == null || _agileInstance == null)
+            {
+                EnsureSlimesExist();
+            }
+
             if (_activeRole == role) return;
             _activeRole = role;
             ApplyControlToSlimes();

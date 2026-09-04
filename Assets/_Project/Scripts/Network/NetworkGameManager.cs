@@ -1124,13 +1124,18 @@ namespace Splime.Network
 
         private void EnsureSinglePlayerSession()
         {
-            SinglePlayerManager spManager = FindFirstObjectByType<SinglePlayerManager>(FindObjectsInactive.Include);
+            SinglePlayerManager spManager = SinglePlayerManager.Instance;
             if (spManager == null)
             {
-                GameObject spObj = new GameObject("SinglePlayerManager");
-                spManager = spObj.AddComponent<SinglePlayerManager>();
+                spManager = FindFirstObjectByType<SinglePlayerManager>(FindObjectsInactive.Include);
+                if (spManager == null)
+                {
+                    GameObject spObj = new GameObject("SinglePlayerManager");
+                    spManager = spObj.AddComponent<SinglePlayerManager>();
+                }
             }
 
+            spManager.enabled = true;
             spManager.ConfigureAndInitialize(
                 _slimeTransformerPrefab,
                 _slimeAgilePrefab,
