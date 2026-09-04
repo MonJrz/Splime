@@ -82,30 +82,48 @@ namespace Splime.Core
 
             if (!isLevel)
             {
+                if (Instance != null)
+                {
+                    Instance.PrepareForNewScene();
+                }
                 return;
             }
 
-            SinglePlayerManager existing = FindFirstObjectByType<SinglePlayerManager>(FindObjectsInactive.Include);
-            if (existing == null)
+            SinglePlayerManager manager = Instance;
+            if (manager == null)
             {
-                GameObject spObj = new GameObject("[Auto] SinglePlayerManager");
-                existing = spObj.AddComponent<SinglePlayerManager>();
+                manager = FindFirstObjectByType<SinglePlayerManager>(FindObjectsInactive.Include);
+                if (manager == null)
+                {
+                    GameObject spObj = new GameObject("[Auto] SinglePlayerManager");
+                    manager = spObj.AddComponent<SinglePlayerManager>();
+                }
             }
 
-            if (!existing._isInitialized)
-            {
-                existing.InitializeSinglePlayerSession();
-            }
+            manager.PrepareForNewScene();
+            manager.InitializeSinglePlayerSession();
         }
 
         private void Awake()
         {
             if (Instance != null && Instance != this)
             {
+                // Adoptar referencias configuradas si la instancia persistente no las tiene
+                if (_slimeTransformerPrefab != null && Instance._slimeTransformerPrefab == null)
+                    Instance._slimeTransformerPrefab = _slimeTransformerPrefab;
+                if (_slimeAgilePrefab != null && Instance._slimeAgilePrefab == null)
+                    Instance._slimeAgilePrefab = _slimeAgilePrefab;
+                if (_transformerData != null && Instance._transformerData == null)
+                    Instance._transformerData = _transformerData;
+                if (_agileData != null && Instance._agileData == null)
+                    Instance._agileData = _agileData;
+
                 Destroy(gameObject);
                 return;
             }
+
             Instance = this;
+            DontDestroyOnLoad(gameObject);
         }
 
         private void OnEnable()
@@ -141,6 +159,14 @@ namespace Splime.Core
         // ─────────────────────────────────────────────────────────────────────
         // INICIALIZACIÓN
         // ─────────────────────────────────────────────────────────────────────
+
+        public void PrepareForNewScene()
+        {
+            _transformerInstance = null;
+            _agileInstance = null;
+            _cinemachineTargeter = null;
+            _isInitialized = false;
+        }
 
         /// <summary>
         /// Llamado por NetworkGameManager al cargar un nivel sin sesión activa,
@@ -182,7 +208,7 @@ namespace Splime.Core
 
         private void ResolveMissingReferences()
         {
-            // Intentar tomar desde NetworkGameManager si existe en escena/DontDestroyOnLoad
+            // 1. Intentar tomar desde NetworkGameManager si existe en escena/DontDestroyOnLoad
             if (NetworkGameManager.Instance != null)
             {
                 if (_slimeTransformerPrefab == null)
@@ -195,8 +221,18 @@ namespace Splime.Core
                     _agileData = NetworkGameManager.Instance.AgileData;
             }
 
+            // 2. Carga en tiempo de ejecución desde Resources (funciona en WebGL, standalone y editor)
+            if (_slimeTransformerPrefab == null)
+                _slimeTransformerPrefab = Resources.Load<GameObject>("SinglePlayer/Slime_Transformer");
+            if (_slimeAgilePrefab == null)
+                _slimeAgilePrefab = Resources.Load<GameObject>("SinglePlayer/Slime_Agile");
+            if (_transformerData == null)
+                _transformerData = Resources.Load<SlimeData>("SinglePlayer/SlimeData_Transformer");
+            if (_agileData == null)
+                _agileData = Resources.Load<SlimeData>("SinglePlayer/SlimeData_Agile");
+
 #if UNITY_EDITOR
-            // Fallback Editor: carga directa desde AssetDatabase si aún faltan
+            // 3. Fallback Editor: carga directa desde AssetDatabase si aún faltan
             if (_slimeTransformerPrefab == null)
                 _slimeTransformerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(
                     "Assets/_Project/Prefabs/Players/Slime_Transformer.prefab");
