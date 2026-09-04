@@ -31,6 +31,13 @@ namespace Splime.Player
         private bool _isInputBlocked;
         private bool _isLocallyControlled = true;
 
+        // Virtual Inputs (Touch / On-Screen controls)
+        private Vector2 _virtualMoveInput;
+        private bool _virtualJumpThisFrame;
+        private bool _virtualAbilityThisFrame;
+        private bool _virtualInteractThisFrame;
+        private bool _virtualSwitchThisFrame;
+
         // Properties for current frame input states
         public Vector2 MoveInput { get; private set; }
         public bool JumpPressedThisFrame { get; private set; }
@@ -120,15 +127,56 @@ namespace Splime.Player
         {
             if (!ShouldProcessInput) return;
 
-            if (_moveAction != null)
-            {
-                MoveInput = _moveAction.ReadValue<Vector2>();
-            }
+            Vector2 actionMove = _moveAction != null ? _moveAction.ReadValue<Vector2>() : Vector2.zero;
+            MoveInput = _virtualMoveInput.sqrMagnitude > 0.001f ? _virtualMoveInput : actionMove;
 
-            JumpPressedThisFrame = _jumpAction != null && _jumpAction.WasPressedThisFrame();
-            AbilityPressedThisFrame = _abilityAction != null && _abilityAction.WasPressedThisFrame();
-            InteractPressedThisFrame = _interactAction != null && _interactAction.WasPressedThisFrame();
-            SwitchCharacterPressedThisFrame = _switchCharacterAction != null && _switchCharacterAction.WasPressedThisFrame();
+            JumpPressedThisFrame = (_jumpAction != null && _jumpAction.WasPressedThisFrame()) || _virtualJumpThisFrame;
+            AbilityPressedThisFrame = (_abilityAction != null && _abilityAction.WasPressedThisFrame()) || _virtualAbilityThisFrame;
+            InteractPressedThisFrame = (_interactAction != null && _interactAction.WasPressedThisFrame()) || _virtualInteractThisFrame;
+            SwitchCharacterPressedThisFrame = (_switchCharacterAction != null && _switchCharacterAction.WasPressedThisFrame()) || _virtualSwitchThisFrame;
+
+            _virtualJumpThisFrame = false;
+            _virtualAbilityThisFrame = false;
+            _virtualInteractThisFrame = false;
+            _virtualSwitchThisFrame = false;
+        }
+
+        public void SetVirtualMoveInput(Vector2 virtualMove)
+        {
+            _virtualMoveInput = virtualMove;
+        }
+
+        public void TriggerVirtualJump()
+        {
+            if (!ShouldProcessInput) return;
+            _virtualJumpThisFrame = true;
+            JumpPressedThisFrame = true;
+            OnJumpPressed?.Invoke();
+        }
+
+        public void TriggerVirtualAbility()
+        {
+            if (!ShouldProcessInput) return;
+            _virtualAbilityThisFrame = true;
+            AbilityPressedThisFrame = true;
+            OnAbilityPressed?.Invoke();
+        }
+
+        public void TriggerVirtualInteract()
+        {
+            if (!ShouldProcessInput) return;
+            _virtualInteractThisFrame = true;
+            InteractPressedThisFrame = true;
+            OnInteractPressed?.Invoke();
+        }
+
+        public void TriggerVirtualSwitchCharacter()
+        {
+            if (!ShouldProcessInput) return;
+            _virtualSwitchThisFrame = true;
+            SwitchCharacterPressedThisFrame = true;
+            OnSwitchCharacterPressed?.Invoke();
+            SwitchCharacterRequested?.Invoke();
         }
 
         private void HandleJump(InputAction.CallbackContext context)
@@ -233,6 +281,11 @@ namespace Splime.Player
         private void ClearFrameInput()
         {
             MoveInput = Vector2.zero;
+            _virtualMoveInput = Vector2.zero;
+            _virtualJumpThisFrame = false;
+            _virtualAbilityThisFrame = false;
+            _virtualInteractThisFrame = false;
+            _virtualSwitchThisFrame = false;
             JumpPressedThisFrame = false;
             AbilityPressedThisFrame = false;
             InteractPressedThisFrame = false;
